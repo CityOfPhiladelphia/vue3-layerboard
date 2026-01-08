@@ -14,8 +14,8 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
-    "@phila/phila-ui-core": "file:../phila-ui-4/packages/core",
-    "@phila/phila-ui-map-core": "file:../phila-ui-4/packages/map-core",
+    "@phila/phila-ui-core": "^2.2.0",
+    "@phila/phila-ui-map-core": "^0.0.1",
     "maplibre-gl": "^5.14.0",
     "pinia": "^3.0.4",
     "vue": "^3.5.26",

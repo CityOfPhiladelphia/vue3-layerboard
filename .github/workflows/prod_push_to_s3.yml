@@ -15,16 +15,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-
-    - name: Use Node.js 16.x
+    - name: Use Node.js 22.x
       uses: actions/setup-node@v3
       with:
-        node-version: '16.x'
+        node-version: '22.x'
         cache: 'npm'
-
-    - name: install npm 6
-      run: |
-        npm install -g npm@6
 
     - name: npm install, and build
       run: |
