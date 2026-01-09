@@ -83,14 +83,14 @@ This phase adds the ability to fetch and transform the Esri WebMap JSON at runti
 - [x] Export a main function `transformWebMapToLayerConfigs(webMapJson: EsriWebMap): LayerConfig[]`
 
 ### Create Layer Config Service
-- [ ] Create new file `src/services/layerConfigService.ts`
-- [ ] Implement `getLayerConfigs(): Promise<LayerConfig[]>` function that:
-  - [ ] Checks `VITE_LAYER_MODE` environment variable
-  - [ ] If `'static'`: imports and returns the existing static layer configs from `src/layers/*.ts` files (current behavior)
-  - [ ] If `'dynamic'`: fetches JSON from `VITE_WEBMAP_URL`, runs `transformWebMapToLayerConfigs()`, and returns the result
-- [ ] Add error handling for fetch failures in dynamic mode (log error, maybe fall back to static?)
-- [ ] Add loading state management (the fetch + transform may take 1-2 seconds)
-- [ ] Cache the transformed configs in memory so subsequent calls don't re-fetch
+- [x] Create new file `src/services/layerConfigService.ts`
+- [x] Implement `getLayerConfigs(): Promise<LayerConfig[]>` function that:
+  - [x] Checks `VITE_LAYER_MODE` environment variable
+  - [x] If `'static'`: imports and returns the existing static layer configs from `src/layers/*.ts` files (current behavior)
+  - [x] If `'dynamic'`: fetches JSON from `VITE_WEBMAP_URL`, runs `transformWebMapToLayerConfigs()`, and returns the result
+- [x] Add error handling for fetch failures in dynamic mode (log error, maybe fall back to static?)
+- [x] Add loading state management (the fetch + transform may take 1-2 seconds)
+- [x] Cache the transformed configs in memory so subsequent calls don't re-fetch
 
 ### Update App Initialization
 - [ ] Locate where layer configs are currently imported/loaded (likely in `App.vue`, a store, or composable)
@@ -111,10 +111,18 @@ This phase adds the ability to fetch and transform the Esri WebMap JSON at runti
 - [ ] Verify popups, legends, and zoom constraints work in both modes
 
 ### Deployment Setup (for A/B comparison)
-- [ ] Create/update build scripts or CI config to produce two builds:
-  - [ ] Static build: `VITE_LAYER_MODE=static` → deploy to endpoint A (e.g., `/openmaps-static/`)
-  - [ ] Dynamic build: `VITE_LAYER_MODE=dynamic` → deploy to endpoint B (e.g., `/openmaps-dynamic/`)
-- [ ] Document how to deploy both versions for stakeholder comparison
+- [x] Create build scripts in `package.json`:
+  - [x] `build:static` - runs `vite build --mode static` (loads `.env.static`)
+  - [x] `build:dynamic` - runs `vite build --mode dynamic` (loads `.env.dynamic`)
+- [x] Create environment files:
+  - [x] `.env` - default for local dev (static mode)
+  - [x] `.env.static` - sets `VITE_LAYER_MODE=static`
+  - [x] `.env.dynamic` - sets `VITE_LAYER_MODE=dynamic`
+- [x] Update GitHub Actions workflow (`.github/workflows/dev_push_to_s3.yml`):
+  - [x] Build static → deploy to `openmaps-dev.phila.gov` (S3 + CloudFront E3T7BKDV4NKW92)
+  - [x] Build dynamic → deploy to `openmaps-dev2.phila.gov` (S3 + CloudFront E30RQ5P7SS12OW)
+  - [x] Sequential deployment: static completes before dynamic starts
+- [ ] Verify both endpoints are accessible for stakeholder comparison
 
 ### Cleanup (After Decision is Made)
 - [ ] Once team decides on preferred approach, either:
