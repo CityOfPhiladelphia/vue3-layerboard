@@ -93,10 +93,10 @@ This phase adds the ability to fetch and transform the Esri WebMap JSON at runti
 - [x] Cache the transformed configs in memory so subsequent calls don't re-fetch
 
 ### Update App Initialization
-- [ ] Locate where layer configs are currently imported/loaded (likely in `App.vue`, a store, or composable)
-- [ ] Replace direct static imports with call to `layerConfigService.getLayerConfigs()`
-- [ ] Handle the async nature - layer list should show loading state until configs are ready
-- [ ] Ensure map doesn't try to render layers before configs are loaded
+- [x] Locate where layer configs are currently imported/loaded (likely in `App.vue`, a store, or composable)
+- [x] Replace direct static imports with call to `layerConfigService.getLayerConfigs()`
+- [x] Handle the async nature - layer list should show loading state until configs are ready
+- [x] Ensure map doesn't try to render layers before configs are loaded
 
 ### Type Safety
 - [ ] Create TypeScript interface `EsriWebMap` for the raw Esri JSON structure (or use `any` with runtime validation)

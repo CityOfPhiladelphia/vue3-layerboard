@@ -5,17 +5,40 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import MapPanel from "./components/MapPanel.vue";
 import LayerPanel from "./components/LayerPanel.vue";
 
-// Import layer configs
-import { layers } from "./layers";
+// Import layer config service
+import { getLayerConfigs } from "./services/layerConfigService";
+import type { LayerConfig } from "./layers/types";
 
 // ============================================================================
 // LAYER DEFINITIONS
 // ============================================================================
-// Build layerList from layers array, deriving component type from layer.type
-const layerList = layers.map(config => ({
-  config,
-  component: config.type, // "circle", "fill", or "line"
-}));
+// Layer configs and loading state
+const layerList = ref<Array<{ config: LayerConfig; component: string }>>([]);
+const configsLoading = ref(true);
+const configsError = ref<string | null>(null);
+
+// Load layer configs on mount
+async function loadLayerConfigs() {
+  try {
+    configsLoading.value = true;
+    configsError.value = null;
+
+    const configs = await getLayerConfigs();
+
+    // Build layerList from configs array, deriving component type from layer.type
+    layerList.value = configs.map(config => ({
+      config,
+      component: config.type, // "circle", "fill", or "line"
+    }));
+
+    console.log(`[App] Loaded ${configs.length} layer configs`);
+  } catch (error) {
+    console.error('[App] Failed to load layer configs:', error);
+    configsError.value = error instanceof Error ? error.message : 'Failed to load layer configurations';
+  } finally {
+    configsLoading.value = false;
+  }
+}
 
 // ============================================================================
 // SHARED STATE
@@ -72,6 +95,7 @@ async function fetchMetadata() {
 }
 
 onMounted(() => {
+  loadLayerConfigs();
   fetchMetadata();
 });
 
@@ -134,32 +158,48 @@ function updateSearch(query: string) {
     </header>
 
     <div class="app-main">
-      <div class="layer-panel-wrapper" :class="{ 'active': activePanel === 'layers' }">
-        <LayerPanel
-          :layer-list="layerList"
-          :visible-layers="visibleLayers"
-          :layer-opacities="layerOpacities"
-          :loading-layers="loadingLayers"
-          :layer-errors="layerErrors"
-          :current-zoom="currentZoom"
-          :search-query="searchQuery"
-          :layer-metadata="layerMetadata"
-          @toggle-layer="toggleLayer"
-          @set-opacity="setLayerOpacity"
-          @update-search="updateSearch"
-        />
+      <!-- Loading state -->
+      <div v-if="configsLoading" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>Loading layer configurations...</p>
       </div>
 
-      <div class="map-panel-wrapper" :class="{ 'active': activePanel === 'map' }">
-        <MapPanel
-          :visible-layers="visibleLayers"
-          :layer-opacities="layerOpacities"
-          :layer-list="layerList"
-          @zoom="onZoomChange"
-          @layer-loading="setLayerLoading"
-          @layer-error="setLayerError"
-        />
+      <!-- Error state -->
+      <div v-else-if="configsError" class="error-container">
+        <h2>Error Loading Layers</h2>
+        <p>{{ configsError }}</p>
+        <button @click="loadLayerConfigs" class="retry-button">Retry</button>
       </div>
+
+      <!-- Normal app view -->
+      <template v-else>
+        <div class="layer-panel-wrapper" :class="{ 'active': activePanel === 'layers' }">
+          <LayerPanel
+            :layer-list="layerList"
+            :visible-layers="visibleLayers"
+            :layer-opacities="layerOpacities"
+            :loading-layers="loadingLayers"
+            :layer-errors="layerErrors"
+            :current-zoom="currentZoom"
+            :search-query="searchQuery"
+            :layer-metadata="layerMetadata"
+            @toggle-layer="toggleLayer"
+            @set-opacity="setLayerOpacity"
+            @update-search="updateSearch"
+          />
+        </div>
+
+        <div class="map-panel-wrapper" :class="{ 'active': activePanel === 'map' }">
+          <MapPanel
+            :visible-layers="visibleLayers"
+            :layer-opacities="layerOpacities"
+            :layer-list="layerList"
+            @zoom="onZoomChange"
+            @layer-loading="setLayerLoading"
+            @layer-error="setLayerError"
+          />
+        </div>
+      </template>
     </div>
 
     <!-- Mobile toggle button -->
@@ -352,5 +392,67 @@ body {
   .mobile-toggle {
     display: block;
   }
+}
+
+/* Loading and error states */
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 40px;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #0f4d90;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-container p {
+  color: #666;
+  font-size: 16px;
+  margin: 0;
+}
+
+.error-container h2 {
+  color: #d32f2f;
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+
+.error-container p {
+  color: #666;
+  font-size: 16px;
+  margin-bottom: 24px;
+  max-width: 500px;
+}
+
+.retry-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  background-color: #0f4d90;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.retry-button:hover {
+  background-color: #0d3d73;
 }
 </style>
