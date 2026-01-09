@@ -70,17 +70,17 @@ This phase adds the ability to fetch and transform the Esri WebMap JSON at runti
 - [x] Keep the ID near where it's used (in `layerConfigService.ts` or a `src/config.ts` file) - not hidden in env vars since it's public
 
 ### Extract Transformation Logic into Shared Module
-- [ ] Create new file `src/utils/webmap-transformer.ts` (or similar location)
-- [ ] Move/copy the core transformation logic from the existing converter script (`scripts/convert-esri-webmap.ts` or similar) into this new module
-- [ ] Refactor transformation functions to be importable and callable at runtime (not just CLI script)
-- [ ] Key functions to extract:
-  - [ ] `transformEsriRenderer()` - converts Esri renderer JSON to MapLibre paint styles
-  - [ ] `transformPopupConfig()` - converts Esri popupInfo to app's popup format
-  - [ ] `transformLegendConfig()` - generates legend entries from renderer
-  - [ ] `convertScaleToZoom()` - converts Esri minScale/maxScale to MapLibre zoom levels
-  - [ ] `buildWhereClause()` - extracts definitionExpression
-- [ ] Ensure the module works in browser environment (no Node.js-only APIs like `fs`)
-- [ ] Export a main function `transformWebMapToLayerConfigs(webMapJson: EsriWebMap): LayerConfig[]`
+- [x] Create new file `src/utils/webmap-transformer.ts` (or similar location)
+- [x] Move/copy the core transformation logic from the existing converter script (`scripts/convert-esri-webmap.ts` or similar) into this new module
+- [x] Refactor transformation functions to be importable and callable at runtime (not just CLI script)
+- [x] Key functions to extract:
+  - [x] `transformEsriRenderer()` - converts Esri renderer JSON to MapLibre paint styles
+  - [x] `transformPopupConfig()` - converts Esri popupInfo to app's popup format
+  - [x] `transformLegendConfig()` - generates legend entries from renderer
+  - [x] `convertScaleToZoom()` - converts Esri minScale/maxScale to MapLibre zoom levels
+  - [x] `buildWhereClause()` - extracts definitionExpression
+- [x] Ensure the module works in browser environment (no Node.js-only APIs like `fs`)
+- [x] Export a main function `transformWebMapToLayerConfigs(webMapJson: EsriWebMap): LayerConfig[]`
 
 ### Create Layer Config Service
 - [ ] Create new file `src/services/layerConfigService.ts`
