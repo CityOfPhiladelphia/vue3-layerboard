@@ -35,7 +35,7 @@ export interface LayerConfig {
   minZoom?: number;
   maxZoom?: number;
   opacity: number;
-  paint: Record<string, unknown>;
+  paint?: Record<string, unknown>;
   outlinePaint?: Record<string, unknown>;
   legend: LegendItem[];
   popup: PopupConfig | null;
