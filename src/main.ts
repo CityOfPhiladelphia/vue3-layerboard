@@ -12,10 +12,20 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import {
   faLocationCrosshairs,
+  faRulerCombined,
+  faXmark,
+  faCheck,
+  faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 
 // Add icons to library
-library.add(faLocationCrosshairs)
+library.add(
+  faLocationCrosshairs,
+  faRulerCombined,
+  faXmark,
+  faCheck,
+  faTrash
+)
 
 const app = createApp(App)
 

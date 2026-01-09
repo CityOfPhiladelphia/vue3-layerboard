@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { Map, CircleLayer, FillLayer, LineLayer, MapPopup } from "@phila/phila-ui-map-core";
+import { Map, CircleLayer, FillLayer, LineLayer, MapPopup, DrawTool } from "@phila/phila-ui-map-core";
 import type { LngLatLike } from "maplibre-gl";
 
 // Bounds type for spatial queries
@@ -459,6 +459,9 @@ const popupHtml = computed(() => {
       @moveend="onMoveEnd"
       @load="onMapLoad"
     >
+      <!-- Draw Tool -->
+      <DrawTool position="bottom-left" />
+
       <!-- Circle Layers -->
       <CircleLayer
         v-for="layer in visibleCircleLayers"
