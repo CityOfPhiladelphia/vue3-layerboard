@@ -759,5 +759,8 @@ export function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): LayerConf
     }
   }
 
+  // Sort configs alphabetically by title to match static layer order
+  configs.sort((a, b) => a.title.localeCompare(b.title));
+
   return configs;
 }
