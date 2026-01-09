@@ -9,8 +9,12 @@
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
+    "build:static": "run-p type-check \"build-only:static {@}\" --",
+    "build:dynamic": "run-p type-check \"build-only:dynamic {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
+    "build-only:static": "vite build --mode static",
+    "build-only:dynamic": "vite build --mode dynamic",
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
