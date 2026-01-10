@@ -353,6 +353,62 @@ Create a new utility file with the following functions:
 - [ ] Click a polygon feature → electric blue border appears, thicker than original polygon outline
 - [ ] Close popup → highlight disappears
 - [ ] Click a different feature → old highlight clears, new highlight appears
+
+## Phase 6.45: Fix Fill Layer Rendering Issues
+
+**IMPORTANT: This phase was discovered during Phase 6.4 testing**
+
+- **Goal**: Ensure all fill layers render correctly with proper visibility and transparency
+- **Issues Identified**:
+  1. Some fill layers don't render at all (e.g., Commercial Corridors)
+  2. Some fill layers render completely opaque when they should be transparent (e.g., Combined Sewer Service Area)
+
+### Investigation Steps
+
+- [x] Check layer config files for fill layers with rendering issues
+  - [x] Commercial Corridors layer config
+  - [x] Combined Sewer Service Area layer config
+- [x] Verify paint properties are correctly applied in MapPanel.vue
+- [x] Check if opacity is being handled correctly in `getDynamicPaint()`
+- [x] Verify GeoJSON data is loading correctly for these layers
+- [ ] Check browser console for any errors when layers are toggled on
+
+### Common Fill Layer Issues to Check
+
+#### Opacity Problems
+- [x] Check if `fill-opacity` is being set correctly
+- [x] Verify that layer opacity slider values are being applied
+- [x] Ensure opacity from layer config is preserved
+- [x] Check if `getDynamicPaint()` is correctly merging opacity values
+
+#### Visibility Problems
+- [x] Verify layer data is being fetched successfully
+- [x] Check if source is being created correctly for fill layers
+- [x] Verify `minZoom` isn't preventing layer from showing at current zoom level
+- [x] Check if paint properties have correct structure
+
+#### Paint Property Structure
+- [x] Ensure `fill-color` is properly set
+- [x] Ensure `fill-opacity` is properly set
+- [x] Ensure `fill-outline-color` exists if needed
+- [x] Check for any MapLibre expression syntax errors
+
+### Fixes to Implement
+
+- [x] Fix Commercial Corridors layer not rendering (numeric match values in static config)
+- [x] Fix webmap-transformer.ts `coerceMatchValue()` to always return strings for MapLibre match expressions
+- [x] Fix Combined Sewer Service Area opacity issue
+- [ ] Audit all other fill layers for similar issues
+- [x] Add defensive checks in `getDynamicPaint()` for fill layers
+- [x] Ensure default opacity values if not specified
+
+### Testing Checklist
+
+- [ ] Commercial Corridors layer renders and is visible
+- [x] Combined Sewer Service Area renders with proper transparency
+- [ ] All other fill layers render correctly
+- [x] Opacity slider works for all fill layers
+- [x] Fill layers respect their configured opacity values
 - [ ] Click outside features → popup closes, highlight clears
 - [ ] Toggle off the layer of selected feature → highlight disappears
 - [ ] Pan/zoom with feature selected → highlight remains visible and positioned correctly

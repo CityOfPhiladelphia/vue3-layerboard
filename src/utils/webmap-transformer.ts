@@ -235,20 +235,14 @@ function hasVisibleOutline(outline?: { style?: string; color?: number[] | null }
 }
 
 /**
- * Coerce a value to handle string/number mismatches in Esri data.
- * Esri stores unique values as strings, but actual field data may be numeric.
- * Returns the numeric form if the string can be parsed as a number.
+ * Coerce a value to string for MapLibre match expressions.
+ * MapLibre requires all match values to be strings (not numbers).
+ * Esri may store unique values as strings or numbers, but we always
+ * convert to strings for consistency in MapLibre expressions.
  */
-function coerceMatchValue(value: string | number): string | number {
-  // If it's a string that looks like a number, use the numeric form
-  // since ArcGIS GeoJSON returns numeric fields as numbers
-  if (typeof value === 'string') {
-    const num = Number(value);
-    if (!isNaN(num) && value.trim() !== '') {
-      return num;
-    }
-  }
-  return value;
+function coerceMatchValue(value: string | number): string {
+  // Always return string form for MapLibre match expressions
+  return String(value);
 }
 
 /**
@@ -258,14 +252,21 @@ function convertSimpleRenderer(renderer: EsriRenderer, layerOpacity?: number): R
   const symbol = renderer.symbol;
   const geomType = detectGeometryType(symbol);
 
+  console.log('[Transformer] convertSimpleRenderer - geomType:', geomType, 'symbol:', symbol);
+
   let paint: Record<string, unknown> = {};
   let legend: LegendItem[] = [];
   let outlinePaint: Record<string, unknown> | null = null;
 
   if (geomType === 'fill' && symbol) {
+    // Check if fill color has alpha = 0 (fully transparent)
+    const fillAlpha = symbol.color?.[3] ?? 255;
+    // Use transparent color when alpha is 0 to ensure no fill is rendered
+    const fillColor = fillAlpha === 0 ? 'rgba(0, 0, 0, 0)' : esriColorToCSS(symbol.color);
+
     paint = {
-      'fill-color': esriColorToCSS(symbol.color),
-      'fill-opacity': convertOpacity(layerOpacity),
+      'fill-color': fillColor,
+      'fill-opacity': fillAlpha === 0 ? 0 : convertOpacity(layerOpacity),
     };
 
     // For fill layers with visible outlines, create separate outline paint
@@ -274,16 +275,29 @@ function convertSimpleRenderer(renderer: EsriRenderer, layerOpacity?: number): R
       const outlineWidth = symbol.outline!.width || 1;
       const outlineColor = esriColorToCSS(symbol.outline!.color);
 
-      // Always add fill-outline-color for the 1px fallback
-      paint['fill-outline-color'] = outlineColor;
+      console.log('[Transformer] Fill layer with outline:', {
+        fillAlpha,
+        outlineWidth,
+        outlineColor,
+        willCreateOutlinePaint: outlineWidth > 1 || fillAlpha === 0
+      });
 
-      // If outline is thicker than 1px, create separate line paint
-      if (outlineWidth > 1) {
+      // For transparent fills, don't use fill-outline-color as it can cause rendering issues
+      // Instead, rely solely on the separate LineLayer for the outline
+      if (fillAlpha !== 0) {
+        paint['fill-outline-color'] = outlineColor;
+      }
+
+      // If outline is thicker than 1px OR fill is transparent, create separate line paint
+      if (outlineWidth > 1 || fillAlpha === 0) {
         outlinePaint = {
           'line-color': outlineColor,
           'line-width': outlineWidth,
         };
+        console.log('[Transformer] Created outlinePaint:', outlinePaint);
       }
+    } else {
+      console.log('[Transformer] No visible outline for fill layer, hasVisibleOutline returned false');
     }
 
     legend = [{
@@ -351,7 +365,8 @@ function convertUniqueValueRenderer(renderer: EsriRenderer, layerOpacity?: numbe
 
   if (geomType === 'fill') {
     // Build match expression for fill-color
-    const colorMatch: unknown[] = ['match', ['get', field]];
+    // Use to-string to ensure field values match string literals in the expression
+    const colorMatch: unknown[] = ['match', ['to-string', ['get', field]]];
 
     for (const info of uniqueValueInfos) {
       colorMatch.push(coerceMatchValue(info.value));
@@ -388,7 +403,8 @@ function convertUniqueValueRenderer(renderer: EsriRenderer, layerOpacity?: numbe
       }
     }
   } else if (geomType === 'line') {
-    const colorMatch: unknown[] = ['match', ['get', field]];
+    // Use to-string to ensure field values match string literals in the expression
+    const colorMatch: unknown[] = ['match', ['to-string', ['get', field]]];
 
     for (const info of uniqueValueInfos) {
       colorMatch.push(coerceMatchValue(info.value));
@@ -410,7 +426,8 @@ function convertUniqueValueRenderer(renderer: EsriRenderer, layerOpacity?: numbe
       'line-opacity': convertOpacity(layerOpacity),
     };
   } else if (geomType === 'circle') {
-    const colorMatch: unknown[] = ['match', ['get', field]];
+    // Use to-string to ensure field values match string literals in the expression
+    const colorMatch: unknown[] = ['match', ['to-string', ['get', field]]];
 
     for (const info of uniqueValueInfos) {
       colorMatch.push(coerceMatchValue(info.value));
@@ -531,6 +548,9 @@ function convertClassBreaksRenderer(renderer: EsriRenderer, layerOpacity?: numbe
  */
 export function transformEsriRenderer(drawingInfo?: EsriDrawingInfo, layerOpacity?: number): RendererResult {
   if (!drawingInfo?.renderer) {
+    console.warn('[Transformer] No renderer found in drawingInfo - layer will use service default (not available in WebMap)');
+    // Return empty paint - the layer will need to fetch service metadata for its default renderer
+    // For now, this will result in MapLibre default styling (which may not be correct)
     return { paint: {}, legend: [], geomType: 'fill', outlinePaint: null };
   }
 
@@ -680,6 +700,34 @@ function getDisplayTitle(title: string): string {
 }
 
 // ============================================================================
+// SERVICE METADATA FETCHING
+// ============================================================================
+
+/**
+ * Fetch drawing info from a feature service when not provided in WebMap
+ *
+ * @param serviceUrl The feature service URL
+ * @returns Promise resolving to the service's drawingInfo, or null if not available
+ */
+async function fetchServiceDrawingInfo(serviceUrl: string): Promise<EsriDrawingInfo | null> {
+  try {
+    console.log(`[Transformer] Fetching service metadata from: ${serviceUrl}`);
+    const response = await fetch(`${serviceUrl}?f=json`);
+
+    if (!response.ok) {
+      console.warn(`[Transformer] Failed to fetch service metadata: ${response.status}`);
+      return null;
+    }
+
+    const serviceData = await response.json();
+    return serviceData.drawingInfo || null;
+  } catch (error) {
+    console.error(`[Transformer] Error fetching service metadata:`, error);
+    return null;
+  }
+}
+
+// ============================================================================
 // MAIN TRANSFORMATION
 // ============================================================================
 
@@ -693,9 +741,12 @@ function getDisplayTitle(title: string): string {
  * @param webMapJson The Esri WebMap JSON object
  * @returns Array of LayerConfig objects ready to use with MapLibre
  */
-export function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): LayerConfig[] {
+export async function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): Promise<LayerConfig[]> {
   const operationalLayers = webMapJson.operationalLayers || [];
   const configs: LayerConfig[] = [];
+
+  console.log('🔄 [Transformer] ===== STARTING FRESH TRANSFORMATION =====');
+  console.log('[Transformer] Starting transformation of', operationalLayers.length, 'layers');
 
   for (const layer of operationalLayers) {
     // Skip layers without URLs (like group layers)
@@ -704,12 +755,26 @@ export function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): LayerConf
       continue;
     }
 
+    console.log('[Transformer] Processing layer:', layer.title);
+    console.log(`[Transformer] Layer "${layer.title}" - Renderer type:`, layer.layerDefinition?.drawingInfo?.renderer?.type);
+
     try {
+      // Get drawingInfo - either from WebMap or fetch from service
+      let drawingInfo = layer.layerDefinition?.drawingInfo;
+
+      // If no drawingInfo in WebMap, fetch it from the service
+      if (!drawingInfo?.renderer && layer.url) {
+        console.log(`[Transformer] Layer "${layer.title}" has no renderer in WebMap, fetching from service...`);
+        drawingInfo = await fetchServiceDrawingInfo(layer.url);
+      }
+
       // Transform renderer to get paint styles and legend
       const { paint, legend, geomType, outlinePaint } = transformEsriRenderer(
-        layer.layerDefinition?.drawingInfo,
+        drawingInfo,
         layer.opacity
       );
+
+      console.log(`[Transformer] Layer "${layer.title}" - Result: geomType=${geomType}, hasOutlinePaint=${!!outlinePaint}`);
 
       // Transform popup config
       const popup = transformPopupConfig(layer.popupInfo);
@@ -727,13 +792,18 @@ export function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): LayerConf
       const layerId = titleToKebab(layer.title);
       const displayTitle = getDisplayTitle(layer.title);
 
+      // Determine effective opacity for the slider
+      // For fill layers with transparent fills (alpha=0), use layer opacity for outline visibility
+      // The fill will always stay at 0, but the slider controls the outline
+      let effectiveOpacity = layer.opacity ?? 1;
+
       // Build layer config
       const config: LayerConfig = {
         id: layerId,
         title: displayTitle,
         type: geomType,
         url: layer.url,
-        opacity: layer.opacity ?? 1,
+        opacity: effectiveOpacity,
         paint,
         legend,
         popup,

@@ -6,8 +6,18 @@ import MapPanel from "./components/MapPanel.vue";
 import LayerPanel from "./components/LayerPanel.vue";
 
 // Import layer config service
-import { getLayerConfigs } from "./services/layerConfigService";
+import { getLayerConfigs, clearCache } from "./services/layerConfigService";
 import type { LayerConfig } from "./layers/types";
+
+// Expose clearCache to window for easy console access
+if (typeof window !== 'undefined') {
+  (window as any).clearLayerCache = () => {
+    console.log('[App] Clearing layer config cache...');
+    clearCache();
+    console.log('[App] Cache cleared. Reload the page to fetch fresh configs.');
+  };
+  console.log('✅ [App.vue] Script loaded - clearLayerCache() available in console');
+}
 
 // ============================================================================
 // LAYER DEFINITIONS
@@ -19,17 +29,29 @@ const configsError = ref<string | null>(null);
 
 // Load layer configs on mount
 async function loadLayerConfigs() {
+  console.log('🚀 [App] loadLayerConfigs() called');
   try {
     configsLoading.value = true;
     configsError.value = null;
 
+    console.log('[App] About to call getLayerConfigs()...');
     const configs = await getLayerConfigs();
+    console.log('[App] getLayerConfigs() returned', configs.length, 'configs');
 
     // Build layerList from configs array, deriving component type from layer.type
     layerList.value = configs.map(config => ({
       config,
       component: config.type, // "circle", "fill", or "line"
     }));
+
+    // Initialize layer opacities with their configured values
+    // This ensures the slider shows the correct starting position
+    const initialOpacities: Record<string, number> = {};
+    configs.forEach(config => {
+      // Use the layer's configured opacity if available, otherwise default to 1.0
+      initialOpacities[config.id] = config.opacity ?? 1.0;
+    });
+    layerOpacities.value = initialOpacities;
 
     console.log(`[App] Loaded ${configs.length} layer configs`);
   } catch (error) {

@@ -93,7 +93,7 @@ async function loadDynamicConfigs(): Promise<LayerConfig[]> {
 
     // Transform to layer configs
     console.log('[LayerConfigService] Transforming WebMap to layer configs');
-    const configs = transformWebMapToLayerConfigs(webMapJson);
+    const configs = await transformWebMapToLayerConfigs(webMapJson);
 
     console.log(`[LayerConfigService] Successfully loaded ${configs.length} layer configs`);
 
@@ -140,7 +140,8 @@ async function loadStaticConfigs(): Promise<LayerConfig[]> {
 export async function getLayerConfigs(): Promise<LayerConfig[]> {
   // Return cached configs if available
   if (cachedConfigs) {
-    console.log('[LayerConfigService] Returning cached configs');
+    console.log('[LayerConfigService] ⚠️ Returning CACHED configs (transformer will NOT run)');
+    console.log('[LayerConfigService] To force refresh, call clearCache() or reload with Ctrl+Shift+R');
     return cachedConfigs;
   }
 

@@ -272,17 +272,27 @@ function getLayerOpacity(layerId: string): number {
 }
 
 function getDynamicPaint(layer: any) {
-  const opacity = getLayerOpacity(layer.id);
+  const sliderOpacity = getLayerOpacity(layer.id);
   const opacityKey =
     layer.type === "circle" ? "circle-opacity" :
     layer.type === "fill" ? "fill-opacity" :
     "line-opacity";
-  return { ...layer.paint, [opacityKey]: opacity };
+
+  // For fill layers, check if the base paint has fill-opacity of 0 (transparent fill)
+  // If so, keep it at 0 regardless of slider (the slider controls outline visibility instead)
+  if (layer.type === "fill" && layer.paint['fill-opacity'] === 0) {
+    return { ...layer.paint, 'fill-opacity': 0 };
+  }
+
+  // Use the slider value as the final opacity
+  // The slider represents absolute opacity (0.0 to 1.0)
+  return { ...layer.paint, [opacityKey]: sliderOpacity };
 }
 
 function getOutlinePaint(layer: any) {
-  const opacity = getLayerOpacity(layer.id);
-  return { ...layer.outlinePaint, "line-opacity": opacity };
+  const sliderOpacity = getLayerOpacity(layer.id);
+  // Use the slider value as the final opacity for outlines too
+  return { ...layer.outlinePaint, "line-opacity": sliderOpacity };
 }
 
 // ============================================================================
