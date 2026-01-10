@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { Map, CircleLayer, FillLayer, LineLayer, MapPopup, DrawTool } from "@phila/phila-ui-map-core";
+import { Map as MapComponent, CircleLayer, FillLayer, LineLayer, MapPopup, DrawTool } from "@phila/phila-ui-map-core";
 import type { LngLatLike, CircleLayerSpecification, LineLayerSpecification } from "maplibre-gl";
 
 // Bounds type for spatial queries
@@ -28,7 +28,8 @@ const emit = defineEmits<{
 // ============================================================================
 // MAP REF & ZOOM TRACKING
 // ============================================================================
-const mapRef = ref<InstanceType<typeof Map> | null>(null);
+const mapRef = ref<InstanceType<typeof MapComponent> | null>(null);
+const mapInstance = ref<any>(null); // Store the actual MapLibre map instance
 
 function onZoomChange(zoom: number) {
   emit("zoom", zoom);
@@ -147,6 +148,9 @@ function onMoveEnd(data: { center: { lng: number; lat: number }; zoom: number; b
 
 // Handle map load event - get initial bounds and zoom
 function onMapLoad(map: any) {
+  // Store the MapLibre map instance for later use
+  mapInstance.value = map;
+
   const bounds = map.getBounds();
   currentBounds.value = {
     west: bounds.getWest(),
@@ -424,7 +428,7 @@ function sortFeaturesByLayerOrder(
 function handleLayerClick(e: { features?: Array<{ properties?: Record<string, unknown>; geometry?: GeoJSON.Geometry; layer: { id: string } }>; lngLat: { lng: number; lat: number } }) {
   // Query ALL visible layers at the click point, not just the clicked layer
   // This enables navigation between multiple overlapping features
-  const map = mapRef.value?.getMap();
+  const map = mapInstance.value;
   if (!map) return;
 
   // Build array of all visible layer IDs from the layer configuration
@@ -810,7 +814,7 @@ watch(currentFeatureIndex, () => {
 
   // Get the actual feature with geometry from the original query
   // We need to re-query to get the geometry since popupFeatures only has properties
-  const map = mapRef.value?.getMap();
+  const map = mapInstance.value;
   if (!map || !popupLngLat.value) return;
 
   // Build array of visible layer IDs
@@ -858,7 +862,7 @@ watch(currentFeatureIndex, () => {
 
 <template>
   <div class="map-panel">
-    <Map
+    <MapComponent
       ref="mapRef"
       :basemap-change-controls="{ toggle: true, dropdown: true, position: 'top-right' }"
       :navigation-controls="{ position: 'bottom-right' }"
@@ -949,7 +953,7 @@ watch(currentFeatureIndex, () => {
         @next="goToNextFeature"
         @previous="goToPreviousFeature"
       />
-    </Map>
+    </MapComponent>
   </div>
 </template>
 
