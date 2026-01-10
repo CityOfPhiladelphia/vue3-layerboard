@@ -491,7 +491,7 @@ This phase adds support for navigating through multiple overlapping features whe
 ### State Management
 
 #### Multi-Feature State
-- [ ] Create a reactive ref to track all features at click point:
+- [x] Create a reactive ref to track all features at click point:
   ```typescript
   const clickedFeatures = ref<{
     features: Array<{
@@ -506,18 +506,20 @@ This phase adds support for navigating through multiple overlapping features whe
     currentIndex: 0
   });
   ```
-- [ ] `features`: Array of all features at the click point with metadata
-- [ ] `currentIndex`: Index of the currently displayed feature (0-based)
+  **Note**: Implementation uses `popupFeatures` array and `currentFeatureIndex` ref instead of nested structure
+- [x] `features`: Array of all features at the click point with metadata
+- [x] `currentIndex`: Index of the currently displayed feature (0-based)
 
 #### Computed Properties
-- [ ] Create computed property for the currently active feature:
+- [x] Create computed property for the currently active feature:
   ```typescript
   const activeFeature = computed(() => {
     if (clickedFeatures.value.features.length === 0) return null;
     return clickedFeatures.value.features[clickedFeatures.value.currentIndex];
   });
   ```
-- [ ] Create computed property for feature count display:
+  **Note**: Implementation uses `currentPopupFeature` computed property
+- [x] Create computed property for feature count display:
   ```typescript
   const featureCountDisplay = computed(() => {
     const total = clickedFeatures.value.features.length;
@@ -525,9 +527,10 @@ This phase adds support for navigating through multiple overlapping features whe
     return total > 1 ? `${current} of ${total}` : '';
   });
   ```
+  **Note**: Display logic is in `popupHtml` computed property
 
 #### Navigation Functions
-- [ ] Create `goToNextFeature()` function:
+- [x] Create `goToNextFeature()` function:
   ```typescript
   function goToNextFeature() {
     const total = clickedFeatures.value.features.length;
@@ -540,7 +543,8 @@ This phase adds support for navigating through multiple overlapping features whe
     updatePopupForActiveFeature();
   }
   ```
-- [ ] Create `goToPreviousFeature()` function:
+  **Note**: Highlight update happens via watcher on `currentFeatureIndex`
+- [x] Create `goToPreviousFeature()` function:
   ```typescript
   function goToPreviousFeature() {
     const total = clickedFeatures.value.features.length;
@@ -553,13 +557,14 @@ This phase adds support for navigating through multiple overlapping features whe
     updatePopupForActiveFeature();
   }
   ```
+  **Note**: Highlight update happens via watcher on `currentFeatureIndex`
 
 ### Popup UI Updates
 
 #### MapPopup Component Changes
 The `@phila/phila-ui-map-core` MapPopup component needs to be updated to support navigation:
 
-- [ ] Add new props to MapPopup.vue:
+- [x] Add new props to MapPopup.vue:
   ```typescript
   interface MapPopupProps {
     // ... existing props
@@ -570,7 +575,7 @@ The `@phila/phila-ui-map-core` MapPopup component needs to be updated to support
   }
   ```
 
-- [ ] Add new events to MapPopup.vue:
+- [x] Add new events to MapPopup.vue:
   ```typescript
   interface MapPopupEmits {
     // ... existing emits
@@ -580,15 +585,15 @@ The `@phila/phila-ui-map-core` MapPopup component needs to be updated to support
   ```
 
 #### Navigation UI Layout
-- [ ] Add a header section above the popup content showing:
-  - [ ] Layer name (e.g., "Bike Network")
-  - [ ] Feature counter (e.g., "1 of 3") - only show when multiple features exist
+- [x] Add a header section above the popup content showing:
+  - [x] Layer name (e.g., "Bike Network")
+  - [x] Feature counter (e.g., "1 of 3") - only show when multiple features exist
 
-- [ ] Add Previous/Next buttons:
-  - [ ] Position them in the popup header or as floating controls
-  - [ ] Style consistently with existing popup design
-  - [ ] Disable Previous button when on first feature
-  - [ ] Disable Next button when on last feature
+- [x] Add Previous/Next buttons:
+  - [x] Position them in the popup header or as floating controls
+  - [x] Style consistently with existing popup design
+  - [x] Disable Previous button when on first feature
+  - [x] Disable Next button when on last feature
   - [ ] Consider using keyboard shortcuts (arrow keys) for navigation
 
 #### Header Layout Example
@@ -620,33 +625,37 @@ The `@phila/phila-ui-map-core` MapPopup component needs to be updated to support
 ### Popup Content Updates
 
 #### Dynamic Content Rendering
-- [ ] When `currentIndex` changes, update popup content to show the active feature's properties
-- [ ] Create `updatePopupForActiveFeature()` function that:
-  - [ ] Gets the active feature from `clickedFeatures`
-  - [ ] Looks up the layer config for popup field configuration
-  - [ ] Generates popup HTML/content using existing popup logic
-  - [ ] Updates the MapPopup component with new content
-  - [ ] Updates the layer name display
+- [x] When `currentIndex` changes, update popup content to show the active feature's properties
+  **Note**: Content updates happen automatically via `currentPopupFeature` computed property and watcher on `currentFeatureIndex`
+- [x] Create `updatePopupForActiveFeature()` function that:
+  - [x] Gets the active feature from `clickedFeatures`
+  - [x] Looks up the layer config for popup field configuration
+  - [x] Generates popup HTML/content using existing popup logic
+  - [x] Updates the MapPopup component with new content
+  - [x] Updates the layer name display
+  **Note**: Implemented via computed properties and watchers instead of a single function
 
 #### Layer Name Display
-- [ ] Show the layer title (from layer config) in the popup header
-- [ ] This helps users understand which layer the current feature belongs to
-- [ ] Especially important when features from different layers overlap
-- [ ] Example: "Bike Network", "Zoning Districts", "Building Footprints"
+- [x] Show the layer title (from layer config) in the popup header
+- [x] This helps users understand which layer the current feature belongs to
+- [x] Especially important when features from different layers overlap
+- [x] Example: "Bike Network", "Zoning Districts", "Building Footprints"
 
 ### Highlight Integration (Phase 6.4)
 
 #### Update Highlighting on Navigation
-- [ ] When user clicks Next/Previous, update the highlight to show the new active feature
-- [ ] Call `clearHighlight()` before showing new highlight
-- [ ] Call `highlightFeature(activeFeature.value.feature, activeFeature.value.layerId)` after index changes
-- [ ] Ensure highlight stays in sync with displayed popup content
+- [x] When user clicks Next/Previous, update the highlight to show the new active feature
+- [x] Call `clearHighlight()` before showing new highlight
+  **Note**: Implemented via watcher on `currentFeatureIndex`
+- [x] Call `highlightFeature(activeFeature.value.feature, activeFeature.value.layerId)` after index changes
+  **Note**: Implemented via watcher that updates `selectedFeature`
+- [x] Ensure highlight stays in sync with displayed popup content
 
 #### Single Highlight Rule
-- [ ] Only ONE feature should be highlighted at a time (the currently active one)
-- [ ] Even if 5 features are at the click point, only highlight the one being viewed
-- [ ] When user cycles to the next feature, old highlight clears and new one appears
-- [ ] This provides clear visual feedback about which feature's data is being displayed
+- [x] Only ONE feature should be highlighted at a time (the currently active one)
+- [x] Even if 5 features are at the click point, only highlight the one being viewed
+- [x] When user cycles to the next feature, old highlight clears and new one appears
+- [x] This provides clear visual feedback about which feature's data is being displayed
 
 ### Click Lifecycle Updates
 

@@ -506,6 +506,24 @@ function closePopup() {
   selectedFeature.value = null;
 }
 
+// Navigate to next feature in the popup
+// Cycles through all features collected at the click point
+function goToNextFeature() {
+  const total = popupFeatures.value.length;
+  if (total <= 1) return;
+
+  currentFeatureIndex.value = (currentFeatureIndex.value + 1) % total;
+}
+
+// Navigate to previous feature in the popup
+// Cycles through all features collected at the click point
+function goToPreviousFeature() {
+  const total = popupFeatures.value.length;
+  if (total <= 1) return;
+
+  currentFeatureIndex.value = (currentFeatureIndex.value - 1 + total) % total;
+}
+
 // Current feature for display
 const currentPopupFeature = computed(() => {
   if (popupFeatures.value.length === 0) return null;
@@ -536,12 +554,6 @@ const popupHtml = computed(() => {
     html += `</table>`;
   } else {
     html += `<p class="popup-no-fields">No additional information available.</p>`;
-  }
-
-  if (popupFeatures.value.length > 1) {
-    html += `<div class="popup-navigation">`;
-    html += `<span class="popup-nav-info">${currentFeatureIndex.value + 1} of ${popupFeatures.value.length}</span>`;
-    html += `</div>`;
   }
 
   html += `</div>`;
@@ -786,6 +798,62 @@ watch(
   },
   { deep: true }
 );
+
+// Watch for changes to currentFeatureIndex to update highlight when navigating between features
+// This syncs the highlight with the currently displayed popup feature
+watch(currentFeatureIndex, () => {
+  const feature = currentPopupFeature.value;
+  if (!feature) {
+    selectedFeature.value = null;
+    return;
+  }
+
+  // Get the actual feature with geometry from the original query
+  // We need to re-query to get the geometry since popupFeatures only has properties
+  const map = mapRef.value?.getMap();
+  if (!map || !popupLngLat.value) return;
+
+  // Build array of visible layer IDs
+  const visibleLayerIds: string[] = [];
+  props.layerList.forEach(layerItem => {
+    const layerConfig = layerItem.config;
+    if (props.visibleLayers.has(layerConfig.id)) {
+      visibleLayerIds.push(layerConfig.id);
+      if (layerConfig.outlinePaint) {
+        visibleLayerIds.push(`${layerConfig.id}-outline`);
+      }
+    }
+  });
+
+  // Query features at the popup location
+  const point = map.project(popupLngLat.value as [number, number]);
+  const allFeatures = map.queryRenderedFeatures(point, {
+    layers: visibleLayerIds,
+  });
+
+  // Find the feature that matches the current popup feature
+  const matchingFeature = allFeatures.find((f: { properties?: Record<string, unknown>; geometry?: GeoJSON.Geometry; layer: { id: string } }) => {
+    const baseLayerId = f.layer.id.replace(/-outline$/, '');
+    return baseLayerId === feature.layerId &&
+           JSON.stringify(f.properties) === JSON.stringify(feature.properties);
+  });
+
+  if (matchingFeature && matchingFeature.geometry) {
+    const config = getLayerConfig(feature.layerId);
+    if (config) {
+      const geometryType = getGeometryType(matchingFeature.geometry);
+      const originalStyle = getOriginalStyleProperties(config.id, config.type);
+
+      selectedFeature.value = {
+        geometry: matchingFeature.geometry,
+        geometryType,
+        layerId: config.id,
+        properties: matchingFeature.properties || {},
+        originalStyle,
+      };
+    }
+  }
+});
 </script>
 
 <template>
@@ -873,7 +941,13 @@ watch(
         :lng-lat="popupLngLat"
         :html="popupHtml"
         :close-on-click="false"
+        :show-navigation="popupFeatures.length > 1"
+        :current-feature-index="currentFeatureIndex"
+        :total-features="popupFeatures.length"
+        :layer-name="currentPopupFeature.layerTitle"
         @close="closePopup"
+        @next="goToNextFeature"
+        @previous="goToPreviousFeature"
       />
     </Map>
   </div>
