@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { Map, CircleLayer, FillLayer, LineLayer, MapPopup, DrawTool } from "@phila/phila-ui-map-core";
-import type { LngLatLike } from "maplibre-gl";
+import type { LngLatLike, CircleLayerSpecification, LineLayerSpecification } from "maplibre-gl";
 
 // Bounds type for spatial queries
 interface Bounds {
@@ -478,7 +478,7 @@ const highlightLinesSource = ref<GeoJSON.FeatureCollection>({
 });
 
 // Highlight layer paint properties
-const highlightCirclesPaint = {
+const highlightCirclesPaint: CircleLayerSpecification["paint"] = {
   "circle-radius": ["get", "highlightRadius"],
   "circle-color": "#00FFFF",
   "circle-opacity": 0.8,
@@ -486,7 +486,7 @@ const highlightCirclesPaint = {
   "circle-stroke-color": "#FFFFFF",
 };
 
-const highlightLinesPaint = {
+const highlightLinesPaint: LineLayerSpecification["paint"] = {
   "line-width": ["get", "highlightWidth"],
   "line-color": "#00FFFF",
   "line-opacity": 0.9,
@@ -560,7 +560,8 @@ function extractPolygonBorder(coordinates: number[][][]): number[][] {
   if (!coordinates || coordinates.length === 0) {
     return [];
   }
-  return coordinates[0]; // Return the outer ring as LineString coordinates
+  // Return the outer ring as LineString coordinates
+  return coordinates[0] ?? [];
 }
 
 // Build GeoJSON feature for highlighting based on geometry type
