@@ -378,7 +378,7 @@ function formatFieldValue(value: unknown, format?: PopupFieldFormat): string {
 
 // Deduplicate features by creating a unique key from layer ID and feature properties
 // MapLibre may return the same feature multiple times (e.g., from fill + outline layers)
-function deduplicateFeatures(features: Array<{ properties?: Record<string, unknown>; geometry?: GeoJSON.Geometry; layer: { id: string } }>): Array<{ properties?: Record<string, unknown>; geometry?: GeoJSON.Geometry; layer: { id: string } }> {
+function deduplicateFeatures(features: MapLibreFeature[]): MapLibreFeature[] {
   const seen = new Set<string>();
   return features.filter((feature) => {
     // Create a unique key from base layer ID (without -outline suffix) and stringified properties
@@ -395,9 +395,9 @@ function deduplicateFeatures(features: Array<{ properties?: Record<string, unkno
 // Sort features by layer order (layers rendered on top appear first)
 // Uses the layer config order to determine which features should be shown first
 function sortFeaturesByLayerOrder(
-  features: Array<{ layer: { id: string } }>,
+  features: MapLibreFeature[],
   layerConfigs: Array<{ id: string }>
-): Array<{ layer: { id: string } }> {
+): MapLibreFeature[] {
   // Create a map of layer ID to its index in the config (lower index = rendered earlier = lower priority)
   const layerIndexMap = new Map<string, number>();
   layerConfigs.forEach((config, index) => {
@@ -414,8 +414,18 @@ function sortFeaturesByLayerOrder(
   });
 }
 
+// MapLibre feature type from queryRenderedFeatures
+interface MapLibreFeature {
+  properties: Record<string, unknown>;
+  geometry: GeoJSON.Geometry;
+  layer: { id: string };
+  source?: string;
+  sourceLayer?: string;
+  state?: Record<string, unknown>;
+}
+
 // Handle layer click - collects ALL features at click point from all visible layers
-function handleLayerClick(e: { features?: Array<{ properties?: Record<string, unknown>; geometry?: GeoJSON.Geometry; layer: { id: string } }>; lngLat: { lng: number; lat: number } }) {
+function handleLayerClick(e: { lngLat: { lng: number; lat: number } }) {
   // Query ALL visible layers at the click point, not just the clicked layer
   // This enables navigation between multiple overlapping features
   const map = mapInstance.value;
@@ -438,7 +448,7 @@ function handleLayerClick(e: { features?: Array<{ properties?: Record<string, un
   const point = map.project([e.lngLat.lng, e.lngLat.lat]);
   const allFeatures = map.queryRenderedFeatures(point, {
     layers: visibleLayerIds,
-  });
+  }) as MapLibreFeature[];
 
   if (allFeatures.length === 0) return;
 

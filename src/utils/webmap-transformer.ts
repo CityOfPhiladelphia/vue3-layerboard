@@ -947,7 +947,9 @@ function parseServiceDescription(description: string | undefined): Map<string, s
     if (match) {
       const [, code, label] = match;
       // Store as string → string mapping (codes are always treated as strings for MapLibre match expressions)
-      labelMap.set(code, label.trim());
+      if (code && label) {
+        labelMap.set(code, label.trim());
+      }
     }
   }
 
