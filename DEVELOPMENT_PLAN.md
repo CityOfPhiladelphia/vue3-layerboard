@@ -697,51 +697,57 @@ The `@phila/phila-ui-map-core` MapPopup component needs to be updated to support
 
 ## Phase 6.5 Debugging - Popup Navigation Issues
 
-### Issue 1: Next Button Closes Popup Instead of Navigating
+### Issue 1: Next Button Closes Popup Instead of Navigating ✅ FIXED
 **Problem**: When clicking the Next button in the popup (when multiple features are at a click point), the popup closes instead of showing the next feature's information.
 
-**Expected Behavior**:
-- Click Next button → popup stays open, content updates to show feature 2 of N
-- Highlight updates to show the new active feature
-- Feature counter updates (e.g., "2 of 3")
+**Root Cause**: The MapPopup component had watchers on `html` and `currentFeatureIndex` that called `createPopup()`, which removed and recreated the popup. This removal triggered the MapLibre popup's `close` event, which propagated and closed the popup.
 
-**Current Behavior**:
-- Click Next button → popup closes immediately
-- Never see the second feature's data
+**Solution**: Combined the watchers into one that updates popup content in-place using `popup.setHTML()` instead of recreating the popup. This prevents the close event from firing.
+
+**Files Changed**:
+- `phila-ui-4/packages/map-core/src/components/popups/MapPopup.vue` - Lines 190-212
 
 **Debugging Steps**:
-- [ ] Check if Next button click is propagating and triggering close event
-- [ ] Verify `@next` event handler is being called correctly
-- [ ] Check if `goToNextFeature()` is executing fully before popup closes
-- [ ] Review event propagation/stopPropagation in MapPopup component
-- [ ] Check if popup close is triggered by click outside detection
+- [x] Check if Next button click is propagating and triggering close event - **FOUND: createPopup() was removing popup**
+- [x] Verify `@next` event handler is being called correctly - **Working correctly**
+- [x] Check if `goToNextFeature()` is executing fully before popup closes - **Was executing, but popup was being recreated**
+- [x] Review event propagation/stopPropagation in MapPopup component - **Added stopPropagation, but main fix was avoiding popup recreation**
+- [x] Check if popup close is triggered by click outside detection - **Not the issue**
 
-### Issue 2: Next Button Visibility is Inconsistent
+### Issue 2: Next Button Visibility is Inconsistent ✅ LIKELY FIXED
 **Problem**: The Next button shows up at the wrong times - sometimes when clicking only 1 feature, and sometimes missing when clicking 2+ features.
+
+**Status**: After fixing Issue 1, this issue appears to have resolved itself. User tested clicking around and could not reproduce the inconsistent behavior anymore.
+
+**Theory**: The popup recreation bug in Issue 1 may have been causing race conditions that made the navigation UI appear/disappear incorrectly.
 
 **Expected Behavior**:
 - Click 1 feature → No Next button (single feature, nothing to navigate)
 - Click 2+ features → Next button appears with "1 of N" counter
 
-**Current Behavior**:
-- Sometimes clicking 1 feature shows Next button (incorrect)
-- Sometimes clicking 2+ features doesn't show Next button (incorrect)
-
 **Debugging Steps**:
-- [ ] Check `popupFeatures.length` calculation
-- [ ] Verify `:show-navigation="popupFeatures.length > 1"` logic
-- [ ] Check if features are being deduplicated correctly
-- [ ] Review `handleLayerClick` to ensure all features at click point are collected
-- [ ] Log `popupFeatures` array length on each click to see actual vs expected count
+- [x] Fixed Issue 1 popup recreation bug
+- [x] User tested and cannot reproduce inconsistent behavior anymore
+- [ ] ~~Check `popupFeatures.length` calculation~~ - Not needed, issue appears resolved
+- [ ] ~~Verify `:show-navigation="popupFeatures.length > 1"` logic~~ - Not needed, issue appears resolved
+- [ ] ~~Check if features are being deduplicated correctly~~ - Not needed, issue appears resolved
+- [ ] ~~Review `handleLayerClick` to ensure all features at click point are collected~~ - Not needed, issue appears resolved
+- [ ] ~~Log `popupFeatures` array length on each click to see actual vs expected count~~ - Not needed, issue appears resolved
 
-### Issue 3: Feature Collection at Click Point
+### Issue 3: Feature Collection at Click Point ✅ FIXED
 **Investigation needed**: Ensure all features at a click point are being collected correctly.
 
+**Status**: After fixing Issue 1, this issue also resolved itself. Features are now being collected and displayed correctly when clicking on overlapping features.
+
+**Theory**: The popup recreation bug was causing the feature collection/display to behave inconsistently. With the popup staying stable and updating in-place, the feature collection logic works correctly.
+
 **Debugging Steps**:
-- [ ] Add console.log in `handleLayerClick` showing number of features found
-- [ ] Verify `queryRenderedFeatures` is being called with correct parameters
-- [ ] Check if deduplication logic is removing too many features
-- [ ] Verify layer ordering in feature sort is correct
+- [x] Fixed Issue 1 popup recreation bug
+- [x] User tested and confirmed feature collection is working correctly
+- [ ] ~~Add console.log in `handleLayerClick` showing number of features found~~ - Not needed, working correctly
+- [ ] ~~Verify `queryRenderedFeatures` is being called with correct parameters~~ - Not needed, working correctly
+- [ ] ~~Check if deduplication logic is removing too many features~~ - Not needed, working correctly
+- [ ] ~~Verify layer ordering in feature sort is correct~~ - Not needed, working correctly
    **Note**: Watcher on `currentFeatureIndex` (lines 683-735) re-queries and updates highlight
 4. [x] Update popup content with new feature's properties
    **Note**: Automatic via `currentPopupFeature` computed property and `popupHtml` computed property
