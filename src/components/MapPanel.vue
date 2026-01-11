@@ -168,25 +168,15 @@ function onMapLoad(map: any) {
 }
 
 // Watch for visibility changes - fetch any newly visible layers
+// We watch the Set size because the Set is mutated (not replaced), so watching the Set itself won't trigger
 watch(
-  () => props.visibleLayers,
-  (newVisible, oldVisible) => {
+  () => props.visibleLayers.size,
+  () => {
     if (currentBounds.value) {
-      // Check if any layer was just turned on
-      for (const { config } of props.layerList) {
-        // Skip paginated layers
-        if (PAGINATED_LAYER_IDS.includes(config.id)) continue;
-
-        // If layer is now visible and wasn't before, and we don't have data yet
-        if (newVisible.has(config.id) && !oldVisible?.has(config.id) && !spatialData.value[config.id]) {
-          // Layer was just turned on and we don't have data yet
-          fetchSpatialLayers(currentBounds.value);
-          break;
-        }
-      }
+      // Fetch data for any visible layers that don't have data yet
+      fetchSpatialLayers(currentBounds.value);
     }
-  },
-  { deep: true }
+  }
 );
 
 // Fetch paginated layers on mount

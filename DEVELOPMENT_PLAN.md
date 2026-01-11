@@ -660,57 +660,125 @@ The `@phila/phila-ui-map-core` MapPopup component needs to be updated to support
 ### Click Lifecycle Updates
 
 #### On Map Click with Multiple Features
-1. [ ] Collect all features at click point (query + deduplicate + sort)
-2. [ ] If no features found, do nothing (no popup, no highlight)
-3. [ ] If 1 feature found:
-   - [ ] Show popup with single feature (no navigation UI)
-   - [ ] Highlight the feature
-   - [ ] Set `clickedFeatures` with single item, `currentIndex = 0`
-4. [ ] If 2+ features found:
-   - [ ] Show popup with first feature (index 0)
-   - [ ] Show navigation UI with "1 of N" counter
-   - [ ] Highlight the first feature
-   - [ ] Set `clickedFeatures` with all items, `currentIndex = 0`
+1. [x] Collect all features at click point (query + deduplicate + sort)
+   **Note**: Implemented in `handleLayerClick` function (lines 417-451)
+2. [x] If no features found, do nothing (no popup, no highlight)
+   **Note**: Early return on line 443 if `allFeatures.length === 0`
+3. [x] If 1 feature found:
+   - [x] Show popup with single feature (no navigation UI)
+   - [x] Highlight the feature
+   - [x] Set `clickedFeatures` with single item, `currentIndex = 0`
+   **Note**: Navigation UI automatically hidden via `:show-navigation="popupFeatures.length > 1"`
+4. [x] If 2+ features found:
+   - [x] Show popup with first feature (index 0)
+   - [x] Show navigation UI with "1 of N" counter
+   - [x] Highlight the first feature
+   - [x] Set `clickedFeatures` with all items, `currentIndex = 0`
+   **Note**: All handled automatically in `handleLayerClick` - sets `currentFeatureIndex = 0` on line 470
 
 #### On Popup Close
-- [ ] Clear `clickedFeatures.value.features` array
-- [ ] Reset `clickedFeatures.value.currentIndex` to 0
-- [ ] Clear highlight (Phase 6.4 integration)
-- [ ] Hide popup
+- [x] Clear `clickedFeatures.value.features` array
+  **Note**: Implemented as `popupFeatures.value = []` in `closePopup` (line 495)
+- [x] Reset `clickedFeatures.value.currentIndex` to 0
+  **Note**: Implemented as `currentFeatureIndex.value = 0` in `closePopup` (line 497)
+- [x] Clear highlight (Phase 6.4 integration)
+  **Note**: Implemented as `selectedFeature.value = null` in `closePopup` (line 500)
+- [x] Hide popup
+  **Note**: Popup is v-if controlled, automatically hidden when `currentPopupFeature` is null
 
 #### On Navigation (Next/Previous)
-1. [ ] Update `currentIndex` (wrap around if needed)
-2. [ ] Clear old highlight
-3. [ ] Highlight new active feature
-4. [ ] Update popup content with new feature's properties
-5. [ ] Update layer name in header
-6. [ ] Update feature counter display
+1. [x] Update `currentIndex` (wrap around if needed)
+   **Note**: Implemented in `goToNextFeature` and `goToPreviousFeature` with modulo wrapping (lines 505-519)
+2. [x] Clear old highlight
+   **Note**: Automatic via watcher on `currentFeatureIndex` which updates `selectedFeature`
+3. [x] Highlight new active feature
+
+---
+
+## Phase 6.5 Debugging - Popup Navigation Issues
+
+### Issue 1: Next Button Closes Popup Instead of Navigating
+**Problem**: When clicking the Next button in the popup (when multiple features are at a click point), the popup closes instead of showing the next feature's information.
+
+**Expected Behavior**:
+- Click Next button → popup stays open, content updates to show feature 2 of N
+- Highlight updates to show the new active feature
+- Feature counter updates (e.g., "2 of 3")
+
+**Current Behavior**:
+- Click Next button → popup closes immediately
+- Never see the second feature's data
+
+**Debugging Steps**:
+- [ ] Check if Next button click is propagating and triggering close event
+- [ ] Verify `@next` event handler is being called correctly
+- [ ] Check if `goToNextFeature()` is executing fully before popup closes
+- [ ] Review event propagation/stopPropagation in MapPopup component
+- [ ] Check if popup close is triggered by click outside detection
+
+### Issue 2: Next Button Visibility is Inconsistent
+**Problem**: The Next button shows up at the wrong times - sometimes when clicking only 1 feature, and sometimes missing when clicking 2+ features.
+
+**Expected Behavior**:
+- Click 1 feature → No Next button (single feature, nothing to navigate)
+- Click 2+ features → Next button appears with "1 of N" counter
+
+**Current Behavior**:
+- Sometimes clicking 1 feature shows Next button (incorrect)
+- Sometimes clicking 2+ features doesn't show Next button (incorrect)
+
+**Debugging Steps**:
+- [ ] Check `popupFeatures.length` calculation
+- [ ] Verify `:show-navigation="popupFeatures.length > 1"` logic
+- [ ] Check if features are being deduplicated correctly
+- [ ] Review `handleLayerClick` to ensure all features at click point are collected
+- [ ] Log `popupFeatures` array length on each click to see actual vs expected count
+
+### Issue 3: Feature Collection at Click Point
+**Investigation needed**: Ensure all features at a click point are being collected correctly.
+
+**Debugging Steps**:
+- [ ] Add console.log in `handleLayerClick` showing number of features found
+- [ ] Verify `queryRenderedFeatures` is being called with correct parameters
+- [ ] Check if deduplication logic is removing too many features
+- [ ] Verify layer ordering in feature sort is correct
+   **Note**: Watcher on `currentFeatureIndex` (lines 683-735) re-queries and updates highlight
+4. [x] Update popup content with new feature's properties
+   **Note**: Automatic via `currentPopupFeature` computed property and `popupHtml` computed property
+5. [x] Update layer name in header
+   **Note**: Automatic via `:layer-name="currentPopupFeature.layerTitle"` prop binding
+6. [x] Update feature counter display
+   **Note**: Automatic via `:current-feature-index` and `:total-features` prop bindings
 
 ### Helper Functions to Create
 
 #### `src/utils/featureHelpers.ts`
 Create a new utility file (or add to existing one) with the following functions:
 
-- [ ] `deduplicateFeatures(features: MapLibreFeature[]): MapLibreFeature[]`
-  - [ ] Takes array of features from queryRenderedFeatures
-  - [ ] Removes duplicates based on feature ID and layer ID
-  - [ ] Returns deduplicated array
+- [x] `deduplicateFeatures(features: MapLibreFeature[]): MapLibreFeature[]`
+  - [x] Takes array of features from queryRenderedFeatures
+  - [x] Removes duplicates based on feature ID and layer ID
+  - [x] Returns deduplicated array
+  **Note**: Implemented inline in MapPanel.vue (lines 379-393)
 
-- [ ] `sortFeaturesByLayerOrder(features: MapLibreFeature[], layerConfigs: LayerConfig[]): MapLibreFeature[]`
-  - [ ] Takes features and layer configs
-  - [ ] Sorts features by their layer's position in the layer config array
-  - [ ] Layers earlier in the config array (rendered on top) come first
-  - [ ] Returns sorted array
+- [x] `sortFeaturesByLayerOrder(features: MapLibreFeature[], layerConfigs: LayerConfig[]): MapLibreFeature[]`
+  - [x] Takes features and layer configs
+  - [x] Sorts features by their layer's position in the layer config array
+  - [x] Layers earlier in the config array (rendered on top) come first
+  - [x] Returns sorted array
+  **Note**: Implemented inline in MapPanel.vue (lines 395-415)
 
-- [ ] `getGeometryType(feature: MapLibreFeature): 'Point' | 'LineString' | 'Polygon'`
-  - [ ] Determines the feature's geometry type
-  - [ ] Handles MapLibre's geometry type naming
-  - [ ] Returns standardized geometry type string
+- [x] `getGeometryType(feature: MapLibreFeature): 'Point' | 'LineString' | 'Polygon'`
+  - [x] Determines the feature's geometry type
+  - [x] Handles MapLibre's geometry type naming
+  - [x] Returns standardized geometry type string
+  **Note**: Implemented inline in MapPanel.vue (lines 488-490)
 
-- [ ] `enrichFeatureWithMetadata(feature: MapLibreFeature, layerConfigs: LayerConfig[])`
-  - [ ] Takes a feature and finds its layer config
-  - [ ] Returns object with `{ feature, layerId, layerTitle, geometryType }`
-  - [ ] Used when building the `clickedFeatures` array
+- [x] `enrichFeatureWithMetadata(feature: MapLibreFeature, layerConfigs: LayerConfig[])`
+  - [x] Takes a feature and finds its layer config
+  - [x] Returns object with `{ feature, layerId, layerTitle, geometryType }`
+  - [x] Used when building the `clickedFeatures` array
+  **Note**: Implemented inline in `handleLayerClick` during PopupFeature conversion (lines 454-465)
 
 ### Keyboard Navigation (Optional Enhancement)
 
