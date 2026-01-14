@@ -597,7 +597,7 @@ The `@phila/phila-ui-map-core` MapPopup component needs to be updated to support
   - [ ] Consider using keyboard shortcuts (arrow keys) for navigation
 
 #### Header Layout Example
-```vue
+
 <div class="popup-header" v-if="showNavigation">
   <div class="layer-name">{{ layerName }}</div>
   <div class="navigation-controls" v-if="totalFeatures > 1">
@@ -620,7 +620,7 @@ The `@phila/phila-ui-map-core` MapPopup component needs to be updated to support
     </button>
   </div>
 </div>
-```
+
 
 ### Popup Content Updates
 

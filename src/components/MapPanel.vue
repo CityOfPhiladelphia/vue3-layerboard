@@ -1,6 +1,16 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { Map as MapComponent, CircleLayer, FillLayer, LineLayer, MapPopup, DrawTool } from "@phila/phila-ui-map-core";
+import {
+  Map as MapComponent,
+  CircleLayer,
+  FillLayer,
+  LineLayer,
+  MapPopup,
+  DrawTool,
+} from "@phila/phila-ui-map-core";
+import type {
+  CyclomediaConfig
+} from "@phila/phila-ui-map-core";
 import type { LngLatLike, CircleLayerSpecification, LineLayerSpecification } from "maplibre-gl";
 import bboxClip from "@turf/bbox-clip";
 
@@ -17,6 +27,7 @@ const props = defineProps<{
   visibleLayers: Set<string>;
   layerOpacities: Record<string, number>;
   layerList: Array<{ config: any; component: string }>;
+  cyclomediaConfig: CyclomediaConfig;
 }>();
 
 // Emit events to parent
@@ -928,6 +939,11 @@ watch(currentFeatureIndex, () => {
       :navigation-controls="{ position: 'bottom-right' }"
       :geolocation-control="{ position: 'bottom-right' }"
       :map-search-control="{ position: 'top-left' }"
+      :enable-cyclomedia="true"
+      :cyclomedia-config="props.cyclomediaConfig"
+      cyclomedia-button-position="top-right"
+      tool-panel-layout="vertical"
+      :tool-panel-split-ratio="50"
       basemap-before-id="feature-layers-start"
       @zoom="onZoomChange"
       @click="closePopup"
