@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import "maplibre-gl/dist/maplibre-gl.css";
+import "@phila/phila-ui-map-core/dist/assets/phila-ui-map-core.css";
 
 import MapPanel from "./components/MapPanel.vue";
 import LayerPanel from "./components/LayerPanel.vue";
+import type { CyclomediaConfig } from "@phila/phila-ui-map-core";
 
 // Import layer config service
 import { getLayerConfigs, clearCache } from "./services/layerConfigService";
@@ -71,6 +72,19 @@ const visibleLayers = ref<Set<string>>(new Set());
 const layerOpacities = ref<Record<string, number>>({});
 const loadingLayers = ref<Set<string>>(new Set());
 const layerErrors = ref<Record<string, string>>({});
+
+// ============================================================================
+// CYCLOMEDIA CONFIGURATION
+// ============================================================================
+// With the new Map component, we just need to provide the config.
+// The Map component handles all state management, layout, and component injection automatically.
+const cyclomediaConfig: CyclomediaConfig = {
+  username: import.meta.env.VITE_CYCLOMEDIA_USERNAME || "",
+  password: import.meta.env.VITE_CYCLOMEDIA_PASSWORD || "",
+  apiKey: import.meta.env.VITE_CYCLOMEDIA_API_KEY || "",
+  srs: "EPSG:4326",
+  locale: "en-US",
+};
 
 // ============================================================================
 // METADATA LOOKUP
@@ -216,6 +230,7 @@ function updateSearch(query: string) {
             :visible-layers="visibleLayers"
             :layer-opacities="layerOpacities"
             :layer-list="layerList"
+            :cyclomedia-config="cyclomediaConfig"
             @zoom="onZoomChange"
             @layer-loading="setLayerLoading"
             @layer-error="setLayerError"
@@ -245,6 +260,11 @@ function updateSearch(query: string) {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  overflow: hidden;
+}
+
+html {
+  overflow: hidden;
 }
 </style>
 
@@ -311,6 +331,7 @@ body {
   flex-direction: column;
   height: 100vh;
   width: 100vw;
+  overflow: hidden;
 }
 
 .app-header {
@@ -330,6 +351,7 @@ body {
   display: flex;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .layer-panel-wrapper {
