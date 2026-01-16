@@ -9,7 +9,8 @@ import {
   DrawTool,
 } from "@phila/phila-ui-map-core";
 import type {
-  CyclomediaConfig
+  CyclomediaConfig,
+  PictometryCredentials,
 } from "@phila/phila-ui-map-core";
 import type { LngLatLike, CircleLayerSpecification, LineLayerSpecification } from "maplibre-gl";
 import bboxClip from "@turf/bbox-clip";
@@ -28,6 +29,7 @@ const props = defineProps<{
   layerOpacities: Record<string, number>;
   layerList: Array<{ config: any; component: string }>;
   cyclomediaConfig: CyclomediaConfig;
+  pictometryCredentials: PictometryCredentials;
 }>();
 
 // Emit events to parent
@@ -942,6 +944,9 @@ watch(currentFeatureIndex, () => {
       :enable-cyclomedia="true"
       :cyclomedia-config="props.cyclomediaConfig"
       cyclomedia-button-position="top-right"
+      :enable-pictometry="true"
+      :pictometry-credentials="props.pictometryCredentials"
+      pictometry-button-position="top-right"
       tool-panel-layout="vertical"
       :tool-panel-split-ratio="50"
       @zoom="onZoomChange"
