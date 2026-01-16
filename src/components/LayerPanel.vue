@@ -285,7 +285,7 @@ function onOpacityChange(layerId: string, event: Event) {
 
 .layer-checkbox {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   padding: 12px 8px;
   cursor: pointer;

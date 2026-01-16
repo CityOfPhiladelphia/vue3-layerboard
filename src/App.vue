@@ -4,7 +4,7 @@ import "@phila/phila-ui-map-core/dist/assets/phila-ui-map-core.css";
 
 import MapPanel from "./components/MapPanel.vue";
 import LayerPanel from "./components/LayerPanel.vue";
-import type { CyclomediaConfig } from "@phila/phila-ui-map-core";
+import type { CyclomediaConfig, PictometryCredentials } from "@phila/phila-ui-map-core";
 
 // Import layer config service
 import { getLayerConfigs, clearCache } from "./services/layerConfigService";
@@ -84,6 +84,15 @@ const cyclomediaConfig: CyclomediaConfig = {
   apiKey: import.meta.env.VITE_CYCLOMEDIA_API_KEY || "",
   srs: "EPSG:4326",
   locale: "en-US",
+};
+
+// ============================================================================
+// PICTOMETRY CONFIGURATION
+// ============================================================================
+// OAuth2 credentials for Eagleview Pictometry oblique imagery
+const pictometryCredentials: PictometryCredentials = {
+  clientId: import.meta.env.VITE_PICTOMETRY_CLIENT_ID || "",
+  clientSecret: import.meta.env.VITE_PICTOMETRY_CLIENT_SECRET || "",
 };
 
 // ============================================================================
@@ -231,6 +240,7 @@ function updateSearch(query: string) {
             :layer-opacities="layerOpacities"
             :layer-list="layerList"
             :cyclomedia-config="cyclomediaConfig"
+            :pictometry-credentials="pictometryCredentials"
             @zoom="onZoomChange"
             @layer-loading="setLayerLoading"
             @layer-error="setLayerError"
