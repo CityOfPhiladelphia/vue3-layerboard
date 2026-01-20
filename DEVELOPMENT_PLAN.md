@@ -1909,10 +1909,10 @@ Build the reusable components that consuming apps will use.
 
 #### Create TopicAccordion.vue
 
-- [ ] Create expandable accordion component for topics mode
-- [ ] Props: `title`, `icon`, `expanded`, `layerIds`
-- [ ] Slots: default slot for custom topic content
-- [ ] Emits: `toggle`, `layer-change`
+- [x] Create expandable accordion component for topics mode
+- [x] Props: `title`, `icon`, `expanded`, `layerIds`, `headerClass`
+- [x] Slots: default slot for custom topic content, icon slot
+- [x] Emits: `toggle`, `layerChange`
 
 #### Create LayerCheckboxSet.vue
 
