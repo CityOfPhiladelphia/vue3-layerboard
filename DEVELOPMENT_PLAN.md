@@ -1953,9 +1953,9 @@ Build Vue composables for state management and data fetching.
 
 #### Create useDataSource.ts
 
-- [ ] Composable for fetching data from ArcGIS FeatureServers
-- [ ] Supports reactive refetching when address changes
-- [ ] Returns loading state, data, and error
+- [x] Composable for fetching data from ArcGIS FeatureServers
+- [x] Supports reactive refetching when address changes
+- [x] Returns loading state, data, and error
   ```typescript
   export function useDataSource(config: DataSourceConfig) {
     const data = ref(null)
