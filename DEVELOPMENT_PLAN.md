@@ -1709,12 +1709,12 @@ vue3-openmaps/src/
 - [x] Review and categorize each file/folder:
 
 **Framework Code** (will be in `@phila/vue3-layerboard` package):
-- [ ] `components/LayerPanel.vue` - Generic layer panel (needs refactoring for flexibility)
-- [ ] `components/MapPanel.vue` - Generic map container
-- [ ] `services/layerConfigService.ts` - Layer loading service (needs WebMap ID as param)
-- [ ] `utils/webmap-transformer.ts` - Already generic
-- [ ] `layers/types.ts` - LayerConfig interface and related types
-- [ ] New composables to be created
+- [x] `components/LayerPanel.vue` - Generic layer panel (needs refactoring for flexibility)
+- [x] `components/MapPanel.vue` - Generic map container
+- [x] `services/layerConfigService.ts` - Layer loading service (needs WebMap ID as param)
+- [x] `utils/webmap-transformer.ts` - Already generic
+- [x] `layers/types.ts` - LayerConfig interface and related types
+- [x] New composables to be created
 
 **Application-Specific Code** (stays in example apps / consumer repos):
 - [ ] `App.vue` - App-specific layout and configuration
