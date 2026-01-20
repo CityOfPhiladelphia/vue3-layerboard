@@ -1,45 +1,25 @@
-// Layer configuration types
-
-export interface LayerConfig {
-  id: string
-  title: string
-  sourceUrl: string
-  geometryType: 'point' | 'line' | 'polygon'
-  paint: CirclePaint | LinePaint | FillPaint
-  legend: LegendItem[]
-  popup?: PopupConfig
-  minZoom?: number
-  maxZoom?: number
-  whereClause?: string
-  visible?: boolean
-}
-
-export interface CirclePaint {
-  'circle-radius': number | any[]
-  'circle-color': string | any[]
-  'circle-opacity'?: number
-  'circle-stroke-width'?: number
-  'circle-stroke-color'?: string
-}
-
-export interface LinePaint {
-  'line-width': number | any[]
-  'line-color': string | any[]
-  'line-opacity'?: number
-}
-
-export interface FillPaint {
-  'fill-color': string | any[]
-  'fill-opacity'?: number
-  'fill-outline-color'?: string
-}
+/**
+ * Layer Configuration Types
+ */
 
 export interface LegendItem {
-  label: string
+  type: 'fill' | 'line' | 'circle'
   color: string
-  type: 'circle' | 'line' | 'fill'
-  radius?: number
+  label: string
   width?: number
+  radius?: number
+}
+
+export interface PopupFieldFormat {
+  dateFormat?: string
+  digitSeparator?: boolean
+  places?: number
+}
+
+export interface PopupField {
+  field: string
+  label: string
+  format?: PopupFieldFormat
 }
 
 export interface PopupConfig {
@@ -47,8 +27,38 @@ export interface PopupConfig {
   fields: PopupField[]
 }
 
-export interface PopupField {
-  label: string
-  field: string
-  format?: 'date' | 'number' | 'currency'
+export interface LayerConfig {
+  id: string
+  title: string
+  type: 'fill' | 'line' | 'circle'
+  url: string
+  where?: string
+  minZoom?: number
+  maxZoom?: number
+  opacity: number
+  paint?: Record<string, unknown>
+  outlinePaint?: Record<string, unknown>
+  legend: LegendItem[]
+  popup: PopupConfig | null
+}
+
+// MapLibre-specific paint property interfaces
+export interface CirclePaint {
+  'circle-radius': number | unknown[]
+  'circle-color': string | unknown[]
+  'circle-opacity'?: number
+  'circle-stroke-width'?: number
+  'circle-stroke-color'?: string
+}
+
+export interface LinePaint {
+  'line-width': number | unknown[]
+  'line-color': string | unknown[]
+  'line-opacity'?: number
+}
+
+export interface FillPaint {
+  'fill-color': string | unknown[]
+  'fill-opacity'?: number
+  'fill-outline-color'?: string
 }
