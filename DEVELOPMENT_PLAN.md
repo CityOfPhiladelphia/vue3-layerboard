@@ -1706,7 +1706,7 @@ vue3-openmaps/src/
 
 #### Categorize Files
 
-- [ ] Review and categorize each file/folder:
+- [x] Review and categorize each file/folder:
 
 **Framework Code** (will be in `@phila/vue3-layerboard` package):
 - [ ] `components/LayerPanel.vue` - Generic layer panel (needs refactoring for flexibility)
