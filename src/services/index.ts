@@ -1,2 +1,2 @@
 // Framework services
-export { getLayerConfigs } from './layerConfigService'
+export { getLayerConfigs, clearCache, buildWebMapUrl, getWebMapUrl, WEBMAP_ID } from './layerConfigService'
