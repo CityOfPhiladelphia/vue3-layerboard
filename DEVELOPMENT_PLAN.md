@@ -1801,16 +1801,16 @@ Transform vue3-openmaps into vue3-layerboard with framework code and example app
 
 #### Move Existing Files
 
-- [ ] Move `src/components/LayerPanel.vue` → `src/components/LayerPanel.vue`
-- [ ] Move `src/components/MapPanel.vue` → `src/components/MapPanel.vue`
-- [ ] Move `src/services/layerConfigService.ts` → `src/services/layerConfigService.ts`
-- [ ] Move `src/utils/webmap-transformer.ts` → `src/utils/webmap-transformer.ts`
-- [ ] Move `src/layers/types.ts` → `src/types/layer.ts`
-- [ ] Move `src/App.vue` → `examples/openmaps/src/App.vue`
-- [ ] Move `src/main.ts` → `examples/openmaps/src/main.ts`
-- [ ] Delete `src/layers/*.ts` (all 130+ static layer files) - Using dynamic mode instead
-- [ ] Move `src/assets/` → `examples/openmaps/src/assets/`
-- [ ] Delete `src/stores/counter.ts` (unused placeholder)
+- [x] Move `src/components/LayerPanel.vue` → `src/components/LayerPanel.vue` (already in place)
+- [x] Move `src/components/MapPanel.vue` → `src/components/MapPanel.vue` (already in place)
+- [x] Move `src/services/layerConfigService.ts` → `src/services/layerConfigService.ts` (already in place)
+- [x] Move `src/utils/webmap-transformer.ts` → `src/utils/webmap-transformer.ts` (already in place)
+- [x] Move `src/layers/types.ts` → `src/types/layer.ts` (merged into new types file)
+- [x] Move `src/App.vue` → `examples/openmaps/src/App.vue`
+- [x] Move `src/main.ts` → `examples/openmaps/src/main.ts`
+- [x] Delete `src/layers/*.ts` (all 117 static layer files) - Using dynamic mode instead
+- [x] Move `src/assets/` → `examples/openmaps/src/assets/`
+- [x] Delete `src/stores/counter.ts` (unused placeholder)
 
 ---
 
