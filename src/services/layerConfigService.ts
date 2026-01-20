@@ -1,19 +1,17 @@
 /**
  * Layer Configuration Service
  *
- * Handles loading layer configurations in either static or dynamic mode.
- * - Static mode: Uses pre-generated layer config files from src/layers/*.ts
- * - Dynamic mode: Fetches Esri WebMap JSON at runtime and transforms it
+ * Handles loading layer configurations dynamically from ArcGIS Online WebMap.
+ * Fetches Esri WebMap JSON at runtime and transforms it to LayerConfig format.
  */
 
-import type { LayerConfig } from '@/layers/types';
+import type { LayerConfig } from '@/types/layer';
 import { transformWebMapToLayerConfigs, type EsriWebMap } from '@/utils/webmap-transformer';
 
 /**
  * The Esri WebMap ID for the OpenMaps application
  * This is a public ID used to fetch the layer configuration from ArcGIS Online
  */
-// export const WEBMAP_ID = '1596df70df0349e293ceec46a06ccc50';
 export const WEBMAP_ID = '376af635c84643cd816a8c5d017a53aa';
 
 /**
@@ -81,7 +79,7 @@ async function fetchWebMapJson(): Promise<EsriWebMap> {
 }
 
 /**
- * Load layer configs in dynamic mode
+ * Load layer configs dynamically
  * Fetches WebMap JSON and transforms it at runtime
  */
 async function loadDynamicConfigs(): Promise<LayerConfig[]> {
@@ -100,42 +98,20 @@ async function loadDynamicConfigs(): Promise<LayerConfig[]> {
     return configs;
   } catch (error) {
     console.error('[LayerConfigService] Error loading dynamic configs:', error);
-
-    // Option 1: Re-throw the error (fail hard)
     throw new Error(`Failed to load dynamic layer configs: ${error instanceof Error ? error.message : 'Unknown error'}`);
-
-    // Option 2: Fall back to static mode (uncomment to enable fallback)
-    // console.warn('[LayerConfigService] Falling back to static mode');
-    // return loadStaticConfigs();
   }
 }
 
 /**
- * Load layer configs in static mode
- * Imports pre-generated layer config files
- */
-async function loadStaticConfigs(): Promise<LayerConfig[]> {
-  console.log('[LayerConfigService] Loading configs in STATIC mode');
-
-  const { layers } = await import('@/layers');
-
-  console.log(`[LayerConfigService] Successfully loaded ${layers.length} layer configs`);
-
-  return layers as LayerConfig[];
-}
-
-/**
- * Gets layer configurations based on the VITE_LAYER_MODE environment variable
+ * Gets layer configurations by fetching from ArcGIS Online WebMap
  *
  * This function:
- * - Checks the VITE_LAYER_MODE environment variable (defaults to 'static')
- * - In static mode: imports pre-generated layer configs from src/layers/*.ts
- * - In dynamic mode: fetches WebMap JSON and transforms it at runtime
+ * - Fetches WebMap JSON and transforms it at runtime
  * - Caches results in memory to avoid redundant fetches/transforms
  * - Prevents concurrent loads with a loading promise guard
  *
  * @returns Promise resolving to an array of LayerConfig objects
- * @throws Error if dynamic mode fails to fetch or transform
+ * @throws Error if fetch or transform fails
  */
 export async function getLayerConfigs(): Promise<LayerConfig[]> {
   // Return cached configs if available
@@ -151,20 +127,12 @@ export async function getLayerConfigs(): Promise<LayerConfig[]> {
     return loadingPromise;
   }
 
-  // Determine mode from environment variable
-  const mode = import.meta.env.VITE_LAYER_MODE || 'static';
-  console.log(`[LayerConfigService] Mode: ${mode}`);
+  console.log('[LayerConfigService] Mode: dynamic');
 
   // Create loading promise
   loadingPromise = (async () => {
     try {
-      let configs: LayerConfig[];
-
-      if (mode === 'dynamic') {
-        configs = await loadDynamicConfigs();
-      } else {
-        configs = await loadStaticConfigs();
-      }
+      const configs = await loadDynamicConfigs();
 
       // Cache the results
       cachedConfigs = configs;

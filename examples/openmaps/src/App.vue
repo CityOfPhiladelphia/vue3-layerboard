@@ -2,13 +2,13 @@
 import { ref, onMounted } from "vue";
 import "@phila/phila-ui-map-core/dist/assets/phila-ui-map-core.css";
 
-import MapPanel from "./components/MapPanel.vue";
-import LayerPanel from "./components/LayerPanel.vue";
+import MapPanel from "@/components/MapPanel.vue";
+import LayerPanel from "@/components/LayerPanel.vue";
 import type { CyclomediaConfig, PictometryCredentials } from "@phila/phila-ui-map-core";
 
 // Import layer config service
-import { getLayerConfigs, clearCache } from "./services/layerConfigService";
-import type { LayerConfig } from "./layers/types";
+import { getLayerConfigs, clearCache } from "@/services/layerConfigService";
+import type { LayerConfig } from "@/types/layer";
 
 // Expose clearCache to window for easy console access
 if (typeof window !== 'undefined') {
