@@ -1717,13 +1717,13 @@ vue3-openmaps/src/
 - [x] New composables to be created
 
 **Application-Specific Code** (stays in example apps / consumer repos):
-- [ ] `App.vue` - App-specific layout and configuration
-- [ ] `main.ts` - App initialization with specific config
-- [ ] `assets/` - App-specific styles and branding
-- [ ] `layers/*.ts` (130+ files) - Philadelphia OpenMaps layer definitions
-- [ ] `stores/counter.ts` - Placeholder, can be removed
-- [ ] Environment files (`.env`, `.env.static`, `.env.dynamic`)
-- [ ] GitHub workflows and deployment scripts
+- [x] `App.vue` - App-specific layout and configuration
+- [x] `main.ts` - App initialization with specific config
+- [x] `assets/` - App-specific styles and branding
+- [x] `layers/*.ts` (130+ files) - Philadelphia OpenMaps layer definitions
+- [x] `stores/counter.ts` - Placeholder, can be removed
+- [x] Environment files (`.env`, `.env.static`, `.env.dynamic`)
+- [x] GitHub workflows and deployment scripts
 
 **Dependencies** (peer dependencies of the framework):
 - [ ] `@phila/phila-ui-map-core` - Map components (MapLibreMap, etc.)
