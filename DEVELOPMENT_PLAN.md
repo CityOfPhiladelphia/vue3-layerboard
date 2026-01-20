@@ -2015,10 +2015,10 @@ Create working example applications that demonstrate framework usage.
 
 #### Set Up StreetSmartPHL Example
 
-- [ ] Create `examples/streetsmartphl/` directory structure
-- [ ] Create topic Vue components (PaveTopic.vue, PlowTopic.vue, etc.)
-- [ ] Each topic uses framework building blocks (`LayerCheckboxSet`, `DataTable`, etc.)
-- [ ] Configure with StreetSmartPHL WebMap ID
+- [x] Create `examples/streetsmartphl/` directory structure
+- [x] Create topic Vue components (PaveTopic.vue, PlowTopic.vue, etc.)
+- [x] Each topic uses framework building blocks (`LayerCheckboxSet`, `DataTable`, etc.)
+- [x] Configure with StreetSmartPHL WebMap ID
 - [ ] Test topics accordion functionality
 
 ---
