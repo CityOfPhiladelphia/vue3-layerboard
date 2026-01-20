@@ -1720,9 +1720,9 @@ vue3-openmaps/src/
 - [x] `App.vue` - App-specific layout and configuration
 - [x] `main.ts` - App initialization with specific config
 - [x] `assets/` - App-specific styles and branding
-- [x] `layers/*.ts` (130+ files) - Philadelphia OpenMaps layer definitions
+- [x] ~~`layers/*.ts` (130+ files)~~ - **TO BE DELETED** - Using dynamic mode (layers fetched from ArcGIS Online at runtime)
 - [x] `stores/counter.ts` - Placeholder, can be removed
-- [x] Environment files (`.env`, `.env.static`, `.env.dynamic`)
+- [x] Environment files - Only `.env` needed (dynamic mode is the default)
 - [x] GitHub workflows and deployment scripts
 
 **Dependencies** (peer dependencies of the framework):
@@ -1777,8 +1777,7 @@ Transform vue3-openmaps into vue3-layerboard with framework code and example app
   │   │   ├── src/
   │   │   │   ├── App.vue
   │   │   │   ├── main.ts
-  │   │   │   ├── config.ts       # OpenMaps-specific config
-  │   │   │   └── layers/         # 130+ Philadelphia layer files
+  │   │   │   └── config.ts       # OpenMaps-specific config (WebMap ID, etc.)
   │   │   ├── index.html
   │   │   ├── package.json
   │   │   └── vite.config.ts
@@ -1809,7 +1808,7 @@ Transform vue3-openmaps into vue3-layerboard with framework code and example app
 - [ ] Move `src/layers/types.ts` → `src/types/layer.ts`
 - [ ] Move `src/App.vue` → `examples/openmaps/src/App.vue`
 - [ ] Move `src/main.ts` → `examples/openmaps/src/main.ts`
-- [ ] Move `src/layers/*.ts` (all 130+ files) → `examples/openmaps/src/layers/`
+- [ ] Delete `src/layers/*.ts` (all 130+ static layer files) - Using dynamic mode instead
 - [ ] Move `src/assets/` → `examples/openmaps/src/assets/`
 - [ ] Delete `src/stores/counter.ts` (unused placeholder)
 
