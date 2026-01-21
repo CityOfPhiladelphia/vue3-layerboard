@@ -2076,6 +2076,8 @@ Before implementing individual topics, ensure the generic topic infrastructure w
 - [x] Update App.vue layer IDs to match WebMap transformer output (slugified IDs)
 - [x] No topic should be open when the app loads (expandedTopic starts as null)
 - [x] When a topic opens, auto-activate its default tiled layers (e.g., collectionDay for PickupPHL)
+- [x] Add spacing around topic accordions (border, border-radius, margin-bottom)
+- [x] Add intro paragraph above topics explaining how to use StreetSmartPHL
 - [ ] Ensure layer visibility toggles work within topics (checkboxes control map layers)
 - [ ] Verify layer legends display correctly within topics
 - [ ] Test layer opacity controls work within topics
