@@ -9,10 +9,15 @@ import type { LayerConfig } from '@/types/layer';
 import { transformWebMapToLayerConfigs, type EsriWebMap } from '@/utils/webmap-transformer';
 
 /**
- * The Esri WebMap ID for the OpenMaps application
- * This is a public ID used to fetch the layer configuration from ArcGIS Online
+ * The default Esri WebMap ID (OpenMaps)
+ * This can be overridden by passing a webMapId to getLayerConfigs()
  */
-export const WEBMAP_ID = '376af635c84643cd816a8c5d017a53aa';
+export const DEFAULT_WEBMAP_ID = '376af635c84643cd816a8c5d017a53aa';
+
+/**
+ * @deprecated Use DEFAULT_WEBMAP_ID instead
+ */
+export const WEBMAP_ID = DEFAULT_WEBMAP_ID;
 
 /**
  * Builds the fetch URL for the Esri WebMap JSON
@@ -27,7 +32,7 @@ export function buildWebMapUrl(webMapId: string): string {
  * Gets the WebMap fetch URL using the default WEBMAP_ID
  */
 export function getWebMapUrl(): string {
-  return buildWebMapUrl(WEBMAP_ID);
+  return buildWebMapUrl(DEFAULT_WEBMAP_ID);
 }
 
 // ============================================================================
@@ -35,23 +40,29 @@ export function getWebMapUrl(): string {
 // ============================================================================
 
 /**
- * In-memory cache for transformed layer configs
+ * In-memory cache for transformed layer configs, keyed by webMapId
  * Prevents re-fetching and re-transforming on subsequent calls
  */
-let cachedConfigs: LayerConfig[] | null = null;
+const configCache: Map<string, LayerConfig[]> = new Map();
 
 /**
- * Loading state to prevent concurrent fetches
+ * Loading state to prevent concurrent fetches, keyed by webMapId
  */
-let loadingPromise: Promise<LayerConfig[]> | null = null;
+const loadingPromises: Map<string, Promise<LayerConfig[]>> = new Map();
 
 /**
  * Clear the cached layer configs
- * Useful for testing or forcing a refresh
+ * @param webMapId Optional - if provided, only clears cache for that webMapId
+ *                 If not provided, clears all cached configs
  */
-export function clearCache(): void {
-  cachedConfigs = null;
-  loadingPromise = null;
+export function clearCache(webMapId?: string): void {
+  if (webMapId) {
+    configCache.delete(webMapId);
+    loadingPromises.delete(webMapId);
+  } else {
+    configCache.clear();
+    loadingPromises.clear();
+  }
 }
 
 // ============================================================================
@@ -60,11 +71,12 @@ export function clearCache(): void {
 
 /**
  * Fetch WebMap JSON from ArcGIS Online
+ * @param webMapId The Esri WebMap ID to fetch
  * @returns Promise resolving to the WebMap JSON object
  * @throws Error if fetch fails
  */
-async function fetchWebMapJson(): Promise<EsriWebMap> {
-  const url = getWebMapUrl();
+async function fetchWebMapJson(webMapId: string): Promise<EsriWebMap> {
+  const url = buildWebMapUrl(webMapId);
 
   console.log(`[LayerConfigService] Fetching WebMap from: ${url}`);
 
@@ -81,13 +93,14 @@ async function fetchWebMapJson(): Promise<EsriWebMap> {
 /**
  * Load layer configs dynamically
  * Fetches WebMap JSON and transforms it at runtime
+ * @param webMapId The Esri WebMap ID to load configs from
  */
-async function loadDynamicConfigs(): Promise<LayerConfig[]> {
+async function loadDynamicConfigs(webMapId: string): Promise<LayerConfig[]> {
   try {
-    console.log('[LayerConfigService] Loading configs in DYNAMIC mode');
+    console.log(`[LayerConfigService] Loading configs in DYNAMIC mode for WebMap: ${webMapId}`);
 
     // Fetch WebMap JSON
-    const webMapJson = await fetchWebMapJson();
+    const webMapJson = await fetchWebMapJson(webMapId);
 
     // Transform to layer configs
     console.log('[LayerConfigService] Transforming WebMap to layer configs');
@@ -110,39 +123,44 @@ async function loadDynamicConfigs(): Promise<LayerConfig[]> {
  * - Caches results in memory to avoid redundant fetches/transforms
  * - Prevents concurrent loads with a loading promise guard
  *
+ * @param webMapId Optional - the WebMap ID to fetch. Defaults to DEFAULT_WEBMAP_ID
  * @returns Promise resolving to an array of LayerConfig objects
  * @throws Error if fetch or transform fails
  */
-export async function getLayerConfigs(): Promise<LayerConfig[]> {
-  // Return cached configs if available
-  if (cachedConfigs) {
-    console.log('[LayerConfigService] ⚠️ Returning CACHED configs (transformer will NOT run)');
+export async function getLayerConfigs(webMapId: string = DEFAULT_WEBMAP_ID): Promise<LayerConfig[]> {
+  // Return cached configs if available for this webMapId
+  const cached = configCache.get(webMapId);
+  if (cached) {
+    console.log(`[LayerConfigService] ⚠️ Returning CACHED configs for ${webMapId} (transformer will NOT run)`);
     console.log('[LayerConfigService] To force refresh, call clearCache() or reload with Ctrl+Shift+R');
-    return cachedConfigs;
+    return cached;
   }
 
-  // If already loading, return the existing promise
-  if (loadingPromise) {
-    console.log('[LayerConfigService] Load already in progress, waiting...');
-    return loadingPromise;
+  // If already loading this webMapId, return the existing promise
+  const existingPromise = loadingPromises.get(webMapId);
+  if (existingPromise) {
+    console.log(`[LayerConfigService] Load already in progress for ${webMapId}, waiting...`);
+    return existingPromise;
   }
 
-  console.log('[LayerConfigService] Mode: dynamic');
+  console.log(`[LayerConfigService] Mode: dynamic, WebMap: ${webMapId}`);
 
   // Create loading promise
-  loadingPromise = (async () => {
+  const loadingPromise = (async () => {
     try {
-      const configs = await loadDynamicConfigs();
+      const configs = await loadDynamicConfigs(webMapId);
 
       // Cache the results
-      cachedConfigs = configs;
+      configCache.set(webMapId, configs);
 
       return configs;
     } finally {
       // Clear loading promise when done (success or error)
-      loadingPromise = null;
+      loadingPromises.delete(webMapId);
     }
   })();
+
+  loadingPromises.set(webMapId, loadingPromise);
 
   return loadingPromise;
 }

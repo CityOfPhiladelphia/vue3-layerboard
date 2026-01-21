@@ -57,16 +57,10 @@ function toggleAccordion() {
       :aria-expanded="isExpanded"
       @click="toggleAccordion"
     >
-      <!-- Icon slot or default chevron -->
-      <span class="topic-icon">
+      <!-- Icon slot or FontAwesome icon -->
+      <span v-if="icon || $slots.icon" class="topic-icon">
         <slot name="icon">
-          <svg
-            v-if="icon"
-            class="custom-icon"
-            aria-hidden="true"
-          >
-            <!-- Icon would be rendered here based on icon prop -->
-          </svg>
+          <font-awesome-icon v-if="icon" :icon="['fas', icon]" />
         </slot>
       </span>
 
