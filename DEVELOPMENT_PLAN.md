@@ -2021,6 +2021,118 @@ Create working example applications that demonstrate framework usage.
 - [x] Configure with StreetSmartPHL WebMap ID
 - [ ] Test topics accordion functionality
 
+#### 8.7.5 Create Main Layerboard Component
+
+Extract the common app layout structure into a reusable `Layerboard.vue` component so example apps don't duplicate the panel/map/header/footer structure.
+
+- [x] Create `src/components/Layerboard.vue` with:
+  - [x] Standard layout structure (header, sidebar, map panel, footer, mobile toggle)
+  - [x] All layer state management handled internally (visibleLayers, layerOpacities, loadingLayers, layerErrors)
+  - [x] Configurable via props: `title`, `subtitle`, `webMapId`, `themeColor`, `sidebarWidth`, `sidebarLabel`, `mapLabel`
+  - [x] `cyclomediaConfig` and `pictometryCredentials` props for imagery
+  - [x] `showDefaultSidebar` prop to use LayerPanel or custom sidebar
+  - [x] `fetchMetadata` prop for OpenMaps-style metadata links
+  - [x] Slots for customization: `#header`, `#sidebar`, `#footer`
+  - [x] Sidebar slot receives layer state as slot props (`layers`, `visibleLayers`, `toggleLayer`, etc.)
+  - [x] Loading and error states with retry button
+  - [x] Mobile responsive toggle between sidebar and map
+  - [x] Exposes API via `defineExpose` for parent component access
+- [x] Export `Layerboard` from `src/components/index.ts`
+- [x] Update `layerConfigService.ts` to accept `webMapId` parameter (with caching per WebMap)
+- [x] Update OpenMaps example to use `<Layerboard>` component (simplified from ~500 lines to ~40 lines)
+- [x] Update StreetSmartPHL example to use `<Layerboard>` with custom `#sidebar` slot for topic accordions (simplified from ~670 lines to ~280 lines)
+- [x] Create `pnpm-workspace.yaml` to enable workspace dependency resolution
+
+#### 8.7.6 Debug Layerboard.vue CSS Issues
+
+Fix CSS layout issues causing scrollbars and content being cut off in example apps.
+
+- [x] Investigate CSS causing horizontal and vertical scrollbars around the entire app
+- [x] Identify the CSS rules causing content to be offscreen on the right and bottom edges
+- [x] Move necessary global CSS from example App.vue files to Layerboard.vue component
+- [x] Ensure `html`, `body`, and root element have proper sizing (100vh, 100vw, no overflow)
+- [x] Verify flex layout fills available space without causing overflow
+- [x] Make sidebar width consistent across both example apps (use OpenMaps width as default)
+- [x] Test both OpenMaps and StreetSmartPHL examples to confirm scrollbars are removed
+- [x] Ensure mobile responsive behavior still works correctly
+
+#### 8.7.7 StreetSmartPHL Full Topic Implementation
+
+Make the StreetSmartPHL example app fully functional with all 5 topics matching the production app at streetsmartphl.phila.gov. Reference the existing `streetsmartphl` project on the local machine for component configurations.
+
+##### 8.7.7.1 Generic Topic Functionality
+
+Before implementing individual topics, ensure the generic topic infrastructure works correctly.
+
+- [ ] Verify layers load onto the map when topic accordions are expanded
+- [ ] Ensure layer visibility toggles work within topics
+- [ ] Verify layer legends display correctly within topics
+- [ ] Test layer opacity controls work within topics
+- [ ] Ensure zoom-dependent layer visibility warnings appear
+- [ ] Verify loading states show for layers within topics
+- [ ] Test error handling for failed layer loads within topics
+- [ ] Ensure closing a topic doesn't remove layers from the map (persistence)
+
+##### 8.7.7.2 PickupPHL Topic
+
+Implement the PickupPHL (sanitation collection) topic to match production functionality.
+
+- [ ] Review PickupPHL components in the original `streetsmartphl` project config
+- [ ] Add Sanitation Visits layers (Close, Intermediate, Far) with correct styling
+- [ ] Add Collection Boundary layer
+- [ ] Add any PickupPHL-specific interactive components (date pickers, filters, etc.)
+- [ ] Add any PickupPHL-specific data tables or info displays
+- [ ] Test all PickupPHL functionality matches production behavior
+
+##### 8.7.7.3 PermitPHL Topic
+
+Implement the PermitPHL (street closure permits) topic to match production functionality.
+
+- [ ] Review PermitPHL components in the original `streetsmartphl` project config
+- [ ] Add Current Closures layers (points and segments)
+- [ ] Add Future Closures layers (points and segments)
+- [ ] Add any PermitPHL-specific interactive components (date filters, permit search, etc.)
+- [ ] Add any PermitPHL-specific data tables or info displays
+- [ ] Test all PermitPHL functionality matches production behavior
+
+##### 8.7.7.4 PavePHL Topic
+
+Implement the PavePHL (paving and road conditions) topic to match production functionality.
+
+- [ ] Review PavePHL components in the original `streetsmartphl` project config
+- [ ] Add Streets Status for Paving Season layer
+- [ ] Add Street Condition Index layer
+- [ ] Add Five Year Paving Plan layer
+- [ ] Add Highway Districts layer
+- [ ] Add Council Districts layer
+- [ ] Add State Routes layer
+- [ ] Add any PavePHL-specific interactive components (year selectors, condition filters, etc.)
+- [ ] Add any PavePHL-specific data tables or info displays
+- [ ] Test all PavePHL functionality matches production behavior
+
+##### 8.7.7.5 PlowPHL Topic
+
+Implement the PlowPHL (snow removal and winter operations) topic to match production functionality.
+
+- [ ] Review PlowPHL components in the original `streetsmartphl` project config
+- [ ] Add Treated Street Status layer
+- [ ] Add Streets not treated by the City layer
+- [ ] Add any PlowPHL-specific interactive components (status indicators, time displays, etc.)
+- [ ] Add any PlowPHL-specific data tables or info displays
+- [ ] Test all PlowPHL functionality matches production behavior
+
+##### 8.7.7.6 SweepPHL Topic
+
+Implement the SweepPHL (street sweeping) topic to match production functionality.
+
+- [ ] Review SweepPHL components in the original `streetsmartphl` project config
+- [ ] Add All Route Locations layer
+- [ ] Add Swept Streets layer
+- [ ] Add 2022 Litter Index layer
+- [ ] Add any SweepPHL-specific interactive components (schedule displays, route filters, etc.)
+- [ ] Add any SweepPHL-specific data tables or info displays
+- [ ] Test all SweepPHL functionality matches production behavior
+
 ---
 
 ### 8.8 Testing and Validation
