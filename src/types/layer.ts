@@ -59,6 +59,21 @@ export interface LayerConfig {
   displayOptions?: LayerDisplayOptions
 }
 
+/**
+ * Override configuration for layer styles
+ * Allows overriding the paint and legend from WebMap with custom values
+ */
+export interface LayerStyleOverride {
+  /** MapLibre paint properties to override */
+  paint?: Record<string, unknown>
+  /** MapLibre outline paint properties (for polygons) */
+  outlinePaint?: Record<string, unknown>
+  /** Legend items to override */
+  legend?: LegendItem[]
+  /** Override the layer type (fill, line, circle) */
+  type?: 'fill' | 'line' | 'circle'
+}
+
 // MapLibre-specific paint property interfaces
 export interface CirclePaint {
   'circle-radius': number | unknown[]

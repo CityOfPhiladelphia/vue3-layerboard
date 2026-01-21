@@ -11,6 +11,7 @@ import { ref } from 'vue'
 import Layerboard from '@/components/Layerboard.vue'
 import TopicAccordion from '@/components/TopicAccordion.vue'
 import LayerCheckboxSet from '@/components/LayerCheckboxSet.vue'
+import LayerRadioButtonSet from '@/components/LayerRadioButtonSet.vue'
 import CollectionDayLegend from './components/CollectionDayLegend.vue'
 import type { CyclomediaConfig, PictometryCredentials } from "@phila/phila-ui-map-core"
 import type { LayerConfig, LayerDisplayOptions, TiledLayerConfig } from '@/types/layer'
@@ -54,6 +55,17 @@ const layerDisplayOptions: Record<string, LayerDisplayOptions> = {
     shouldShowSlider: false,
   },
   'future-closures-segments': {
+    shouldShowSlider: false,
+  },
+
+  // PavePHL - All layers have no opacity slider (matching original shouldShowSlider: false)
+  'streets-status-for-paving-season': {
+    shouldShowSlider: false,
+  },
+  'street-condition-index': {
+    shouldShowSlider: false,
+  },
+  'five-year-paving-plan': {
     shouldShowSlider: false,
   },
 }
@@ -102,13 +114,17 @@ const permitLayerIds = [
 ]
 
 // PavePHL topic - Paving and road conditions
+// Default layer that auto-activates when topic opens
+const paveDefaultLayers = [
+  'streets-status-for-paving-season',
+]
+
+// PavePHL topic - All layer IDs
 const paveLayerIds = [
   'streets-status-for-paving-season',
   'street-condition-index',
   'five-year-paving-plan',
-  'highway-districts',
-  'council-districts',
-  'state-routes',
+  // Note: Highway Districts, Council Districts, State Routes commented out in original
 ]
 
 // PlowPHL topic - Snow removal and winter operations
@@ -187,6 +203,7 @@ const pictometryCredentials: PictometryCredentials = {
 const defaultTopicLayersMap: Record<string, string[]> = {
   pickup: pickupDefaultLayers,
   permit: permitDefaultLayers,
+  pave: paveDefaultLayers,
 }
 
 // ============================================================================
@@ -294,6 +311,8 @@ function getLayersForTopic(
       }
       return layer.config
     })
+    // Sort by the order in layerIds array (preserves intended display order)
+    .sort((a, b) => layerIds.indexOf(a.id) - layerIds.indexOf(b.id))
 }
 
 // ============================================================================
@@ -364,6 +383,25 @@ function getPermitNotice(dataSourcesState: Record<string, { data: unknown }>): s
 
   if (permitNotices.length > 0) {
     return permitNotices[0].Description
+  }
+  return null
+}
+
+// ============================================================================
+// DATA SOURCE HELPERS FOR PAVEPHL
+// ============================================================================
+
+// Get pave-specific notices from the notices data source
+function getPaveNotice(dataSourcesState: Record<string, { data: unknown }>): string | null {
+  const noticesData = dataSourcesState?.notices?.data as Notice[] | null
+  if (!noticesData || !Array.isArray(noticesData)) return null
+
+  const paveNotices = noticesData.filter(
+    (n) => n.Type?.toLowerCase() === 'pavephl'
+  )
+
+  if (paveNotices.length > 0) {
+    return paveNotices[0].Description
   }
   return null
 }
@@ -520,21 +558,64 @@ function getPermitNotice(dataSourcesState: Record<string, { data: unknown }>): s
           :layer-ids="paveLayerIds"
           @toggle="(expanded) => onTopicToggle('pave', expanded)"
         >
-          <LayerCheckboxSet
+          <!-- Topic intro paragraph -->
+          <p class="topic-intro">
+            View status of paving operations.
+          </p>
+
+          <!-- Notices alert (from notices data source) -->
+          <div
+            v-if="getPaveNotice(dataSourcesState)"
+            class="notice-alert"
+          >
+            <span class="notice-icon">⚠️</span>
+            <span v-html="getPaveNotice(dataSourcesState)"></span>
+          </div>
+
+          <!-- Layer radio buttons (only one visible at a time) -->
+          <LayerRadioButtonSet
             :layers="getLayersForTopic(layers, paveLayerIds)"
             :visible-layer-ids="visibleLayers"
             :layer-opacities="layerOpacities"
             :loading-layer-ids="loadingLayers"
             :layer-errors="layerErrors"
             :current-zoom="currentZoom"
-            :show-opacity="true"
+            :show-opacity="false"
             :show-legend="true"
-            @toggle-layer="toggleLayer"
+            group-name="pave-layers"
+            @select-layer="(layerId, previousIds) => {
+              // Turn off previous layers and turn on new one
+              if (previousIds.length > 0) {
+                setLayersVisible(previousIds, false)
+              }
+              setLayersVisible([layerId], true)
+            }"
             @set-opacity="setOpacity"
           />
           <p v-if="getLayersForTopic(layers, paveLayerIds).length === 0" class="no-layers">
             No matching layers found
           </p>
+
+          <!-- Paving Steps info box -->
+          <div class="paving-steps-box">
+            <h4>Paving Steps</h4>
+            <div class="paving-step">
+              <strong>Step 1 Milling</strong>
+              <p>Milling is the process of grinding off the top layer of asphalt or surface of a roadway. This is usually done in preparation for paving. Contractors, will if needed, tow vehicles to a nearby street, so it is important to not park on a street that is about to be milled.</p>
+            </div>
+            <div class="paving-step">
+              <strong>Step 2 Street Adjustments</strong>
+              <p>After asphalt is milled off, utility manholes and castings are prepped and/or replaced by the contractor prior to performing the resurfacing operations on a project.</p>
+            </div>
+            <div class="paving-step">
+              <strong>Step 3 Street Paving</strong>
+              <p>City crews provide a new layer of asphalt surface on the streets to protect the underlying road structure and improve the quality of the ride. Residents are required to move their car during these workdays.</p>
+            </div>
+            <div class="paving-step">
+              <strong>Step 4 Street Linestriping</strong>
+              <p>The installation of placement markings and crosswalks is the final phase. Road surface markings are used on paved roadways to provide guidance and information to drivers and pedestrians. Striping is done over a series of days/weeks.</p>
+            </div>
+          </div>
         </TopicAccordion>
 
         <!-- PlowPHL Topic -->
@@ -767,5 +848,42 @@ function getPermitNotice(dataSourcesState: Record<string, { data: unknown }>): s
 
 .trash-status--warning .trash-status-message {
   background-color: #f0f0f0;
+}
+
+/* Paving steps box */
+.paving-steps-box {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
+.paving-steps-box h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.paving-step {
+  margin-bottom: 12px;
+}
+
+.paving-step:last-child {
+  margin-bottom: 0;
+}
+
+.paving-step strong {
+  display: block;
+  font-size: 13px;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.paving-step p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #555;
 }
 </style>

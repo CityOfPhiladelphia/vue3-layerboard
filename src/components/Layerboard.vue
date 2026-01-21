@@ -21,7 +21,7 @@ import LayerPanel from './LayerPanel.vue'
 import type { CyclomediaConfig, PictometryCredentials } from "@phila/phila-ui-map-core"
 
 import { getLayerConfigs, clearCache } from '@/services/layerConfigService'
-import type { LayerConfig, TiledLayerConfig } from '@/types/layer'
+import type { LayerConfig, TiledLayerConfig, LayerStyleOverride } from '@/types/layer'
 import type { DataSourceConfig } from '@/types/dataSource'
 import { useApiDataSources } from '@/composables/useApiDataSources'
 
@@ -56,6 +56,8 @@ const props = withDefaults(
     tiledLayers?: TiledLayerConfig[]
     /** API data source configurations for fetching external data (notices, status, etc.) */
     dataSources?: DataSourceConfig[]
+    /** Layer style overrides - override paint/legend for specific layers by ID */
+    layerStyleOverrides?: Record<string, LayerStyleOverride>
   }>(),
   {
     themeColor: '#0f4d90',
@@ -66,6 +68,7 @@ const props = withDefaults(
     fetchMetadata: false,
     tiledLayers: () => [],
     dataSources: () => [],
+    layerStyleOverrides: () => ({}),
   }
 )
 
@@ -216,22 +219,38 @@ async function loadLayerConfigs() {
 
     const configs = await getLayerConfigs(props.webMapId)
 
+    // Apply layer style overrides if provided
+    const overriddenConfigs = configs.map(config => {
+      const override = props.layerStyleOverrides[config.id]
+      if (override) {
+        console.log(`[Layerboard] Applying style override for layer: ${config.id}`)
+        return {
+          ...config,
+          paint: override.paint ?? config.paint,
+          outlinePaint: override.outlinePaint ?? config.outlinePaint,
+          legend: override.legend ?? config.legend,
+          type: override.type ?? config.type,
+        }
+      }
+      return config
+    })
+
     // Build layerList from configs
-    layerList.value = configs.map(config => ({
+    layerList.value = overriddenConfigs.map(config => ({
       config,
       component: config.type,
     }))
 
     // Initialize layer opacities
     const initialOpacities: Record<string, number> = {}
-    configs.forEach(config => {
+    overriddenConfigs.forEach(config => {
       initialOpacities[config.id] = config.opacity ?? 1.0
     })
     layerOpacities.value = initialOpacities
 
-    console.log(`[Layerboard] Loaded ${configs.length} layer configs from WebMap ${props.webMapId}`)
-    console.log('[Layerboard] Layer IDs:', configs.map(c => c.id))
-    emit('configs-loaded', configs)
+    console.log(`[Layerboard] Loaded ${overriddenConfigs.length} layer configs from WebMap ${props.webMapId}`)
+    console.log('[Layerboard] Layer IDs:', overriddenConfigs.map(c => c.id))
+    emit('configs-loaded', overriddenConfigs)
   } catch (error) {
     console.error('[Layerboard] Failed to load layer configs:', error)
     const errorMsg = error instanceof Error ? error.message : 'Failed to load layer configurations'
