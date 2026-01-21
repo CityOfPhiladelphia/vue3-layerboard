@@ -29,6 +29,8 @@
   },
   "scripts": {
     "build": "vue-tsc --build && vite build",
+    "build:openmaps": "vite build --config examples/openmaps/vite.config.ts",
+    "build:streetsmartphl": "vite build --config examples/streetsmartphl/vite.config.ts",
     "dev": "vite",
     "dev:openmaps": "vite --config examples/openmaps/vite.config.ts",
     "dev:streetsmartphl": "vite --config examples/streetsmartphl/vite.config.ts",

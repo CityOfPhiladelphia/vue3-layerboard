@@ -5,6 +5,10 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   root: fileURLToPath(new URL('.', import.meta.url)),
+  build: {
+    outDir: fileURLToPath(new URL('../../dist-openmaps', import.meta.url)),
+    emptyOutDir: true,
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('../../src', import.meta.url)),
