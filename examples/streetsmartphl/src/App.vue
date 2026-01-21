@@ -11,16 +11,46 @@ import { ref } from 'vue'
 import Layerboard from '@/components/Layerboard.vue'
 import TopicAccordion from '@/components/TopicAccordion.vue'
 import LayerCheckboxSet from '@/components/LayerCheckboxSet.vue'
+import CollectionDayLegend from './components/CollectionDayLegend.vue'
 import type { CyclomediaConfig, PictometryCredentials } from "@phila/phila-ui-map-core"
-import type { LayerConfig } from '@/types/layer'
+import type { LayerConfig, LayerDisplayOptions, TiledLayerConfig } from '@/types/layer'
+
+// ============================================================================
+// LAYER DISPLAY OPTIONS
+// ============================================================================
+// Configure how layers appear in the sidebar (matching original StreetSmartPHL)
+// Layers with shouldShowCheckbox: false are auto-controlled (no user checkbox)
+
+const layerDisplayOptions: Record<string, LayerDisplayOptions> = {
+  // PickupPHL - Sanitation visits layers have no checkbox (auto-controlled)
+  'sanitation-visits-close': {
+    shouldShowCheckbox: false,
+    shouldShowSlider: false,
+    shouldShowLegendBox: false,
+    layerNameChange: "Status of today's sanitation truck visits",
+  },
+  'sanitation-visits-intermediate': {
+    shouldShowCheckbox: false,
+    shouldShowSlider: false,
+    shouldShowLegendBox: false,
+  },
+  'sanitation-visits-far': {
+    shouldShowCheckbox: false,
+    shouldShowSlider: false,
+    shouldShowLegendBox: false,
+  },
+  'collectionboundary': {
+    shouldShowCheckbox: false,
+    shouldShowSlider: false,
+    shouldShowLegendBox: false,
+  },
+}
 
 // ============================================================================
 // WEBMAP CONFIGURATION
 // ============================================================================
-// StreetSmartPHL WebMap IDs from the real application
-// Production: 'bf08ea4ce7194f68934a7150567151ae'
-// Staging: '67fd6b584c50413b807fc6d3a39bbed7'
-const WEBMAP_ID = '67fd6b584c50413b807fc6d3a39bbed7'
+// StreetSmartPHL WebMap ID (production - public)
+const WEBMAP_ID = 'bf08ea4ce7194f68934a7150567151ae'
 
 // ============================================================================
 // TOPIC CONFIGURATION
@@ -30,41 +60,59 @@ const WEBMAP_ID = '67fd6b584c50413b807fc6d3a39bbed7'
 
 // PickupPHL topic - Sanitation collection and visits
 const pickupLayerIds = [
-  'Sanitation Visits - Close',
-  'Sanitation Visits - Intermediate',
-  'Sanitation Visits - Far',
-  'CollectionBoundary',
+  'sanitation-visits-close',
+  'sanitation-visits-intermediate',
+  'sanitation-visits-far',
+  'collectionboundary',
 ]
 
 // PermitPHL topic - Street closure permits
 const permitLayerIds = [
-  'Current Closures (points)',
-  'Current Closures (segments)',
-  'Future Closures (points)',
-  'Future Closures (segments)',
+  'current-closures-points',
+  'current-closures-segments',
+  'future-closures-points',
+  'future-closures-segments',
 ]
 
 // PavePHL topic - Paving and road conditions
 const paveLayerIds = [
-  'Streets Status for Paving Season',
-  'Street Condition Index',
-  'Five Year Paving Plan',
-  'Highway Districts',
-  'Council Districts',
-  'State Routes',
+  'streets-status-for-paving-season',
+  'street-condition-index',
+  'five-year-paving-plan',
+  'highway-districts',
+  'council-districts',
+  'state-routes',
 ]
 
 // PlowPHL topic - Snow removal and winter operations
 const plowLayerIds = [
-  'Treated Street Status',
-  'Streets not treated by the City',
+  'treated-street-status',
+  'streets-not-treated-by-the-city',
 ]
 
 // SweepPHL topic - Street sweeping
 const sweepLayerIds = [
-  'All Route Locations',
-  'Swept Streets',
-  '2022 Litter Index',
+  'all-route-locations',
+  'swept-streets',
+  '2022-litter-index',
+]
+
+// ============================================================================
+// TILED LAYERS CONFIGURATION
+// ============================================================================
+// ESRI MapServer tiled layers separate from WebMap feature layers
+const tiledLayers: TiledLayerConfig[] = [
+  {
+    id: 'collectionDay',
+    title: 'Collection Day',
+    url: 'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/PickupPHL_CollectionBands/MapServer',
+  },
+  // PlowPHL tiled layers (for future implementation)
+  // {
+  //   id: 'plowTreatedStreetsStatus',
+  //   title: 'Treated Street Status',
+  //   url: 'https://plowphl-services.phila.gov/arcweb/rest/services/Projects/TreatedStatus/MapServer',
+  // },
 ]
 
 // ============================================================================
@@ -89,19 +137,21 @@ const pictometryCredentials: PictometryCredentials = {
 // ============================================================================
 // TOPIC ACCORDION STATE
 // ============================================================================
-const expandedTopics = ref<Set<string>>(new Set(['pickup']))
+// Only one topic can be open at a time
+const expandedTopic = ref<string | null>('pickup')
 
 function onTopicToggle(topicId: string, expanded: boolean) {
   if (expanded) {
-    expandedTopics.value.add(topicId)
+    // Opening a topic closes any other open topic
+    expandedTopic.value = topicId
   } else {
-    expandedTopics.value.delete(topicId)
+    // Closing the current topic
+    expandedTopic.value = null
   }
-  expandedTopics.value = new Set(expandedTopics.value)
 }
 
 // ============================================================================
-// HELPER - FILTER LAYERS BY TOPIC
+// HELPER - FILTER LAYERS BY TOPIC AND APPLY DISPLAY OPTIONS
 // ============================================================================
 function getLayersForTopic(
   layers: Array<{ config: LayerConfig; component: string }>,
@@ -109,7 +159,20 @@ function getLayersForTopic(
 ): LayerConfig[] {
   return layers
     .filter(layer => layerIds.includes(layer.config.id))
-    .map(layer => layer.config)
+    .map(layer => {
+      // Apply display options if configured for this layer
+      const displayOpts = layerDisplayOptions[layer.config.id]
+      if (displayOpts) {
+        return {
+          ...layer.config,
+          displayOptions: {
+            ...layer.config.displayOptions,
+            ...displayOpts,
+          },
+        }
+      }
+      return layer.config
+    })
 }
 </script>
 
@@ -122,42 +185,33 @@ function getLayersForTopic(
     sidebar-width="30%"
     sidebar-label="Topics"
     :show-default-sidebar="false"
+    :tiled-layers="tiledLayers"
     :cyclomedia-config="cyclomediaConfig"
     :pictometry-credentials="pictometryCredentials"
   >
     <!-- Custom sidebar with topic accordions -->
-    <template #sidebar="{ layers, visibleLayers, layerOpacities, loadingLayers, layerErrors, currentZoom, toggleLayer, setOpacity }">
+    <template #sidebar="{ layers, visibleLayers, layerOpacities, loadingLayers, layerErrors, currentZoom, toggleLayer, setOpacity, visibleTiledLayers, toggleTiledLayer }">
       <div class="topics-container">
         <!-- PickupPHL Topic -->
         <TopicAccordion
           title="PickupPHL"
           icon="trash-alt"
-          :expanded="expandedTopics.has('pickup')"
+          :expanded="expandedTopic === 'pickup'"
           :layer-ids="pickupLayerIds"
           @toggle="(expanded) => onTopicToggle('pickup', expanded)"
         >
-          <LayerCheckboxSet
-            :layers="getLayersForTopic(layers, pickupLayerIds)"
-            :visible-layer-ids="visibleLayers"
-            :layer-opacities="layerOpacities"
-            :loading-layer-ids="loadingLayers"
-            :layer-errors="layerErrors"
-            :current-zoom="currentZoom"
-            :show-opacity="true"
-            :show-legend="true"
-            @toggle-layer="toggleLayer"
-            @set-opacity="setOpacity"
+          <!-- Collection Day tiled layer checkbox + legend -->
+          <CollectionDayLegend
+            :visible-tiled-layers="visibleTiledLayers"
+            :toggle-tiled-layer="toggleTiledLayer"
           />
-          <p v-if="getLayersForTopic(layers, pickupLayerIds).length === 0" class="no-layers">
-            No matching layers found
-          </p>
         </TopicAccordion>
 
         <!-- PermitPHL Topic -->
         <TopicAccordion
           title="PermitPHL"
           icon="scroll"
-          :expanded="expandedTopics.has('permit')"
+          :expanded="expandedTopic === 'permit'"
           :layer-ids="permitLayerIds"
           @toggle="(expanded) => onTopicToggle('permit', expanded)"
         >
@@ -182,7 +236,7 @@ function getLayersForTopic(
         <TopicAccordion
           title="PavePHL"
           icon="road"
-          :expanded="expandedTopics.has('pave')"
+          :expanded="expandedTopic === 'pave'"
           :layer-ids="paveLayerIds"
           @toggle="(expanded) => onTopicToggle('pave', expanded)"
         >
@@ -207,7 +261,7 @@ function getLayersForTopic(
         <TopicAccordion
           title="PlowPHL"
           icon="snowflake"
-          :expanded="expandedTopics.has('plow')"
+          :expanded="expandedTopic === 'plow'"
           :layer-ids="plowLayerIds"
           @toggle="(expanded) => onTopicToggle('plow', expanded)"
         >
@@ -232,7 +286,7 @@ function getLayersForTopic(
         <TopicAccordion
           title="SweepPHL"
           icon="broom"
-          :expanded="expandedTopics.has('sweep')"
+          :expanded="expandedTopic === 'sweep'"
           :layer-ids="sweepLayerIds"
           @toggle="(expanded) => onTopicToggle('sweep', expanded)"
         >

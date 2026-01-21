@@ -5,6 +5,7 @@ import {
   CircleLayer,
   FillLayer,
   LineLayer,
+  RasterLayer,
   MapPopup,
   DrawTool,
 } from "@phila/phila-ui-map-core";
@@ -14,6 +15,7 @@ import type {
 } from "@phila/phila-ui-map-core";
 import type { LngLatLike, CircleLayerSpecification, LineLayerSpecification } from "maplibre-gl";
 import bboxClip from "@turf/bbox-clip";
+import type { TiledLayerConfig } from "@/types/layer";
 
 // Bounds type for spatial queries
 interface Bounds {
@@ -28,6 +30,11 @@ const props = defineProps<{
   visibleLayers: Set<string>;
   layerOpacities: Record<string, number>;
   layerList: Array<{ config: any; component: string }>;
+  // Tiled layer props
+  tiledLayers?: TiledLayerConfig[];
+  visibleTiledLayers?: Set<string>;
+  tiledLayerOpacities?: Record<string, number>;
+  // Imagery props
   cyclomediaConfig: CyclomediaConfig;
   pictometryCredentials: PictometryCredentials;
 }>();
@@ -270,6 +277,45 @@ const visibleLineLayers = computed(() =>
     .filter(l => l.config.type === "line" && isVisible(l.config.id) && hasSourceReady(l.config))
     .map(l => l.config)
 );
+
+// ============================================================================
+// TILED LAYER HELPERS
+// ============================================================================
+
+// Check if a tiled layer is visible
+function isTiledLayerVisible(layerId: string): boolean {
+  return props.visibleTiledLayers?.has(layerId) ?? false;
+}
+
+// Get tiled layer opacity
+function getTiledLayerOpacity(layerId: string): number {
+  return props.tiledLayerOpacities?.[layerId] ?? 1;
+}
+
+// Convert ESRI MapServer URL to tile URL template for MapLibre
+// ESRI tile services use {z}/{y}/{x} format
+function getEsriTileUrl(baseUrl: string): string {
+  // Remove trailing slash if present
+  const url = baseUrl.replace(/\/$/, '');
+  // ESRI MapServer tile endpoint pattern
+  return `${url}/tile/{z}/{y}/{x}`;
+}
+
+// Get raster source configuration for a tiled layer
+function getTiledLayerSource(layer: TiledLayerConfig) {
+  return {
+    type: 'raster' as const,
+    tiles: [getEsriTileUrl(layer.url)],
+    tileSize: 256,
+    attribution: layer.attribution || '',
+  };
+}
+
+// Get visible tiled layers
+const visibleTiledLayersList = computed(() => {
+  if (!props.tiledLayers) return [];
+  return props.tiledLayers.filter(layer => isTiledLayerVisible(layer.id));
+});
 
 // ============================================================================
 // GENERIC SOURCE & PAINT HELPERS
@@ -956,6 +1002,17 @@ watch(currentFeatureIndex, () => {
     >
       <!-- Draw Tool -->
       <DrawTool position="bottom-left" />
+
+      <!-- Tiled Layers (ESRI MapServer raster tiles) - render below vector layers -->
+      <RasterLayer
+        v-for="tiledLayer in visibleTiledLayersList"
+        :key="'tiled-' + tiledLayer.id"
+        :id="'tiled-' + tiledLayer.id"
+        :source="getTiledLayerSource(tiledLayer)"
+        :paint="{ 'raster-opacity': getTiledLayerOpacity(tiledLayer.id) }"
+        :minzoom="tiledLayer.minZoom"
+        :maxzoom="tiledLayer.maxZoom"
+      />
 
       <!-- Circle Layers - positioned before highlight layers -->
       <CircleLayer

@@ -1,6 +1,12 @@
 <script setup lang="ts">
 // LayerCheckboxSet.vue - Reusable layer toggle checkboxes
 // Can be used standalone or within TopicAccordion
+//
+// Supports per-layer display options from LayerConfig.displayOptions:
+// - shouldShowCheckbox: false hides the checkbox (layer is auto-controlled)
+// - shouldShowSlider: false hides the opacity slider
+// - shouldShowLegendBox: false hides the legend
+// - layerNameChange: overrides the display label
 
 import type { LayerConfig } from '@/types/layer'
 
@@ -18,9 +24,9 @@ const props = withDefaults(
     layerErrors?: Record<string, string>
     /** Current map zoom level (for zoom-based availability) */
     currentZoom?: number
-    /** Whether to show opacity sliders */
+    /** Whether to show opacity sliders (can be overridden per-layer) */
     showOpacity?: boolean
-    /** Whether to show legends */
+    /** Whether to show legends (can be overridden per-layer) */
     showLegend?: boolean
   }>(),
   {
@@ -40,7 +46,7 @@ const emit = defineEmits<{
   (e: 'setOpacity', layerId: string, opacity: number): void
 }>()
 
-// Helper functions
+// Helper functions for visibility and state
 function isVisible(layerId: string): boolean {
   return props.visibleLayerIds.has(layerId)
 }
@@ -66,6 +72,29 @@ function isLayerAvailableAtZoom(config: LayerConfig): boolean {
   return true
 }
 
+// Helper functions for display options
+function shouldShowCheckbox(config: LayerConfig): boolean {
+  // Default to true if not specified
+  return config.displayOptions?.shouldShowCheckbox !== false
+}
+
+function shouldShowSlider(config: LayerConfig): boolean {
+  // Check both component prop and per-layer option
+  if (!props.showOpacity) return false
+  return config.displayOptions?.shouldShowSlider !== false
+}
+
+function shouldShowLegendBox(config: LayerConfig): boolean {
+  // Check both component prop and per-layer option
+  if (!props.showLegend) return false
+  return config.displayOptions?.shouldShowLegendBox !== false
+}
+
+function getLayerDisplayName(config: LayerConfig): string {
+  // Use layerNameChange if provided, otherwise use title
+  return config.displayOptions?.layerNameChange || config.title
+}
+
 function onToggleLayer(layerId: string) {
   emit('toggleLayer', layerId)
 }
@@ -83,8 +112,9 @@ function onOpacityChange(layerId: string, event: Event) {
       :key="layer.id"
       class="layer-item"
     >
-      <!-- Layer checkbox row -->
+      <!-- Layer WITH checkbox (default behavior) -->
       <label
+        v-if="shouldShowCheckbox(layer)"
         class="layer-checkbox"
         :class="{
           'layer-unavailable': !isLayerAvailableAtZoom(layer),
@@ -98,7 +128,7 @@ function onOpacityChange(layerId: string, event: Event) {
           @change="onToggleLayer(layer.id)"
         />
         <span class="layer-title">
-          {{ layer.title }}
+          {{ getLayerDisplayName(layer) }}
           <span v-if="isLayerLoading(layer.id)" class="loading-indicator">
             Loading...
           </span>
@@ -115,8 +145,35 @@ function onOpacityChange(layerId: string, event: Event) {
         </span>
       </label>
 
-      <!-- Opacity slider -->
-      <div v-if="showOpacity && isVisible(layer.id)" class="opacity-control">
+      <!-- Layer WITHOUT checkbox (auto-controlled, just shows label) -->
+      <div
+        v-else
+        class="layer-label-only"
+        :class="{
+          'layer-unavailable': !isLayerAvailableAtZoom(layer),
+          'layer-error': getLayerError(layer.id),
+        }"
+      >
+        <span class="layer-title">
+          {{ getLayerDisplayName(layer) }}
+          <span v-if="isLayerLoading(layer.id)" class="loading-indicator">
+            Loading...
+          </span>
+          <span
+            v-if="getLayerError(layer.id)"
+            class="error-indicator"
+            :title="getLayerError(layer.id) || ''"
+          >
+            Error
+          </span>
+          <span v-if="!isLayerAvailableAtZoom(layer)" class="zoom-indicator">
+            (zoom in)
+          </span>
+        </span>
+      </div>
+
+      <!-- Opacity slider (respects per-layer shouldShowSlider) -->
+      <div v-if="shouldShowSlider(layer) && isVisible(layer.id)" class="opacity-control">
         <label class="opacity-label">
           Opacity: {{ Math.round(getLayerOpacity(layer.id) * 100) }}%
         </label>
@@ -131,9 +188,9 @@ function onOpacityChange(layerId: string, event: Event) {
         />
       </div>
 
-      <!-- Legend -->
+      <!-- Legend (respects per-layer shouldShowLegendBox) -->
       <ul
-        v-if="showLegend && isVisible(layer.id) && layer.legend?.length"
+        v-if="shouldShowLegendBox(layer) && isVisible(layer.id) && layer.legend?.length"
         class="layer-legend"
       >
         <li
@@ -216,6 +273,15 @@ function onOpacityChange(layerId: string, event: Event) {
 .layer-checkbox input[type="checkbox"]:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+/* Layer label without checkbox (auto-controlled layers) */
+.layer-label-only {
+  display: flex;
+  align-items: center;
+  padding: 10px 8px;
+  font-size: 14px;
+  color: #333;
 }
 
 .layer-title {

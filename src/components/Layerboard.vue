@@ -21,7 +21,7 @@ import LayerPanel from './LayerPanel.vue'
 import type { CyclomediaConfig, PictometryCredentials } from "@phila/phila-ui-map-core"
 
 import { getLayerConfigs, clearCache } from '@/services/layerConfigService'
-import type { LayerConfig } from '@/types/layer'
+import type { LayerConfig, TiledLayerConfig } from '@/types/layer'
 
 // ============================================================================
 // PROPS
@@ -50,6 +50,8 @@ const props = withDefaults(
     mapLabel?: string
     /** Whether to fetch metadata from Carto for layer info links */
     fetchMetadata?: boolean
+    /** Tiled layer configurations (ESRI MapServer tiles separate from WebMap) */
+    tiledLayers?: TiledLayerConfig[]
   }>(),
   {
     themeColor: '#0f4d90',
@@ -58,6 +60,7 @@ const props = withDefaults(
     sidebarLabel: 'Layers',
     mapLabel: 'Map',
     fetchMetadata: false,
+    tiledLayers: () => [],
   }
 )
 
@@ -91,6 +94,48 @@ const layerErrors = ref<Record<string, string>>({})
 const layerMetadata = ref<Record<string, string>>({})
 
 // ============================================================================
+// TILED LAYER STATE
+// ============================================================================
+/** Set of currently visible tiled layer IDs */
+const visibleTiledLayers = ref<Set<string>>(new Set())
+/** Opacity values for tiled layers (0-1) */
+const tiledLayerOpacities = ref<Record<string, number>>({})
+
+// Initialize tiled layer opacities when props change
+function initTiledLayerOpacities() {
+  const opacities: Record<string, number> = {}
+  for (const tiled of props.tiledLayers) {
+    opacities[tiled.id] = tiled.opacity ?? 1.0
+  }
+  tiledLayerOpacities.value = opacities
+}
+
+// ============================================================================
+// TILED LAYER METHODS
+// ============================================================================
+function toggleTiledLayer(layerId: string) {
+  if (visibleTiledLayers.value.has(layerId)) {
+    visibleTiledLayers.value.delete(layerId)
+  } else {
+    visibleTiledLayers.value.add(layerId)
+  }
+  visibleTiledLayers.value = new Set(visibleTiledLayers.value)
+}
+
+function setTiledLayerVisible(layerId: string, visible: boolean) {
+  if (visible) {
+    visibleTiledLayers.value.add(layerId)
+  } else {
+    visibleTiledLayers.value.delete(layerId)
+  }
+  visibleTiledLayers.value = new Set(visibleTiledLayers.value)
+}
+
+function setTiledLayerOpacity(layerId: string, opacity: number) {
+  tiledLayerOpacities.value = { ...tiledLayerOpacities.value, [layerId]: opacity }
+}
+
+// ============================================================================
 // PROVIDE STATE TO CHILD COMPONENTS
 // ============================================================================
 // These are provided so custom sidebar content can access layer state
@@ -102,6 +147,13 @@ provide('layerboard-errors', readonly(layerErrors))
 provide('layerboard-zoom', readonly(currentZoom))
 provide('layerboard-toggle-layer', toggleLayer)
 provide('layerboard-set-opacity', setLayerOpacity)
+// Tiled layer state
+provide('layerboard-tiled-layers', readonly(computed(() => props.tiledLayers)))
+provide('layerboard-visible-tiled', visibleTiledLayers)
+provide('layerboard-tiled-opacities', tiledLayerOpacities)
+provide('layerboard-toggle-tiled', toggleTiledLayer)
+provide('layerboard-set-tiled-opacity', setTiledLayerOpacity)
+provide('layerboard-set-tiled-visible', setTiledLayerVisible)
 
 // ============================================================================
 // COMPUTED
@@ -146,6 +198,7 @@ async function loadLayerConfigs() {
     layerOpacities.value = initialOpacities
 
     console.log(`[Layerboard] Loaded ${configs.length} layer configs from WebMap ${props.webMapId}`)
+    console.log('[Layerboard] Layer IDs:', configs.map(c => c.id))
     emit('configs-loaded', configs)
   } catch (error) {
     console.error('[Layerboard] Failed to load layer configs:', error)
@@ -273,6 +326,17 @@ defineExpose({
   reloadConfigs: loadLayerConfigs,
   /** Clear configuration cache */
   clearCache: () => clearCache(props.webMapId),
+  // Tiled layer APIs
+  /** Set of visible tiled layer IDs */
+  visibleTiledLayers,
+  /** Tiled layer opacity values */
+  tiledLayerOpacities,
+  /** Toggle a tiled layer's visibility */
+  toggleTiledLayer,
+  /** Set a tiled layer's visibility explicitly */
+  setTiledLayerVisible,
+  /** Set a tiled layer's opacity */
+  setTiledLayerOpacity,
 })
 
 // ============================================================================
@@ -281,6 +345,7 @@ defineExpose({
 onMounted(() => {
   loadLayerConfigs()
   fetchMetadataLookup()
+  initTiledLayerOpacities()
 })
 </script>
 
@@ -323,7 +388,7 @@ onMounted(() => {
           :class="{ 'is-active': activePanel === 'sidebar' }"
           :style="sidebarStyle"
         >
-          <slot name="sidebar" :layers="layerList" :visible-layers="visibleLayers" :layer-opacities="layerOpacities" :loading-layers="loadingLayers" :layer-errors="layerErrors" :current-zoom="currentZoom" :toggle-layer="toggleLayer" :set-opacity="setLayerOpacity">
+          <slot name="sidebar" :layers="layerList" :visible-layers="visibleLayers" :layer-opacities="layerOpacities" :loading-layers="loadingLayers" :layer-errors="layerErrors" :current-zoom="currentZoom" :toggle-layer="toggleLayer" :set-opacity="setLayerOpacity" :tiled-layers="tiledLayers" :visible-tiled-layers="visibleTiledLayers" :tiled-layer-opacities="tiledLayerOpacities" :toggle-tiled-layer="toggleTiledLayer" :set-tiled-layer-visible="setTiledLayerVisible" :set-tiled-layer-opacity="setTiledLayerOpacity">
             <!-- Default: LayerPanel for flat layer list -->
             <LayerPanel
               v-if="showDefaultSidebar"
@@ -348,6 +413,9 @@ onMounted(() => {
             :visible-layers="visibleLayers"
             :layer-opacities="layerOpacities"
             :layer-list="layerList"
+            :tiled-layers="tiledLayers"
+            :visible-tiled-layers="visibleTiledLayers"
+            :tiled-layer-opacities="tiledLayerOpacities"
             :cyclomedia-config="cyclomediaConfig"
             :pictometry-credentials="pictometryCredentials"
             @zoom="onZoomChange"

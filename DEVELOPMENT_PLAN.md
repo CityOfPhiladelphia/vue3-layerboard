@@ -2064,8 +2064,17 @@ Make the StreetSmartPHL example app fully functional with all 5 topics matching 
 
 Before implementing individual topics, ensure the generic topic infrastructure works correctly.
 
-- [ ] Verify layers load onto the map when topic accordions are expanded
-- [ ] Ensure layer visibility toggles work within topics
+**NOTE**: The original Layerboard topic system is more complex than simple checkboxes. Key concepts from the original:
+- `topicLayers` array with per-layer options: `shouldShowCheckbox`, `shouldShowSlider`, `shouldShowLegendBox`, `layerNameChange`
+- `defaultTopicLayers` - layers that auto-activate when the app loads (not just when topic opens)
+- `tiledLayers` - separate ESRI tile map layers (different from WebMap feature layers)
+- `dataSources` - external data fetching for dynamic components like "trash-status"
+- Layer visibility requires BOTH being in `webMapActiveLayers` (toggled on) AND `activeTopicLayers` (topic has it defined)
+
+**Basic Topic Infrastructure:**
+- [x] Ensure only one topic can be open at a time (expanding one closes the other)
+- [x] Update App.vue layer IDs to match WebMap transformer output (slugified IDs)
+- [ ] Ensure layer visibility toggles work within topics (checkboxes control map layers)
 - [ ] Verify layer legends display correctly within topics
 - [ ] Test layer opacity controls work within topics
 - [ ] Ensure zoom-dependent layer visibility warnings appear
@@ -2073,65 +2082,161 @@ Before implementing individual topics, ensure the generic topic infrastructure w
 - [ ] Test error handling for failed layer loads within topics
 - [ ] Ensure closing a topic doesn't remove layers from the map (persistence)
 
-##### 8.7.7.2 PickupPHL Topic
+**Advanced Topic Features (matching original Layerboard):**
+- [x] Support per-layer display options (`shouldShowCheckbox: false` hides checkbox, layer is auto-controlled)
+- [x] Support `layerNameChange` to display different label than layer title
+- [x] Support `shouldShowSlider: false` to hide opacity slider per layer
+- [x] Support `shouldShowLegendBox: false` to hide legend per layer
+- [ ] Support `defaultTopicLayers` for auto-activating layers on app load
+
+**Known Issues / Future Work:**
+- [ ] CORS errors for `plowphl-services.phila.gov` - server needs CORS headers enabled, or add proxy support
+- [ ] Some layers show "Error" when toggled on (CORS/server unavailable) - consider adding proxy for CORS-blocked services
+- [x] Implement `shouldShowCheckbox: false` behavior in LayerCheckboxSet component
+
+##### 8.7.7.2 TiledLayers Support (Framework Feature)
+
+Implement support for ESRI tiled map layers (MapServer tiles) that are separate from WebMap feature layers. These are used by PickupPHL and PlowPHL topics in the original StreetSmartPHL.
+
+**TiledLayers Configuration (in Layerboard.vue or tiledLayerService.ts):**
+- [x] Create `TiledLayerConfig` interface with `id`, `url`, `zIndex`, `attribution` properties
+- [x] Add `tiledLayers` prop to Layerboard component for registering available tiled layers
+- [x] Create `activeTiledLayers` state (Set or array) to track which tiled layers are visible
+- [x] Add `toggleTiledLayer(id)` and `setTiledLayerVisible(id, visible)` methods
+- [x] Expose tiled layer state/methods via slot props for custom sidebars
+
+**TiledLayers Rendering (in MapPanel.vue or MapView):**
+- [x] Add MapLibre raster source for each configured tiled layer
+- [x] Add MapLibre raster layer that renders when tiled layer is active
+- [ ] Handle tiled layer z-index ordering
+- [x] Support show/hide based on `activeTiledLayers` state
+
+**Original StreetSmartPHL TiledLayers to Support:**
+| ID | URL | Used By |
+|----|-----|---------|
+| collectionDay | `https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/PickupPHL_CollectionBands/MapServer` | PickupPHL |
+| plowTreatedStreetsStatus | `https://plowphl-services.phila.gov/arcweb/rest/services/Projects/TreatedStatus/MapServer` | PlowPHL |
+| plowNotTreatedStreets | `https://plowphl-services.phila.gov/arcweb/rest/services/Projects/NotTreatedCity/MapServer` | PlowPHL |
+| plowConditional | `https://plowphl-services.phila.gov/arcweb/rest/services/Projects/NotTreatedCond/MapServer` | PlowPHL |
+| plowHighways | `https://plowphl-services.phila.gov/arcweb/rest/services/Projects/NotTreatedHigh/MapServer` | PlowPHL |
+
+##### 8.7.7.3 DataSources Support (Framework Feature)
+
+Implement support for fetching external data from APIs. This data is used by custom topic components to display status, notices, and conditionally show/hide layers.
+
+**DataSources Service (src/services/dataSourceService.ts):**
+- [ ] Create `DataSourceConfig` interface with `id`, `url`, `type` ('http' | 'esri'), `options`
+- [ ] Create `useDataSources()` composable for fetching and caching data
+- [ ] Implement HTTP GET fetcher for REST APIs
+- [ ] Implement ESRI FeatureServer fetcher for ArcGIS services
+- [ ] Add loading/error state tracking per data source
+- [ ] Add auto-refresh/polling capability for real-time data
+
+**DataSources Integration with Layerboard:**
+- [ ] Add `dataSources` prop to Layerboard component for registering data sources
+- [ ] Fetch data sources on mount (or when topic becomes active)
+- [ ] Expose data source state via slot props for custom topic components
+- [ ] Provide `refetchDataSource(id)` method for manual refresh
+
+**Original StreetSmartPHL DataSources to Support:**
+| ID | URL | Type | Used By |
+|----|-----|------|---------|
+| notices | `https://stsweb.phila.gov/StreetsCityWorks/api/Notice/getNotices` | HTTP | All topics |
+| storms | `https://stsweb.phila.gov/StreetsCityWorks/api/Storm/getStorm` | HTTP | PlowPHL |
+| trashDay | `https://admin.phila.gov/wp-json/closures/v1/closure/` | HTTP | PickupPHL |
+| weekPave | `https://services.arcgis.com/.../StreetSmartPHL/FeatureServer/4` | ESRI | PavePHL |
+| weekMill | `https://services.arcgis.com/.../StreetSmartPHL/FeatureServer/3` | ESRI | PavePHL |
+
+##### 8.7.7.4 PickupPHL Topic
 
 Implement the PickupPHL (sanitation collection) topic to match production functionality.
 
-- [ ] Review PickupPHL components in the original `streetsmartphl` project config
-- [ ] Add Sanitation Visits layers (Close, Intermediate, Far) with correct styling
-- [ ] Add Collection Boundary layer
-- [ ] Add any PickupPHL-specific interactive components (date pickers, filters, etc.)
-- [ ] Add any PickupPHL-specific data tables or info displays
-- [ ] Test all PickupPHL functionality matches production behavior
+**WebMap Feature Layers (auto-visible when topic active, no checkboxes):**
+- [ ] Sanitation Visits - Close (zoom-dependent visibility)
+- [ ] Sanitation Visits - Intermediate (zoom-dependent visibility)
+- [ ] Sanitation Visits - Far (zoom-dependent visibility)
+- [ ] CollectionBoundary (always visible when topic active)
 
-##### 8.7.7.3 PermitPHL Topic
+**TiledLayers:**
+- [x] Create `CollectionDayLegend.vue` component with checkbox "Show Collection Day"
+- [x] Checkbox toggles `collectionDay` tiled layer on/off
+- [x] Display day-of-week legend (Monday-Friday with colors)
+
+**DataSources:**
+- [ ] Fetch `notices` data source, filter for type "pickupphl", display alerts
+- [ ] Fetch `trashDay` data source, display collection status in `TrashStatus` component
+
+**Custom Components:**
+- [ ] Create `TrashStatus.vue` - displays current trash/recycling collection status
+- [x] Create `CollectionDayLegend.vue` - checkbox + day-of-week color legend
+
+##### 8.7.7.5 PermitPHL Topic
 
 Implement the PermitPHL (street closure permits) topic to match production functionality.
 
-- [ ] Review PermitPHL components in the original `streetsmartphl` project config
-- [ ] Add Current Closures layers (points and segments)
-- [ ] Add Future Closures layers (points and segments)
-- [ ] Add any PermitPHL-specific interactive components (date filters, permit search, etc.)
-- [ ] Add any PermitPHL-specific data tables or info displays
-- [ ] Test all PermitPHL functionality matches production behavior
+**WebMap Feature Layers (with checkboxes):**
+- [ ] Current Closures (points)
+- [ ] Current Closures (segments)
+- [ ] Future Closures (points)
+- [ ] Future Closures (segments)
 
-##### 8.7.7.4 PavePHL Topic
+**DataSources:**
+- [ ] Fetch `notices` data source, filter for type "permitphl", display alerts
+
+##### 8.7.7.6 PavePHL Topic
 
 Implement the PavePHL (paving and road conditions) topic to match production functionality.
 
-- [ ] Review PavePHL components in the original `streetsmartphl` project config
-- [ ] Add Streets Status for Paving Season layer
-- [ ] Add Street Condition Index layer
-- [ ] Add Five Year Paving Plan layer
-- [ ] Add Highway Districts layer
-- [ ] Add Council Districts layer
-- [ ] Add State Routes layer
-- [ ] Add any PavePHL-specific interactive components (year selectors, condition filters, etc.)
-- [ ] Add any PavePHL-specific data tables or info displays
-- [ ] Test all PavePHL functionality matches production behavior
+**WebMap Feature Layers (with checkboxes):**
+- [ ] Streets Status for Paving Season
+- [ ] Street Condition Index
+- [ ] Five Year Paving Plan
+- [ ] Highway Districts
+- [ ] Council Districts
+- [ ] State Routes
 
-##### 8.7.7.5 PlowPHL Topic
+**DataSources:**
+- [ ] Fetch `weekPave` data source - weekly paving schedule
+- [ ] Fetch `weekMill` data source - weekly milling schedule
+- [ ] Fetch `notices` data source, filter for type "pavephl", display alerts
+
+##### 8.7.7.7 PlowPHL Topic
 
 Implement the PlowPHL (snow removal and winter operations) topic to match production functionality.
 
-- [ ] Review PlowPHL components in the original `streetsmartphl` project config
-- [ ] Add Treated Street Status layer
-- [ ] Add Streets not treated by the City layer
-- [ ] Add any PlowPHL-specific interactive components (status indicators, time displays, etc.)
-- [ ] Add any PlowPHL-specific data tables or info displays
-- [ ] Test all PlowPHL functionality matches production behavior
+**WebMap Feature Layers (auto-visible based on deployment type, no checkboxes):**
+- [ ] Treated Street Status
+- [ ] Streets not treated by the City
 
-##### 8.7.7.6 SweepPHL Topic
+**TiledLayers (conditional visibility based on storms data):**
+- [ ] `plowTreatedStreetsStatus` - visible during Full/Conditional/Highways deployments
+- [ ] `plowNotTreatedStreets` - visible during Full deployments
+- [ ] `plowConditional` - visible during Conditional deployments
+- [ ] `plowHighways` - visible during Highways Only deployments
+
+**DataSources:**
+- [ ] Fetch `storms` data source - current deployment type (Full/Conditional/Highways/None)
+- [ ] Fetch `notices` data source, filter for type "plowphl", display alerts
+
+**Custom Components:**
+- [ ] Create `DeploymentType.vue` - displays current snow event deployment status
+- [ ] Create `PlowDeploymentLegend.vue` - dynamic legend based on deployment type
+- [ ] Create `TopicTiledLayers.vue` - conditionally shows tiled layers based on data state
+
+##### 8.7.7.8 SweepPHL Topic
 
 Implement the SweepPHL (street sweeping) topic to match production functionality.
 
-- [ ] Review SweepPHL components in the original `streetsmartphl` project config
-- [ ] Add All Route Locations layer
-- [ ] Add Swept Streets layer
-- [ ] Add 2022 Litter Index layer
-- [ ] Add any SweepPHL-specific interactive components (schedule displays, route filters, etc.)
-- [ ] Add any SweepPHL-specific data tables or info displays
-- [ ] Test all SweepPHL functionality matches production behavior
+**WebMap Feature Layers (with checkboxes/radio buttons):**
+- [ ] All Route Locations
+- [ ] Swept Streets
+- [ ] 2022 Litter Index
+
+**DataSources:**
+- [ ] Fetch `notices` data source, filter for type "sweepphl", display alerts
+
+**Custom Components:**
+- [ ] Create `SweepLegend.vue` - radio button group to toggle between sweep layers
 
 ---
 
