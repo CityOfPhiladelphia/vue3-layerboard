@@ -39,11 +39,8 @@ const layerDisplayOptions: Record<string, LayerDisplayOptions> = {
     shouldShowSlider: false,
     shouldShowLegendBox: false,
   },
-  'collectionboundary': {
-    shouldShowCheckbox: false,
-    shouldShowSlider: false,
-    shouldShowLegendBox: false,
-  },
+  // Note: 'collectionboundary' removed - it's an ArcGISMapServiceLayer, not queryable as GeoJSON
+  // The boundary is rendered as part of the CollectionBoundaryPickupPHL__2026 tiled layer
 }
 
 // ============================================================================
@@ -59,11 +56,19 @@ const WEBMAP_ID = 'bf08ea4ce7194f68934a7150567151ae'
 // These layer titles come from the actual StreetSmartPHL WebMap
 
 // PickupPHL topic - Sanitation collection and visits
+// Note: 'collectionboundary' was removed - it's an ArcGISMapServiceLayer, not a FeatureLayer
+// The boundary outline is included in the CollectionBoundaryPickupPHL__2026 tiled layer
 const pickupLayerIds = [
   'sanitation-visits-close',
   'sanitation-visits-intermediate',
   'sanitation-visits-far',
-  'collectionboundary',
+]
+
+// Layers that auto-activate when topic opens (no user checkbox)
+const pickupDefaultLayers = [
+  'sanitation-visits-close',
+  'sanitation-visits-intermediate',
+  'sanitation-visits-far',
 ]
 
 // PermitPHL topic - Street closure permits
@@ -103,9 +108,11 @@ const sweepLayerIds = [
 // ESRI MapServer tiled layers separate from WebMap feature layers
 const tiledLayers: TiledLayerConfig[] = [
   {
+    // Collection Day bands with day-of-week colors and dual-color labels (Fri/Tue)
+    // Updated URL from WebMap bf08ea4ce7194f68934a7150567151ae (2026 version)
     id: 'collectionDay',
     title: 'Collection Day',
-    url: 'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/PickupPHL_CollectionBands/MapServer',
+    url: 'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/CollectionBoundaryPickupPHL__2026/MapServer',
   },
   // PlowPHL tiled layers (for future implementation)
   // {
@@ -135,18 +142,61 @@ const pictometryCredentials: PictometryCredentials = {
 }
 
 // ============================================================================
+// DEFAULT TOPIC LAYERS MAP
+// ============================================================================
+// Maps topic ID to layers that auto-activate when that topic opens
+const defaultTopicLayersMap: Record<string, string[]> = {
+  pickup: pickupDefaultLayers,
+  // Other topics can have default layers added here as needed
+}
+
+// ============================================================================
 // TOPIC ACCORDION STATE
 // ============================================================================
 // Only one topic can be open at a time
 const expandedTopic = ref<string | null>('pickup')
 
+// Reference to setLayersVisible function from Layerboard slot
+let setLayersVisibleFn: ((layerIds: string[], visible: boolean) => void) | null = null
+let hasInitializedDefaultLayers = false
+
+function initSetLayersVisible(fn: (layerIds: string[], visible: boolean) => void) {
+  setLayersVisibleFn = fn
+  // If pickup topic is already expanded on load, activate its default layers (once)
+  if (!hasInitializedDefaultLayers && expandedTopic.value === 'pickup' && pickupDefaultLayers.length > 0) {
+    hasInitializedDefaultLayers = true
+    fn(pickupDefaultLayers, true)
+  }
+}
+
 function onTopicToggle(topicId: string, expanded: boolean) {
+  // Get previous topic's default layers to turn off
+  const previousTopic = expandedTopic.value
+  const previousDefaultLayers = previousTopic ? defaultTopicLayersMap[previousTopic] || [] : []
+
   if (expanded) {
     // Opening a topic closes any other open topic
     expandedTopic.value = topicId
+
+    // Turn off previous topic's default layers
+    if (setLayersVisibleFn && previousDefaultLayers.length > 0 && previousTopic !== topicId) {
+      setLayersVisibleFn(previousDefaultLayers, false)
+    }
+
+    // Turn on this topic's default layers
+    const defaultLayers = defaultTopicLayersMap[topicId] || []
+    if (setLayersVisibleFn && defaultLayers.length > 0) {
+      setLayersVisibleFn(defaultLayers, true)
+    }
   } else {
     // Closing the current topic
     expandedTopic.value = null
+
+    // Turn off this topic's default layers
+    const defaultLayers = defaultTopicLayersMap[topicId] || []
+    if (setLayersVisibleFn && defaultLayers.length > 0) {
+      setLayersVisibleFn(defaultLayers, false)
+    }
   }
 }
 
@@ -190,7 +240,9 @@ function getLayersForTopic(
     :pictometry-credentials="pictometryCredentials"
   >
     <!-- Custom sidebar with topic accordions -->
-    <template #sidebar="{ layers, visibleLayers, layerOpacities, loadingLayers, layerErrors, currentZoom, toggleLayer, setOpacity, visibleTiledLayers, toggleTiledLayer }">
+    <template #sidebar="{ layers, visibleLayers, layerOpacities, loadingLayers, layerErrors, currentZoom, toggleLayer, setLayersVisible, setOpacity, visibleTiledLayers, toggleTiledLayer }">
+      <!-- Initialize setLayersVisible function and activate default layers for initial topic -->
+      <component :is="'div'" style="display:none" :ref="() => initSetLayersVisible(setLayersVisible)" />
       <div class="topics-container">
         <!-- PickupPHL Topic -->
         <TopicAccordion
