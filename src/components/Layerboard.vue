@@ -146,6 +146,8 @@ provide('layerboard-loading', readonly(loadingLayers))
 provide('layerboard-errors', readonly(layerErrors))
 provide('layerboard-zoom', readonly(currentZoom))
 provide('layerboard-toggle-layer', toggleLayer)
+provide('layerboard-set-layer-visible', setLayerVisible)
+provide('layerboard-set-layers-visible', setLayersVisible)
 provide('layerboard-set-opacity', setLayerOpacity)
 // Tiled layer state
 provide('layerboard-tiled-layers', readonly(computed(() => props.tiledLayers)))
@@ -267,6 +269,26 @@ function toggleLayer(layerId: string) {
   visibleLayers.value = new Set(visibleLayers.value)
 }
 
+function setLayerVisible(layerId: string, visible: boolean) {
+  if (visible) {
+    visibleLayers.value.add(layerId)
+  } else {
+    visibleLayers.value.delete(layerId)
+  }
+  visibleLayers.value = new Set(visibleLayers.value)
+}
+
+function setLayersVisible(layerIds: string[], visible: boolean) {
+  for (const layerId of layerIds) {
+    if (visible) {
+      visibleLayers.value.add(layerId)
+    } else {
+      visibleLayers.value.delete(layerId)
+    }
+  }
+  visibleLayers.value = new Set(visibleLayers.value)
+}
+
 function setLayerOpacity(layerId: string, opacity: number) {
   layerOpacities.value = { ...layerOpacities.value, [layerId]: opacity }
 }
@@ -320,6 +342,10 @@ defineExpose({
   currentZoom,
   /** Toggle a layer's visibility */
   toggleLayer,
+  /** Set a layer's visibility explicitly */
+  setLayerVisible,
+  /** Set multiple layers' visibility at once */
+  setLayersVisible,
   /** Set a layer's opacity */
   setLayerOpacity,
   /** Reload layer configurations */
@@ -388,7 +414,7 @@ onMounted(() => {
           :class="{ 'is-active': activePanel === 'sidebar' }"
           :style="sidebarStyle"
         >
-          <slot name="sidebar" :layers="layerList" :visible-layers="visibleLayers" :layer-opacities="layerOpacities" :loading-layers="loadingLayers" :layer-errors="layerErrors" :current-zoom="currentZoom" :toggle-layer="toggleLayer" :set-opacity="setLayerOpacity" :tiled-layers="tiledLayers" :visible-tiled-layers="visibleTiledLayers" :tiled-layer-opacities="tiledLayerOpacities" :toggle-tiled-layer="toggleTiledLayer" :set-tiled-layer-visible="setTiledLayerVisible" :set-tiled-layer-opacity="setTiledLayerOpacity">
+          <slot name="sidebar" :layers="layerList" :visible-layers="visibleLayers" :layer-opacities="layerOpacities" :loading-layers="loadingLayers" :layer-errors="layerErrors" :current-zoom="currentZoom" :toggle-layer="toggleLayer" :set-layer-visible="setLayerVisible" :set-layers-visible="setLayersVisible" :set-opacity="setLayerOpacity" :tiled-layers="tiledLayers" :visible-tiled-layers="visibleTiledLayers" :tiled-layer-opacities="tiledLayerOpacities" :toggle-tiled-layer="toggleTiledLayer" :set-tiled-layer-visible="setTiledLayerVisible" :set-tiled-layer-opacity="setTiledLayerOpacity">
             <!-- Default: LayerPanel for flat layer list -->
             <LayerPanel
               v-if="showDefaultSidebar"

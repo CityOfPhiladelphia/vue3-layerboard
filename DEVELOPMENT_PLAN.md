@@ -2087,7 +2087,7 @@ Before implementing individual topics, ensure the generic topic infrastructure w
 - [x] Support `layerNameChange` to display different label than layer title
 - [x] Support `shouldShowSlider: false` to hide opacity slider per layer
 - [x] Support `shouldShowLegendBox: false` to hide legend per layer
-- [ ] Support `defaultTopicLayers` for auto-activating layers on app load
+- [x] Support `defaultTopicLayers` for auto-activating layers when topic opens (implemented via `setLayersVisible` slot prop)
 
 **Known Issues / Future Work:**
 - [ ] CORS errors for `plowphl-services.phila.gov` - server needs CORS headers enabled, or add proxy support
@@ -2152,15 +2152,34 @@ Implement support for fetching external data from APIs. This data is used by cus
 Implement the PickupPHL (sanitation collection) topic to match production functionality.
 
 **WebMap Feature Layers (auto-visible when topic active, no checkboxes):**
-- [ ] Sanitation Visits - Close (zoom-dependent visibility)
-- [ ] Sanitation Visits - Intermediate (zoom-dependent visibility)
-- [ ] Sanitation Visits - Far (zoom-dependent visibility)
-- [ ] CollectionBoundary (always visible when topic active)
+- [x] Sanitation Visits - Close (zoom-dependent visibility)
+- [x] Sanitation Visits - Intermediate (zoom-dependent visibility)
+- [x] Sanitation Visits - Far (zoom-dependent visibility)
+- ~~CollectionBoundary~~ - **NOT a Feature Layer** - it's an `ArcGISMapServiceLayer` (dynamic map service), not queryable for GeoJSON. The "twice-a-week" boundary outline is included in the `CollectionBoundaryPickupPHL__2026` tiled layer.
+
+**Auto-Activating Layers When Topic Opens:**
+The PickupPHL topic needs to auto-activate certain layers when the topic accordion is expanded:
+- [x] Implement `defaultTopicLayers` support in TopicAccordion or Layerboard
+  - Added `setLayerVisible()` and `setLayersVisible()` methods to Layerboard.vue
+  - Exposed via slot props for custom sidebars
+- [x] When PickupPHL topic expands, auto-toggle ON: Sanitation Visits layers
+  - Implemented `defaultTopicLayersMap` in App.vue
+  - `onTopicToggle()` now activates/deactivates default layers when topics open/close
+- [x] These layers have `shouldShowCheckbox: false` so they're NOT listed in UI, just auto-activated
 
 **TiledLayers:**
 - [x] Create `CollectionDayLegend.vue` component with checkbox "Show Collection Day"
 - [x] Checkbox toggles `collectionDay` tiled layer on/off
 - [x] Display day-of-week legend (Monday-Friday with colors)
+- [x] Updated tiled layer URL to `CollectionBoundaryPickupPHL__2026` (2026 version from WebMap)
+
+**Tiled Layer Content (rendered server-side by MapServer):**
+The `collectionDay` tiled layer at `https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/CollectionBoundaryPickupPHL__2026/MapServer` includes:
+- [ ] Verify tiled layer renders day-of-week color bands correctly
+- [ ] Verify tiled layer renders dual-color labels (e.g., "Fri/Tue" where "Fri/" is blue #004da8, "Tue" is red #ff0000)
+- [ ] Labels are rendered server-side by MapServer - no client-side implementation needed
+- [ ] Primary day (blue) = Trash & Recycling collection day
+- [ ] Secondary day (red) = Trash Only collection day (for twice-a-week areas)
 
 **DataSources:**
 - [ ] Fetch `notices` data source, filter for type "pickupphl", display alerts
