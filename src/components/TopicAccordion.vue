@@ -97,11 +97,14 @@ function toggleAccordion() {
 
 <style scoped>
 .topic-accordion {
-  border-bottom: 1px solid #e0e0e0;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  overflow: hidden;
 }
 
-.topic-accordion:first-child {
-  border-top: 1px solid #e0e0e0;
+.topic-accordion:last-child {
+  margin-bottom: 0;
 }
 
 .topic-header {

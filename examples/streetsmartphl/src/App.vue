@@ -276,6 +276,11 @@ function getLayersForTopic(
       <!-- Initialize layer control functions -->
       <component :is="'div'" style="display:none" :ref="() => initLayerControls(setLayersVisible, setTiledLayerVisible)" />
       <div class="topics-container">
+        <!-- Intro paragraph -->
+        <p class="intro-text">
+          StreetSmartPHL is your portal for viewing information about Streets Department activities.
+          Click to open any of the topics below. Select features on the map for detailed information.
+        </p>
         <!-- PickupPHL Topic -->
         <TopicAccordion
           title="PickupPHL"
@@ -402,7 +407,18 @@ function getLayersForTopic(
 
 <style scoped>
 .topics-container {
-  padding: 0;
+  padding: 10px;
+}
+
+.intro-text {
+  margin: 0 0 16px 0;
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #444;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  font-style: italic;
 }
 
 .no-layers {
