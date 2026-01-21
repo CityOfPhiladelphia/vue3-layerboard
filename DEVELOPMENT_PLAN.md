@@ -2226,17 +2226,29 @@ Implement the PermitPHL (street closure permits) topic to match production funct
 Implement the PavePHL (paving and road conditions) topic to match production functionality.
 
 **WebMap Feature Layers (with checkboxes):**
-- [ ] Streets Status for Paving Season
-- [ ] Street Condition Index
-- [ ] Five Year Paving Plan
-- [ ] Highway Districts
-- [ ] Council Districts
-- [ ] State Routes
+- [x] Streets Status for Paving Season
+- [x] Street Condition Index
+- [x] Five Year Paving Plan
+- [ ] Highway Districts (commented out in original)
+- [ ] Council Districts (commented out in original)
+- [ ] State Routes (commented out in original)
 
 **DataSources:**
-- [ ] Fetch `weekPave` data source - weekly paving schedule
-- [ ] Fetch `weekMill` data source - weekly milling schedule
-- [ ] Fetch `notices` data source, filter for type "pavephl", display alerts
+- [ ] Fetch `weekPave` data source - weekly paving schedule (optional - popover tables)
+- [ ] Fetch `weekMill` data source - weekly milling schedule (optional - popover tables)
+- [x] Fetch `notices` data source, filter for type "pavephl", display alerts
+
+**Topic UI Content:**
+- [x] Add intro paragraph: "View status of paving operations."
+- [x] Add dynamic notices alert (from notices data source, type "pavephl")
+- [x] Configure layer display options (no opacity slider, matching original)
+- [x] Configure default topic layers (Streets Status for Paving Season auto-activate)
+- [x] Add "Paving Steps" info box with 4-step explanation (Milling, Adjustments, Paving, Linestriping)
+
+**Follow-up Issues:**
+- [x] Use radio buttons instead of checkboxes for layer selection (only one layer visible at a time)
+- [x] Fix layer order to match original: Streets Status for Paving Season, Street Condition Index, Five Year Paving Plan
+- [x] Fix Street Condition Index layer colors (should be green, orange, red)
 
 ##### 8.7.7.7 PlowPHL Topic
 
