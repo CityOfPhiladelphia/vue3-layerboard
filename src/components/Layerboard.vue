@@ -589,6 +589,24 @@ html, body {
 
 <!-- Popup styles (unscoped for MapLibre) -->
 <style>
+/* Override the layerboard reset for popup navigation */
+.popup-navigation-header {
+  padding: 20px 12px 8px 12px !important;
+  margin: -10px -10px 10px -10px !important;
+}
+
+.popup-layer-name {
+  margin-bottom: 8px !important;
+}
+
+.popup-navigation-controls {
+  gap: 8px !important;
+}
+
+.popup-nav-button {
+  padding: 6px 12px !important;
+}
+
 .popup-content {
   font-size: 14px;
   min-width: 200px;
