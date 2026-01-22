@@ -45,3 +45,5 @@ __screenshots__/
 
 # Temporary files
 tmpclaude-*
+
+.npmrc
