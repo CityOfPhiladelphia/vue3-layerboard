@@ -509,6 +509,10 @@ onMounted(() => {
   <div class="layerboard-layout">
     <!-- Header -->
     <header class="layerboard-header" :style="headerStyle">
+      <a href="https://www.phila.gov/" class="layerboard-logo">
+        <img src="https://standards.phila.gov/img/logo/city-of-philadelphia-yellow-white.png" alt="City of Philadelphia">
+      </a>
+      <span class="layerboard-header-divider"></span>
       <slot name="header">
         <h1>{{ title }}</h1>
         <span v-if="subtitle" class="layerboard-subtitle">{{ subtitle }}</span>
@@ -520,7 +524,7 @@ onMounted(() => {
       <!-- Loading state -->
       <div v-if="configsLoading" class="layerboard-loading">
         <div class="layerboard-spinner" :style="{ borderTopColor: themeColor }"></div>
-        <p>Loading layer configurations...</p>
+        <p>Loading {{ title }}...</p>
       </div>
 
       <!-- Error state -->
@@ -769,21 +773,40 @@ html, body {
 /* Header */
 .layerboard-header {
   color: white;
-  padding: 10px 20px;
+  padding: 8px 20px;
   flex-shrink: 0;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 16px;
+}
+
+.layerboard-logo {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.layerboard-logo img {
+  height: 50px;
+  width: auto;
+}
+
+.layerboard-header-divider {
+  width: 1px;
+  height: 40px;
+  background-color: white;
+  opacity: 0.5;
+  flex-shrink: 0;
 }
 
 .layerboard-header h1 {
   margin: 0;
-  font-size: 18px;
+  font-size: 26px;
   font-weight: 600;
 }
 
 .layerboard-subtitle {
-  font-size: 14px;
+  font-size: 16px;
   opacity: 0.9;
 }
 
