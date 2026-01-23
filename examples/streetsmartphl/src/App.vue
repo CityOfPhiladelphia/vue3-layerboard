@@ -15,6 +15,7 @@ import LayerRadioButtonSet from '@/components/LayerRadioButtonSet.vue'
 import CollectionDayLegend from './components/CollectionDayLegend.vue'
 import PlowDeploymentLegend from './components/PlowDeploymentLegend.vue'
 import SweepLegend from './components/SweepLegend.vue'
+import InstructionsModal from './components/InstructionsModal.vue'
 import type { CyclomediaConfig, PictometryCredentials } from "@phila/phila-ui-map-core"
 import { PhilaLink } from "@phila/phila-ui-link"
 import type { LayerConfig, LayerDisplayOptions, TiledLayerConfig } from '@/types/layer'
@@ -564,7 +565,6 @@ function getPlowTiledLayersForDeployment(deploymentType: string): string[] {
 <template>
   <Layerboard
     title="StreetSmartPHL"
-    subtitle="Streets Department Interactive Map"
     :web-map-id="WEBMAP_ID"
     theme-color="#0f4d90"
     sidebar-width="30%"
@@ -922,13 +922,27 @@ function getPlowTiledLayersForDeployment(deploymentType: string): string[] {
     </template>
 
     <!-- Custom footer -->
-    <template #footer>
+    <template #footer="{ openModal }">
+      <PhilaLink
+        text="City of Philadelphia"
+        href="https://www.phila.gov/"
+        target="_blank"
+        variant="on-primary"
+      />
+      <span class="footer-separator">|</span>
+      <a href="#" class="footer-link" @click.prevent="openModal">How to use</a>
+      <span class="footer-separator">|</span>
       <PhilaLink
         text="Feedback"
         href="https://phila.formstack.com/forms/streetsmartphl_feedback"
         target="_blank"
         variant="on-primary"
       />
+    </template>
+
+    <!-- Instructions modal -->
+    <template #modal>
+      <InstructionsModal />
     </template>
   </Layerboard>
 </template>
@@ -1169,5 +1183,22 @@ function getPlowTiledLayersForDeployment(deploymentType: string): string[] {
 .deployment-status-icon {
   font-weight: bold;
   font-size: 16px;
+}
+
+/* Footer link styles */
+.footer-link {
+  color: white;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.footer-link:hover {
+  opacity: 0.8;
+}
+
+.footer-separator {
+  margin: 0 8px;
+  color: white;
+  opacity: 0.7;
 }
 </style>
