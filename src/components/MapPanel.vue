@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, onMounted, onUnmounted } from "vue";
 import {
   Map as MapComponent,
   CircleLayer,
@@ -654,6 +654,50 @@ function closePopup() {
   // Clear selected feature highlight
   selectedFeature.value = null;
 }
+
+// ============================================================================
+// KEYBOARD NAVIGATION
+// ============================================================================
+// Handles keyboard shortcuts when popup is visible:
+// - Arrow Left/Up: previous feature
+// - Arrow Right/Down: next feature
+// - Escape: close popup
+
+function handleKeyDown(event: KeyboardEvent) {
+  // Only handle keys when popup is visible
+  if (popupFeatures.value.length === 0) return;
+
+  // Don't interfere with text input fields
+  const target = event.target as HTMLElement;
+  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+    return;
+  }
+
+  switch (event.key) {
+    case 'ArrowLeft':
+    case 'ArrowUp':
+      event.preventDefault();
+      goToPreviousFeature();
+      break;
+    case 'ArrowRight':
+    case 'ArrowDown':
+      event.preventDefault();
+      goToNextFeature();
+      break;
+    case 'Escape':
+      event.preventDefault();
+      closePopup();
+      break;
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown);
+});
 
 // Navigate to next feature in the popup
 // Cycles through all features collected at the click point
