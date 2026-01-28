@@ -405,6 +405,19 @@ function togglePanel() {
 }
 
 // ============================================================================
+// MOBILE HAMBURGER MENU
+// ============================================================================
+const mobileMenuOpen = ref(false)
+
+function toggleMobileMenu() {
+  mobileMenuOpen.value = !mobileMenuOpen.value
+}
+
+function closeMobileMenu() {
+  mobileMenuOpen.value = false
+}
+
+// ============================================================================
 // DESKTOP SIDEBAR COLLAPSE
 // ============================================================================
 const sidebarCollapsed = ref(false)
@@ -509,14 +522,52 @@ onMounted(() => {
   <div class="layerboard-layout">
     <!-- Header -->
     <header class="layerboard-header" :style="headerStyle">
-      <a href="https://www.phila.gov/" class="layerboard-logo">
+      <!-- Desktop: Logo and divider -->
+      <a href="https://www.phila.gov/" class="layerboard-logo layerboard-desktop-only">
         <img src="https://standards.phila.gov/img/logo/city-of-philadelphia-yellow-white.png" alt="City of Philadelphia">
       </a>
-      <span class="layerboard-header-divider"></span>
+      <span class="layerboard-header-divider layerboard-desktop-only"></span>
+
+      <!-- Mobile: Hamburger menu button -->
+      <button
+        class="layerboard-hamburger layerboard-mobile-only"
+        @click="toggleMobileMenu"
+        aria-label="Toggle menu"
+      >
+        <Icon :icon-definition="faBars" size="medium" decorative />
+      </button>
+
       <slot name="header">
         <h1>{{ title }}</h1>
         <span v-if="subtitle" class="layerboard-subtitle">{{ subtitle }}</span>
       </slot>
+
+      <!-- Mobile dropdown menu -->
+      <div
+        v-if="mobileMenuOpen"
+        class="layerboard-mobile-menu"
+        :style="{ backgroundColor: themeColor }"
+      >
+        <div class="layerboard-mobile-menu-content">
+          <slot name="footer" :open-modal="openModal" :close-modal="closeModal" :is-modal-open="isModalOpen">
+            City of Philadelphia
+          </slot>
+        </div>
+        <button
+          class="layerboard-mobile-menu-close"
+          @click="closeMobileMenu"
+          aria-label="Close menu"
+        >
+          <Icon :icon-definition="faXmark" size="medium" decorative />
+        </button>
+      </div>
+
+      <!-- Mobile menu backdrop -->
+      <div
+        v-if="mobileMenuOpen"
+        class="layerboard-mobile-menu-backdrop"
+        @click="closeMobileMenu"
+      ></div>
     </header>
 
     <!-- Main content area -->
@@ -682,6 +733,11 @@ html, body {
 /* Ensure box-sizing is inherited for better consistency */
 .layerboard-layout *, .layerboard-layout *::before, .layerboard-layout *::after {
   box-sizing: inherit;
+}
+
+/* Hide footer separators in mobile menu */
+.layerboard-mobile-menu-content .footer-separator {
+  display: none;
 }
 </style>
 
@@ -897,8 +953,100 @@ html, body {
   overflow-y: auto;
 }
 
+/* Desktop/Mobile visibility helpers */
+.layerboard-mobile-only {
+  display: none;
+}
+
+.layerboard-desktop-only {
+  display: flex;
+}
+
+/* Hamburger menu button */
+.layerboard-hamburger {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.layerboard-hamburger:hover {
+  opacity: 0.8;
+}
+
+/* Mobile dropdown menu */
+.layerboard-mobile-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  padding: 16px 20px;
+  z-index: 1001;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.layerboard-mobile-menu-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+  color: white;
+  font-size: 16px;
+}
+
+.layerboard-mobile-menu-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.layerboard-mobile-menu-close:hover {
+  opacity: 0.8;
+}
+
+.layerboard-mobile-menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+}
+
 /* Mobile responsive styles */
 @media (max-width: 768px) {
+  /* Show hamburger, hide logo on mobile */
+  .layerboard-mobile-only {
+    display: flex;
+  }
+
+  .layerboard-desktop-only {
+    display: none;
+  }
+
+  /* Hide footer on mobile */
+  .layerboard-footer {
+    display: none;
+  }
+
+  /* Position header for dropdown menu */
+  .layerboard-header {
+    position: relative;
+    padding: 4px 12px;
+  }
+
   .layerboard-main {
     position: relative;
   }
@@ -931,8 +1079,10 @@ html, body {
     display: block;
   }
 
+  /* Adjust mobile toggle position since footer is hidden */
   .layerboard-mobile-toggle {
     display: block;
+    bottom: 20px;
   }
 
   .layerboard-sidebar-toggle {
