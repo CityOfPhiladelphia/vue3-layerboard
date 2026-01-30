@@ -59,7 +59,8 @@ export function useApiDataSources(configs: DataSourceConfig[]) {
     state.value = {
       ...state.value,
       [id]: {
-        ...state.value[id],
+        data: state.value[id]?.data ?? null,
+        lastFetched: state.value[id]?.lastFetched ?? null,
         loading: true,
         error: null,
       },
@@ -131,7 +132,8 @@ export function useApiDataSources(configs: DataSourceConfig[]) {
       state.value = {
         ...state.value,
         [id]: {
-          ...state.value[id],
+          data: state.value[id]?.data ?? null,
+          lastFetched: state.value[id]?.lastFetched ?? null,
           loading: false,
           error: errorMessage,
         },
