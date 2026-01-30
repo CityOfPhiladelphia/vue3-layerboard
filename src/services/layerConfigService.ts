@@ -75,7 +75,7 @@ export function clearCache(webMapId?: string): void {
 // ============================================================================
 
 /** Cached token to avoid regenerating on every request */
-let cachedToken: string | null = null;
+let cachedToken: string | undefined = undefined;
 let tokenExpiry: number = 0;
 
 /**
@@ -84,9 +84,7 @@ let tokenExpiry: number = 0;
  * @returns Promise resolving to the token string, or undefined if credentials not available
  */
 async function generateArcGISToken(): Promise<string | undefined> {
-  // @ts-expect-error - Vite env variable
   const username = typeof import.meta !== 'undefined' && import.meta.env?.VITE_AGO_USERNAME;
-  // @ts-expect-error - Vite env variable
   const password = typeof import.meta !== 'undefined' && import.meta.env?.VITE_AGO_PASSWORD;
 
   if (!username || !password) {

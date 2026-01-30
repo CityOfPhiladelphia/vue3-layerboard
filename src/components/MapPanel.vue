@@ -41,8 +41,8 @@ const props = withDefaults(
     visibleTiledLayers?: Set<string>;
     tiledLayerOpacities?: Record<string, number>;
     // Imagery props
-    cyclomediaConfig: CyclomediaConfig;
-    pictometryCredentials: PictometryCredentials;
+    cyclomediaConfig?: CyclomediaConfig;
+    pictometryCredentials?: PictometryCredentials;
     // Map control positions
     basemapControlPosition?: ControlPosition;
     navigationControlPosition?: ControlPosition;
