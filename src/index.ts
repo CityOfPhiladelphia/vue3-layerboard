@@ -14,3 +14,6 @@ export * from './utils'
 
 // Types
 export * from './types'
+
+// Re-export types from dependencies so consumers don't need to import from them directly
+export type { CyclomediaConfig, PictometryCredentials, AisGeocodeResult } from '@phila/phila-ui-map-core'
