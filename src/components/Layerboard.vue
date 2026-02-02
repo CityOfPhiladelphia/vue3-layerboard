@@ -732,8 +732,15 @@ html, body {
   box-sizing: border-box;
 }
 
-/* Ensure box-sizing is inherited for better consistency */
-.layerboard-layout *, .layerboard-layout *::before, .layerboard-layout *::after {
+/* Ensure box-sizing is inherited for direct layout children only (avoids affecting phila-ui components) */
+.layerboard-layout > *,
+.layerboard-layout > *::before,
+.layerboard-layout > *::after,
+.layerboard-header > *,
+.layerboard-main > *,
+.layerboard-sidebar > *,
+.layerboard-map > *,
+.layerboard-footer > * {
   box-sizing: inherit;
 }
 
