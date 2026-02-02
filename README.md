@@ -28,6 +28,18 @@ This package requires the following peer dependencies:
 - `@fortawesome/free-solid-svg-icons` ^7.0.0
 - `@fortawesome/vue-fontawesome` ^3.0.0
 
+## Design Decisions
+
+### Compact Text Field Styling
+
+The phila-ui TextField component has a standard height of 56px, designed for form inputs where touch targets and readability are priorities. In the layerboard context (sidebar filter and map search control), we intentionally use a more compact ~40px version to save vertical space.
+
+This is achieved through CSS overrides in:
+- **LayerPanel.vue** - for the layer filter search box
+- **MapPanel.vue** - for the MapSearchControl on the map
+
+The overrides remove padding from `.state-layer` and `.content` elements. See the detailed comments in those files for the technical breakdown.
+
 ## Development
 
 ### Recommended IDE Setup

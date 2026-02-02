@@ -3,7 +3,7 @@ import { computed } from "vue";
 import type { LayerConfig } from "@/types/layer";
 import { TextField } from "@phila/phila-ui-text-field";
 import { Icon } from "@phila/phila-ui-core";
-import { faCircleInfo } from "@fortawesome/pro-solid-svg-icons";
+import { faCircleInfo, faFilter } from "@fortawesome/pro-solid-svg-icons";
 
 // Props with configuration options
 const props = withDefaults(
@@ -40,7 +40,7 @@ const props = withDefaults(
     showSearch: true,
     showOpacity: true,
     showLegend: true,
-    searchPlaceholder: "Search layers...",
+    searchPlaceholder: "Filter layers...",
   }
 );
 
@@ -136,7 +136,11 @@ function onOpacityChange(layerId: string, event: Event) {
         v-model="searchValue"
         :placeholder="searchPlaceholder"
         class-name="layer-search-field"
-      />
+      >
+        <template #trailing-action>
+          <Icon :icon-definition="faFilter" size="small" inline decorative />
+        </template>
+      </TextField>
     </div>
 
     <!-- Topics mode: render slot content -->
@@ -308,6 +312,31 @@ function onOpacityChange(layerId: string, event: Event) {
 
 .search-box :deep(.phila-text-field) {
   width: 100% !important;
+}
+
+/*
+ * COMPACT TEXT FIELD OVERRIDES
+ *
+ * The phila-ui TextField has a standard height of 56px designed for form inputs.
+ * In the layerboard sidebar, we intentionally use a more compact version to save
+ * vertical space. These overrides remove extra padding/gaps while preserving the
+ * component's visual design.
+ *
+ * Standard TextField height breakdown:
+ *   - .state-layer padding: 4px top + 4px bottom
+ *   - .content height: var(--dimension-core-600) + 4px padding top/bottom
+ *   Total: ~56px
+ *
+ * Compact version reduces this to ~40px by removing the extra padding layers.
+ */
+.search-box :deep(.state-layer) {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.search-box :deep(.content) {
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 /* Topics container for accordion mode */
