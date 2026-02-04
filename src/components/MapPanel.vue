@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onUnmounted } from "vue";
 import {
-  Map as MapComponent,
+  Map as PhilaMap,
   CircleLayer,
   FillLayer,
   LineLayer,
@@ -75,7 +75,7 @@ const emit = defineEmits<{
 // ============================================================================
 // MAP REF & ZOOM/SCALE TRACKING
 // ============================================================================
-const mapRef = ref<InstanceType<typeof MapComponent> | null>(null);
+const mapRef = ref<InstanceType<typeof PhilaMap> | null>(null);
 const mapInstance = ref<any>(null); // Store the actual MapLibre map instance
 
 // Current map scale (calculated from zoom level and latitude)
@@ -1280,7 +1280,7 @@ function handleSearchResult(result: AisGeocodeResult) {
 
 <template>
   <div class="map-panel">
-    <MapComponent
+    <PhilaMap
       ref="mapRef"
       :zoom="props.initialZoom"
       :center="props.initialCenter"
@@ -1415,7 +1415,7 @@ function handleSearchResult(result: AisGeocodeResult) {
         @next="goToNextFeature"
         @previous="goToPreviousFeature"
       />
-    </MapComponent>
+    </PhilaMap>
   </div>
 </template>
 
