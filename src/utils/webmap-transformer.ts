@@ -452,7 +452,7 @@ function convertUniqueValueRenderer(
     }
 
     // Default color
-    colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : '#888888');
+    colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : 'rgba(0, 0, 0, 0)');
 
     paint = {
       'fill-color': colorMatch,
@@ -496,7 +496,7 @@ function convertUniqueValueRenderer(
       });
     }
 
-    colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : '#888888');
+    colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : 'rgba(0, 0, 0, 0)');
 
     paint = {
       'line-color': colorMatch,
@@ -524,7 +524,7 @@ function convertUniqueValueRenderer(
       });
     }
 
-    colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : '#888888');
+    colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : 'rgba(0, 0, 0, 0)');
 
     // Esri size is diameter in points, MapLibre radius is in pixels
     // Empirically tuned multiplier to match Esri rendering
