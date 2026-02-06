@@ -6,9 +6,7 @@ A Vue 3 + MapLibre mapping framework for City of Philadelphia applications. This
 
 ## Framework Vision
 
-**Dual purpose:**
-1. **Immediate**: Migrate OpenMaps application to Vue 3 + MapLibre
-2. **Long-term**: Publish as `@phila/layerboard` on npm
+Published as `@phila/layerboard` on npm. Consumer apps (OpenMaps, StreetSmartPHL, etc.) live in their own repos and install layerboard as a dependency.
 
 ### What is vue3-layerboard?
 
@@ -122,7 +120,6 @@ vue3-layerboard/
 │   │   └── index.ts
 │   └── index.ts                # Main package exports
 ├── examples/
-│   ├── openmaps/               # OpenMaps example app
 │   └── streetsmartphl/         # StreetSmartPHL example app
 └── package.json
 ```
