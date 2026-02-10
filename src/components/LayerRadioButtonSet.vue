@@ -250,6 +250,11 @@ function onOpacityChange(layerId: string, event: Event) {
   opacity: 0.5;
 }
 
+.layer-radio input[type="radio"]:focus-visible {
+  outline: 2px solid #0f4d90;
+  outline-offset: 2px;
+}
+
 .layer-title {
   line-height: 1.4;
   flex: 1;
@@ -309,6 +314,11 @@ function onOpacityChange(layerId: string, event: Event) {
   width: 100%;
   height: 4px;
   cursor: pointer;
+}
+
+.opacity-slider:focus-visible {
+  outline: 2px solid #0f4d90;
+  outline-offset: 2px;
 }
 
 /* Legend styles */
