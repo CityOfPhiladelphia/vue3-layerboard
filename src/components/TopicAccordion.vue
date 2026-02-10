@@ -65,7 +65,7 @@ function toggleAccordion() {
       <!-- Icon slot or FontAwesome icon -->
       <span v-if="icon || $slots.icon" class="topic-icon">
         <slot name="icon">
-          <font-awesome-icon v-if="icon" :icon="['fas', icon]" />
+          <font-awesome-icon v-if="icon" :icon="['fas', icon]" aria-hidden="true" />
         </slot>
       </span>
 

@@ -404,6 +404,7 @@ const sidebarRef = ref<HTMLElement | null>(null)
 const hamburgerRef = ref<HTMLElement | null>(null)
 const mobileToggleRef = ref<HTMLElement | null>(null)
 const mobileMenuCloseRef = ref<HTMLElement | null>(null)
+const mobileMenuRef = ref<HTMLElement | null>(null)
 const modalRef = ref<HTMLElement | null>(null)
 const modalCloseRef = ref<HTMLElement | null>(null)
 
@@ -477,6 +478,35 @@ function handleModalBackdropClick(event: MouseEvent) {
   // Only close if clicking the backdrop itself, not the modal content
   if ((event.target as HTMLElement).classList.contains('layerboard-modal-backdrop')) {
     closeModal()
+  }
+}
+
+function handleMobileMenuKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    closeMobileMenu()
+    return
+  }
+
+  if (event.key === 'Tab' && mobileMenuRef.value) {
+    const focusable = Array.from(mobileMenuRef.value.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), textarea, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    ))
+    if (focusable.length === 0) return
+
+    const first = focusable[0]!
+    const last = focusable[focusable.length - 1]!
+
+    if (event.shiftKey) {
+      if (document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      }
+    } else {
+      if (document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
   }
 }
 
@@ -609,7 +639,7 @@ onBeforeUnmount(() => {
       <a href="https://www.phila.gov/" class="layerboard-logo layerboard-desktop-only">
         <img src="https://standards.phila.gov/img/logo/city-of-philadelphia-yellow-white.png" alt="City of Philadelphia">
       </a>
-      <span class="layerboard-header-divider layerboard-desktop-only"></span>
+      <span class="layerboard-header-divider layerboard-desktop-only" aria-hidden="true"></span>
 
       <!-- Mobile: Hamburger menu button -->
       <button
@@ -630,8 +660,10 @@ onBeforeUnmount(() => {
       <!-- Mobile dropdown menu -->
       <div
         v-if="mobileMenuOpen"
+        ref="mobileMenuRef"
         class="layerboard-mobile-menu"
         :style="{ backgroundColor: themeColor }"
+        @keydown="handleMobileMenuKeydown"
       >
         <div class="layerboard-mobile-menu-content">
           <slot name="footer" :open-modal="openModal" :close-modal="closeModal" :is-modal-open="isModalOpen">
@@ -740,7 +772,8 @@ onBeforeUnmount(() => {
           :class="{ 'is-collapsed': sidebarCollapsed }"
           :style="{ left: sidebarCollapsed ? '0' : props.sidebarWidth }"
           @click="toggleSidebarCollapse"
-          aria-label="Toggle sidebar"
+          :aria-expanded="!sidebarCollapsed"
+          :aria-label="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
         >
           <Icon
             :icon-definition="sidebarCollapsed ? faCaretRight : faCaretLeft"
@@ -781,6 +814,7 @@ onBeforeUnmount(() => {
         class="layerboard-modal"
         role="dialog"
         aria-modal="true"
+        aria-label="Application information"
       >
         <button
           ref="modalCloseRef"
@@ -795,6 +829,8 @@ onBeforeUnmount(() => {
         </slot>
       </div>
     </div>
+
+    <span class="sr-only" aria-live="polite">{{ activePanel === 'sidebar' ? 'Showing layers panel' : 'Showing map' }}</span>
   </div>
 </template>
 
@@ -1012,7 +1048,11 @@ html, body {
   border-right: 1px solid #ddd;
   overflow-y: auto;
   flex-shrink: 0;
-  outline: none;
+}
+
+.layerboard-sidebar:focus {
+  outline: 2px solid #0f4d90;
+  outline-offset: -2px;
 }
 
 /* Map */
@@ -1377,5 +1417,17 @@ html, body {
     margin: 20px;
     max-width: calc(100vw - 40px);
   }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>
