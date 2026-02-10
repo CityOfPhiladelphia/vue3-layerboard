@@ -1,6 +1,6 @@
 {
   "name": "@phila/layerboard",
-  "version": "3.0.0-beta.11",
+  "version": "3.0.0-beta.12",
   "type": "module",
   "description": "Vue 3 + MapLibre mapping framework for City of Philadelphia applications",
   "main": "./dist/index.js",
@@ -44,7 +44,7 @@
   "dependencies": {
     "@phila/phila-ui-core": "2.3.1-beta.0",
     "@phila/phila-ui-link": "1.0.2-beta.0",
-    "@phila/phila-ui-map-core": "0.0.3-beta.3",
+    "@phila/phila-ui-map-core": "0.0.3-beta.4",
     "@phila/phila-ui-text-field": "1.1.1-beta.0"
   },
   "devDependencies": {

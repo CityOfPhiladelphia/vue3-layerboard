@@ -1430,4 +1430,15 @@ html, body {
   white-space: nowrap;
   border: 0;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .layerboard-spinner {
+    animation: none;
+  }
+
+  .layerboard-sidebar-toggle,
+  .layerboard-sidebar {
+    transition: none;
+  }
+}
 </style>

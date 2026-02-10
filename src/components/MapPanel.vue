@@ -962,7 +962,7 @@ const popupHtml = computed(() => {
     html += `<table class="popup-table" aria-label="${escapeHtml(popupTitle.value)}">`;
     for (const field of feature.popupConfig.fields) {
       const value = formatFieldValue(feature.properties[field.field], field.format);
-      html += `<tr><th>${escapeHtml(field.label)}</th><td>${escapeHtml(value)}</td></tr>`;
+      html += `<tr><th scope="row">${escapeHtml(field.label)}</th><td>${escapeHtml(value)}</td></tr>`;
     }
     html += `</table>`;
   } else {

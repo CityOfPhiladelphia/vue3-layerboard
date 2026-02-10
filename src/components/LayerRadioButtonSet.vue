@@ -169,6 +169,7 @@ function onOpacityChange(layerId: string, event: Event) {
       <ul
         v-if="shouldShowLegendBox(layer) && isVisible(layer.id) && layer.legend?.length"
         class="layer-legend"
+        :aria-label="'Legend for ' + getLayerDisplayName(layer)"
       >
         <li
           v-for="(item, index) in layer.legend"
@@ -267,7 +268,7 @@ function onOpacityChange(layerId: string, event: Event) {
 
 /* Unavailable layer styles */
 .layer-unavailable {
-  color: #999;
+  color: #767676;
   cursor: not-allowed;
 }
 
@@ -277,7 +278,7 @@ function onOpacityChange(layerId: string, event: Event) {
 
 .zoom-indicator {
   font-size: 11px;
-  color: #888;
+  color: #767676;
   font-style: italic;
   margin-left: 4px;
 }
