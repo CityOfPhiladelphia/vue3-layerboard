@@ -107,7 +107,7 @@ function onOpacityChange(layerId: string, event: Event) {
 </script>
 
 <template>
-  <div class="layer-radio-set">
+  <div class="layer-radio-set" role="radiogroup">
     <div
       v-for="layer in layers"
       :key="layer.id"
@@ -130,13 +130,14 @@ function onOpacityChange(layerId: string, event: Event) {
         />
         <span class="layer-title">
           {{ getLayerDisplayName(layer) }}
-          <span v-if="isLayerLoading(layer.id)" class="loading-indicator">
+          <span v-if="isLayerLoading(layer.id)" class="loading-indicator" role="status">
             Loading...
           </span>
           <span
             v-if="getLayerError(layer.id)"
             class="error-indicator"
             :aria-label="getLayerError(layer.id) || 'Error'"
+            role="status"
           >
             Error
           </span>

@@ -205,6 +205,7 @@ function onOpacityChange(layerId: string, event: Event) {
               <span
                 v-if="isLayerLoading(layer.config.id)"
                 class="loading-indicator"
+                role="status"
               >
                 Loading...
               </span>
@@ -212,6 +213,7 @@ function onOpacityChange(layerId: string, event: Event) {
                 v-if="getLayerError(layer.config.id)"
                 class="error-indicator"
                 :aria-label="getLayerError(layer.config.id) || 'Error'"
+                role="status"
               >
                 Error
               </span>
