@@ -377,6 +377,11 @@ function onOpacityChange(layerId: string, event: Event) {
   align-self: center;
 }
 
+.metadata-link:focus-visible {
+  outline: 2px solid #0f4d90;
+  outline-offset: 2px;
+}
+
 /* Placeholder to maintain alignment when layer has no metadata but others do */
 .metadata-placeholder {
   width: 24px;
@@ -411,6 +416,11 @@ function onOpacityChange(layerId: string, event: Event) {
 .layer-checkbox input[type="checkbox"]:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+.layer-checkbox input[type="checkbox"]:focus-visible {
+  outline: 2px solid #0f4d90;
+  outline-offset: 2px;
 }
 
 .layer-title {
@@ -477,6 +487,11 @@ function onOpacityChange(layerId: string, event: Event) {
   width: 100%;
   height: 4px;
   cursor: pointer;
+}
+
+.opacity-slider:focus-visible {
+  outline: 2px solid #0f4d90;
+  outline-offset: 2px;
 }
 
 /* No results message */

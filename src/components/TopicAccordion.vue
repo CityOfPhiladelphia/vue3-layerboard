@@ -138,7 +138,7 @@ function toggleAccordion() {
   background: #ebebeb;
 }
 
-.topic-header:focus {
+.topic-header:focus-visible {
   outline: 2px solid #0f4d90;
   outline-offset: -2px;
 }

@@ -276,6 +276,11 @@ function onOpacityChange(layerId: string, event: Event) {
   opacity: 0.5;
 }
 
+.layer-checkbox input[type="checkbox"]:focus-visible {
+  outline: 2px solid #0f4d90;
+  outline-offset: 2px;
+}
+
 /* Layer label without checkbox (auto-controlled layers) */
 .layer-label-only {
   display: flex;
@@ -344,6 +349,11 @@ function onOpacityChange(layerId: string, event: Event) {
   width: 100%;
   height: 4px;
   cursor: pointer;
+}
+
+.opacity-slider:focus-visible {
+  outline: 2px solid #0f4d90;
+  outline-offset: 2px;
 }
 
 /* Legend styles */
