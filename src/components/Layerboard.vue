@@ -13,7 +13,7 @@
  * All layer state management is handled internally.
  */
 
-import { ref, computed, onMounted, provide, readonly } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, provide, readonly } from 'vue'
 import "@phila/phila-ui-core/styles/tokens.css"
 import "@phila/phila-ui-core/styles/template-light.css"
 import "@phila/phila-ui-map-core/dist/assets/phila-ui-map-core.css"
@@ -398,12 +398,27 @@ function updateSearch(query: string) {
 }
 
 // ============================================================================
+// TEMPLATE REFS
+// ============================================================================
+const sidebarRef = ref<HTMLElement | null>(null)
+const hamburgerRef = ref<HTMLElement | null>(null)
+const mobileToggleRef = ref<HTMLElement | null>(null)
+const mobileMenuCloseRef = ref<HTMLElement | null>(null)
+const modalRef = ref<HTMLElement | null>(null)
+const modalCloseRef = ref<HTMLElement | null>(null)
+
+// ============================================================================
 // MOBILE PANEL TOGGLE
 // ============================================================================
 const activePanel = ref<"sidebar" | "map">("map")
 
 function togglePanel() {
   activePanel.value = activePanel.value === "sidebar" ? "map" : "sidebar"
+  nextTick(() => {
+    if (activePanel.value === "sidebar") {
+      sidebarRef.value?.focus()
+    }
+  })
 }
 
 // ============================================================================
@@ -413,10 +428,18 @@ const mobileMenuOpen = ref(false)
 
 function toggleMobileMenu() {
   mobileMenuOpen.value = !mobileMenuOpen.value
+  if (mobileMenuOpen.value) {
+    nextTick(() => {
+      mobileMenuCloseRef.value?.focus()
+    })
+  }
 }
 
 function closeMobileMenu() {
   mobileMenuOpen.value = false
+  nextTick(() => {
+    hamburgerRef.value?.focus()
+  })
 }
 
 // ============================================================================
@@ -432,19 +455,58 @@ function toggleSidebarCollapse() {
 // MODAL SYSTEM
 // ============================================================================
 const isModalOpen = ref(false)
+const modalTriggerElement = ref<HTMLElement | null>(null)
 
 function openModal() {
+  modalTriggerElement.value = document.activeElement as HTMLElement | null
   isModalOpen.value = true
+  nextTick(() => {
+    modalCloseRef.value?.focus()
+  })
 }
 
 function closeModal() {
   isModalOpen.value = false
+  nextTick(() => {
+    modalTriggerElement.value?.focus()
+    modalTriggerElement.value = null
+  })
 }
 
 function handleModalBackdropClick(event: MouseEvent) {
   // Only close if clicking the backdrop itself, not the modal content
   if ((event.target as HTMLElement).classList.contains('layerboard-modal-backdrop')) {
     closeModal()
+  }
+}
+
+function handleModalKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    closeModal()
+    return
+  }
+
+  // Focus trap: keep Tab cycling within the modal
+  if (event.key === 'Tab' && modalRef.value) {
+    const focusable = Array.from(modalRef.value.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), textarea, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    ))
+    if (focusable.length === 0) return
+
+    const first = focusable[0]!
+    const last = focusable[focusable.length - 1]!
+
+    if (event.shiftKey) {
+      if (document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      }
+    } else {
+      if (document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
   }
 }
 
@@ -511,12 +573,26 @@ defineExpose({
 })
 
 // ============================================================================
+// KEYBOARD HANDLERS
+// ============================================================================
+function handleGlobalKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && mobileMenuOpen.value) {
+    closeMobileMenu()
+  }
+}
+
+// ============================================================================
 // LIFECYCLE
 // ============================================================================
 onMounted(() => {
   loadLayerConfigs()
   fetchMetadataLookup()
   initTiledLayerOpacities()
+  document.addEventListener('keydown', handleGlobalKeydown)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', handleGlobalKeydown)
 })
 </script>
 
@@ -532,7 +608,9 @@ onMounted(() => {
 
       <!-- Mobile: Hamburger menu button -->
       <button
+        ref="hamburgerRef"
         class="layerboard-hamburger layerboard-mobile-only"
+        :aria-expanded="mobileMenuOpen"
         @click="toggleMobileMenu"
         aria-label="Toggle menu"
       >
@@ -556,6 +634,7 @@ onMounted(() => {
           </slot>
         </div>
         <button
+          ref="mobileMenuCloseRef"
           class="layerboard-mobile-menu-close"
           @click="closeMobileMenu"
           aria-label="Close menu"
@@ -597,10 +676,12 @@ onMounted(() => {
       <template v-else>
         <!-- Sidebar Panel -->
         <aside
+          ref="sidebarRef"
           class="layerboard-sidebar"
           :class="{ 'is-active': activePanel === 'sidebar' }"
           :style="sidebarStyle"
           aria-label="Map layers"
+          tabindex="-1"
         >
           <slot name="sidebar" :layers="layerList" :visible-layers="visibleLayers" :layer-opacities="layerOpacities" :loading-layers="loadingLayers" :layer-errors="layerErrors" :current-zoom="currentZoom" :toggle-layer="toggleLayer" :set-layer-visible="setLayerVisible" :set-layers-visible="setLayersVisible" :set-opacity="setLayerOpacity" :tiled-layers="tiledLayers" :visible-tiled-layers="visibleTiledLayers" :tiled-layer-opacities="tiledLayerOpacities" :toggle-tiled-layer="toggleTiledLayer" :set-tiled-layer-visible="setTiledLayerVisible" :set-tiled-layer-opacity="setTiledLayerOpacity" :data-sources-state="dataSourcesState" :data-sources-loading="dataSourcesLoading" :get-data-source="getDataSourceData" :refetch-data-source="refetchDataSource">
             <!-- Default: LayerPanel for flat layer list -->
@@ -666,6 +747,7 @@ onMounted(() => {
 
     <!-- Mobile toggle button -->
     <button
+      ref="mobileToggleRef"
       class="layerboard-mobile-toggle"
       :style="mobileToggleStyle"
       @click="togglePanel"
@@ -686,9 +768,16 @@ onMounted(() => {
       v-if="isModalOpen"
       class="layerboard-modal-backdrop"
       @click="handleModalBackdropClick"
+      @keydown="handleModalKeydown"
     >
-      <div class="layerboard-modal">
+      <div
+        ref="modalRef"
+        class="layerboard-modal"
+        role="dialog"
+        aria-modal="true"
+      >
         <button
+          ref="modalCloseRef"
           class="layerboard-modal-close"
           @click="closeModal"
           aria-label="Close modal"
@@ -852,6 +941,11 @@ html, body {
   flex-shrink: 0;
 }
 
+.layerboard-logo:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
 .layerboard-logo img {
   height: 50px;
   width: auto;
@@ -891,6 +985,7 @@ html, body {
   border-right: 1px solid #ddd;
   overflow-y: auto;
   flex-shrink: 0;
+  outline: none;
 }
 
 /* Map */
@@ -932,6 +1027,11 @@ html, body {
   filter: brightness(0.9);
 }
 
+.layerboard-mobile-toggle:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
 /* Desktop sidebar collapse toggle - visible on desktop only */
 .layerboard-sidebar-toggle {
   position: absolute;
@@ -954,6 +1054,11 @@ html, body {
 
 .layerboard-sidebar-toggle:hover {
   background-color: #f0f0f0;
+}
+
+.layerboard-sidebar-toggle:focus-visible {
+  outline: 2px solid #0f4d90;
+  outline-offset: -2px;
 }
 
 /* Sidebar transition for smooth collapse */
@@ -986,6 +1091,11 @@ html, body {
 
 .layerboard-hamburger:hover {
   opacity: 0.8;
+}
+
+.layerboard-hamburger:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
 }
 
 /* Mobile dropdown menu */
@@ -1024,6 +1134,11 @@ html, body {
 
 .layerboard-mobile-menu-close:hover {
   opacity: 0.8;
+}
+
+.layerboard-mobile-menu-close:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
 }
 
 .layerboard-mobile-menu-backdrop {
@@ -1172,6 +1287,11 @@ html, body {
   filter: brightness(0.9);
 }
 
+.layerboard-retry-button:focus-visible {
+  outline: 2px solid #0f4d90;
+  outline-offset: 2px;
+}
+
 /* Modal styles */
 .layerboard-modal-backdrop {
   position: fixed;
@@ -1217,6 +1337,11 @@ html, body {
 .layerboard-modal-close:hover {
   background-color: #f0f0f0;
   color: #333;
+}
+
+.layerboard-modal-close:focus-visible {
+  outline: 2px solid #0f4d90;
+  outline-offset: -2px;
 }
 
 /* Mobile modal adjustments */
