@@ -28,6 +28,8 @@ const props = withDefaults(
     showOpacity?: boolean
     /** Whether to show legends (can be overridden per-layer) */
     showLegend?: boolean
+    /** Accessible label for the group */
+    groupLabel?: string
   }>(),
   {
     layerOpacities: () => ({}),
@@ -106,7 +108,7 @@ function onOpacityChange(layerId: string, event: Event) {
 </script>
 
 <template>
-  <fieldset class="layer-checkbox-set" role="group">
+  <fieldset class="layer-checkbox-set" role="group" :aria-label="groupLabel">
     <div
       v-for="layer in layers"
       :key="layer.id"

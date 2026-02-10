@@ -29,6 +29,8 @@ const props = withDefaults(
     showLegend?: boolean
     /** Unique name for the radio button group */
     groupName?: string
+    /** Accessible label for the group */
+    groupLabel?: string
   }>(),
   {
     layerOpacities: () => ({}),
@@ -107,7 +109,7 @@ function onOpacityChange(layerId: string, event: Event) {
 </script>
 
 <template>
-  <div class="layer-radio-set" role="radiogroup">
+  <div class="layer-radio-set" role="radiogroup" :aria-label="groupLabel">
     <div
       v-for="layer in layers"
       :key="layer.id"
