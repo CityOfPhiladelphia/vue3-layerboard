@@ -129,7 +129,7 @@ function onOpacityChange(layerId: string, event: Event) {
 </script>
 
 <template>
-  <aside class="layer-panel">
+  <div class="layer-panel">
     <!-- Search box (configurable) -->
     <div v-if="showSearch" class="search-box">
       <TextField
@@ -172,7 +172,7 @@ function onOpacityChange(layerId: string, event: Event) {
             target="_blank"
             rel="noopener noreferrer"
             class="metadata-link"
-            title="View metadata"
+            :aria-label="'View metadata for ' + layer.config.title"
             @click.stop
           >
             <Icon
@@ -292,7 +292,7 @@ function onOpacityChange(layerId: string, event: Event) {
         No layers match "{{ searchQuery }}"
       </div>
     </div>
-  </aside>
+  </div>
 </template>
 
 <style scoped>

@@ -687,6 +687,14 @@ function substituteTemplate(template: string, properties: Record<string, unknown
   });
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
 // Format field value for display
 function formatFieldValue(value: unknown, format?: PopupFieldFormat): string {
   if (value === null || value === undefined) return "-";
@@ -948,13 +956,13 @@ const popupHtml = computed(() => {
   if (!feature) return "";
 
   let html = `<div class="popup-content">`;
-  html += `<h3 class="popup-title">${popupTitle.value}</h3>`;
+  html += `<h3 class="popup-title">${escapeHtml(popupTitle.value)}</h3>`;
 
   if (feature.popupConfig?.fields?.length) {
-    html += `<table class="popup-table">`;
+    html += `<table class="popup-table" aria-label="${escapeHtml(popupTitle.value)}">`;
     for (const field of feature.popupConfig.fields) {
       const value = formatFieldValue(feature.properties[field.field], field.format);
-      html += `<tr><th>${field.label}</th><td>${value}</td></tr>`;
+      html += `<tr><th>${escapeHtml(field.label)}</th><td>${escapeHtml(value)}</td></tr>`;
     }
     html += `</table>`;
   } else {
