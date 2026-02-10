@@ -691,13 +691,13 @@ onBeforeUnmount(() => {
     <!-- Main content area -->
     <div class="layerboard-main">
       <!-- Loading state -->
-      <div v-if="configsLoading" class="layerboard-loading">
+      <div v-if="configsLoading" class="layerboard-loading" role="status" aria-live="polite">
         <div class="layerboard-spinner" :style="{ borderTopColor: themeColor }"></div>
         <p>Loading {{ title }}...</p>
       </div>
 
       <!-- Error state -->
-      <div v-else-if="configsError" class="layerboard-error">
+      <div v-else-if="configsError" class="layerboard-error" role="alert">
         <h2>Error Loading Layers</h2>
         <p>{{ configsError }}</p>
         <button

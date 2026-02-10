@@ -106,7 +106,7 @@ function onOpacityChange(layerId: string, event: Event) {
 </script>
 
 <template>
-  <div class="layer-checkbox-set">
+  <fieldset class="layer-checkbox-set" role="group">
     <div
       v-for="layer in layers"
       :key="layer.id"
@@ -129,13 +129,14 @@ function onOpacityChange(layerId: string, event: Event) {
         />
         <span class="layer-title">
           {{ getLayerDisplayName(layer) }}
-          <span v-if="isLayerLoading(layer.id)" class="loading-indicator">
+          <span v-if="isLayerLoading(layer.id)" class="loading-indicator" role="status">
             Loading...
           </span>
           <span
             v-if="getLayerError(layer.id)"
             class="error-indicator"
             :aria-label="getLayerError(layer.id) || 'Error'"
+            role="status"
           >
             Error
           </span>
@@ -156,13 +157,14 @@ function onOpacityChange(layerId: string, event: Event) {
       >
         <span class="layer-title">
           {{ getLayerDisplayName(layer) }}
-          <span v-if="isLayerLoading(layer.id)" class="loading-indicator">
+          <span v-if="isLayerLoading(layer.id)" class="loading-indicator" role="status">
             Loading...
           </span>
           <span
             v-if="getLayerError(layer.id)"
             class="error-indicator"
             :aria-label="getLayerError(layer.id) || 'Error'"
+            role="status"
           >
             Error
           </span>
@@ -236,13 +238,16 @@ function onOpacityChange(layerId: string, event: Event) {
     <div v-if="layers.length === 0" class="empty-state">
       No layers available
     </div>
-  </div>
+  </fieldset>
 </template>
 
 <style scoped>
 .layer-checkbox-set {
   display: flex;
   flex-direction: column;
+  border: none;
+  margin: 0;
+  padding: 0;
 }
 
 .layer-item {
