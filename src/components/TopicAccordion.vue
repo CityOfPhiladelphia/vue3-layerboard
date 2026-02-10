@@ -2,7 +2,7 @@
 // TopicAccordion.vue - Accordion component for topic-based layer organization
 // Used by apps like StreetSmartPHL that group layers by topic
 
-import { ref, watch } from 'vue'
+import { ref, useId, watch } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -33,6 +33,9 @@ const emit = defineEmits<{
 // Internal expanded state, initialized from prop
 const isExpanded = ref(props.expanded)
 
+const panelId = `topic-panel-${useId()}`
+const headerId = `topic-header-${useId()}`
+
 // Watch for external changes to expanded prop
 watch(
   () => props.expanded,
@@ -51,10 +54,12 @@ function toggleAccordion() {
   <div class="topic-accordion" :class="{ 'is-expanded': isExpanded }">
     <!-- Accordion Header -->
     <button
+      :id="headerId"
       class="topic-header"
       :class="headerClass"
       type="button"
       :aria-expanded="isExpanded"
+      :aria-controls="panelId"
       @click="toggleAccordion"
     >
       <!-- Icon slot or FontAwesome icon -->
@@ -79,6 +84,7 @@ function toggleAccordion() {
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
+          aria-hidden="true"
         >
           <polyline points="6 9 12 15 18 9"></polyline>
         </svg>
@@ -86,7 +92,13 @@ function toggleAccordion() {
     </button>
 
     <!-- Accordion Content -->
-    <div v-show="isExpanded" class="topic-content">
+    <div
+      :id="panelId"
+      v-show="isExpanded"
+      role="region"
+      :aria-labelledby="headerId"
+      class="topic-content"
+    >
       <!-- Default slot for custom topic content (layer checkboxes, etc.) -->
       <slot>
         <p class="topic-empty">No content provided for this topic.</p>
