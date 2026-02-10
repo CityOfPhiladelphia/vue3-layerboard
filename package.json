@@ -30,9 +30,7 @@
   },
   "scripts": {
     "build": "vue-tsc --build && vite build",
-    "build:streetsmartphl": "vite build --config examples/streetsmartphl/vite.config.ts",
     "dev": "vite",
-    "dev:streetsmartphl": "vite --config examples/streetsmartphl/vite.config.ts",
     "preview": "vite preview",
     "type-check": "vue-tsc --build"
   },
