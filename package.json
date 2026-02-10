@@ -1,6 +1,6 @@
 {
   "name": "@phila/layerboard",
-  "version": "3.0.0-beta.9",
+  "version": "3.0.0-beta.10",
   "type": "module",
   "description": "Vue 3 + MapLibre mapping framework for City of Philadelphia applications",
   "main": "./dist/index.js",
