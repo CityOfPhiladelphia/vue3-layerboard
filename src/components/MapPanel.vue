@@ -1426,27 +1426,5 @@ function handleSearchResult(result: AisGeocodeResult) {
   position: relative;
 }
 
-/*
- * COMPACT MAP SEARCH CONTROL OVERRIDES
- *
- * The phila-ui TextField (used within MapSearchControl) has a standard height of 56px.
- * For map overlays, we use a more compact version to minimize visual footprint on the map.
- * These overrides remove extra padding/gaps while preserving the component's visual design.
- *
- * Standard TextField height breakdown:
- *   - .state-layer padding: 4px top + 4px bottom
- *   - .content height: var(--dimension-core-600) + 4px padding top/bottom
- *   Total: ~56px
- *
- * Compact version reduces this to ~40px by removing the extra padding layers.
- */
-.map-panel :deep(.map-search-control .state-layer) {
-  padding-top: 0;
-  padding-bottom: 0;
-}
 
-.map-panel :deep(.map-search-control .content) {
-  padding-top: 0;
-  padding-bottom: 0;
-}
 </style>
