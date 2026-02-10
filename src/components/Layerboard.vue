@@ -662,6 +662,9 @@ onBeforeUnmount(() => {
         v-if="mobileMenuOpen"
         ref="mobileMenuRef"
         class="layerboard-mobile-menu"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Site menu"
         :style="{ backgroundColor: themeColor }"
         @keydown="handleMobileMenuKeydown"
       >
