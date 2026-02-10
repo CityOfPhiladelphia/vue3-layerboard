@@ -598,6 +598,11 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="layerboard-layout">
+    <a
+      href="#main-content"
+      class="skip-to-main-content-link"
+    >Skip to main content</a>
+
     <!-- Header -->
     <header class="layerboard-header" :style="headerStyle">
       <!-- Desktop: Logo and divider -->
@@ -677,6 +682,7 @@ onBeforeUnmount(() => {
         <!-- Sidebar Panel -->
         <aside
           ref="sidebarRef"
+          id="main-content"
           class="layerboard-sidebar"
           :class="{ 'is-active': activePanel === 'sidebar' }"
           :style="sidebarStyle"
@@ -703,7 +709,7 @@ onBeforeUnmount(() => {
         </aside>
 
         <!-- Map Panel -->
-        <div id="main-content" role="main" aria-label="Map" class="layerboard-map" :class="{ 'is-active': activePanel === 'map' }">
+        <div role="main" aria-label="Map" class="layerboard-map" :class="{ 'is-active': activePanel === 'map' }">
           <MapPanel
             :visible-layers="visibleLayers"
             :layer-opacities="layerOpacities"
@@ -923,6 +929,27 @@ html, body {
   width: 100vw;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+}
+
+.skip-to-main-content-link {
+  position: absolute;
+  left: -9999px;
+  z-index: 999;
+  padding: .5em;
+  background-color: #0f4d90;
+  color: white;
+  opacity: 0;
+  text-decoration: underline;
+}
+
+.skip-to-main-content-link:focus {
+  left: 0px;
+  top: 0px;
+  opacity: 1;
+}
+
+.skip-to-main-content-link:hover {
+  color: white;
 }
 
 /* Header */
