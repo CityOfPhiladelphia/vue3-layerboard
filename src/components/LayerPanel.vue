@@ -211,7 +211,7 @@ function onOpacityChange(layerId: string, event: Event) {
               <span
                 v-if="getLayerError(layer.config.id)"
                 class="error-indicator"
-                :title="getLayerError(layer.config.id) || ''"
+                :aria-label="getLayerError(layer.config.id) || 'Error'"
               >
                 Error
               </span>
@@ -230,10 +230,11 @@ function onOpacityChange(layerId: string, event: Event) {
           v-if="showOpacity && isVisible(layer.config.id)"
           class="opacity-control"
         >
-          <label class="opacity-label">
+          <label class="opacity-label" :for="'opacity-' + layer.config.id">
             Opacity: {{ Math.round(getLayerOpacity(layer.config.id) * 100) }}%
           </label>
           <input
+            :id="'opacity-' + layer.config.id"
             type="range"
             min="0"
             max="1"
@@ -260,6 +261,7 @@ function onOpacityChange(layerId: string, event: Event) {
               v-if="item.type === 'circle'"
               class="legend-symbol legend-circle"
               :style="{ backgroundColor: item.color }"
+              aria-hidden="true"
             ></span>
 
             <!-- Line symbol -->
@@ -270,6 +272,7 @@ function onOpacityChange(layerId: string, event: Event) {
                 backgroundColor: item.color,
                 height: `${item.width || 2}px`,
               }"
+              aria-hidden="true"
             ></span>
 
             <!-- Fill symbol -->
@@ -277,6 +280,7 @@ function onOpacityChange(layerId: string, event: Event) {
               v-else-if="item.type === 'fill'"
               class="legend-symbol legend-fill"
               :style="{ backgroundColor: item.color }"
+              aria-hidden="true"
             ></span>
 
             <span class="legend-label">{{ item.label }}</span>
@@ -463,7 +467,6 @@ function onOpacityChange(layerId: string, event: Event) {
   color: #c00;
   font-weight: bold;
   margin-left: 4px;
-  cursor: help;
 }
 
 /* Opacity control */

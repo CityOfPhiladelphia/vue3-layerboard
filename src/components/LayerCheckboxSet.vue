@@ -135,7 +135,7 @@ function onOpacityChange(layerId: string, event: Event) {
           <span
             v-if="getLayerError(layer.id)"
             class="error-indicator"
-            :title="getLayerError(layer.id) || ''"
+            :aria-label="getLayerError(layer.id) || 'Error'"
           >
             Error
           </span>
@@ -162,7 +162,7 @@ function onOpacityChange(layerId: string, event: Event) {
           <span
             v-if="getLayerError(layer.id)"
             class="error-indicator"
-            :title="getLayerError(layer.id) || ''"
+            :aria-label="getLayerError(layer.id) || 'Error'"
           >
             Error
           </span>
@@ -174,10 +174,11 @@ function onOpacityChange(layerId: string, event: Event) {
 
       <!-- Opacity slider (respects per-layer shouldShowSlider) -->
       <div v-if="shouldShowSlider(layer) && isVisible(layer.id)" class="opacity-control">
-        <label class="opacity-label">
+        <label class="opacity-label" :for="'opacity-' + layer.id">
           Opacity: {{ Math.round(getLayerOpacity(layer.id) * 100) }}%
         </label>
         <input
+          :id="'opacity-' + layer.id"
           type="range"
           min="0"
           max="1"
@@ -204,6 +205,7 @@ function onOpacityChange(layerId: string, event: Event) {
             v-if="item.type === 'circle'"
             class="legend-symbol legend-circle"
             :style="{ backgroundColor: item.color }"
+            aria-hidden="true"
           ></span>
 
           <!-- Line symbol -->
@@ -214,6 +216,7 @@ function onOpacityChange(layerId: string, event: Event) {
               backgroundColor: item.color,
               height: `${item.width || 2}px`,
             }"
+            aria-hidden="true"
           ></span>
 
           <!-- Fill symbol -->
@@ -221,6 +224,7 @@ function onOpacityChange(layerId: string, event: Event) {
             v-else-if="item.type === 'fill'"
             class="legend-symbol legend-fill"
             :style="{ backgroundColor: item.color }"
+            aria-hidden="true"
           ></span>
 
           <span class="legend-label">{{ item.label }}</span>
@@ -330,7 +334,6 @@ function onOpacityChange(layerId: string, event: Event) {
   color: #c00;
   font-weight: bold;
   margin-left: 4px;
-  cursor: help;
 }
 
 /* Opacity control */
