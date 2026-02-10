@@ -239,6 +239,7 @@ function onOpacityChange(layerId: string, event: Event) {
             max="1"
             step="0.05"
             :value="getLayerOpacity(layer.config.id)"
+            :aria-label="'Opacity for ' + layer.config.title"
             class="opacity-slider"
             @input="onOpacityChange(layer.config.id, $event)"
           />

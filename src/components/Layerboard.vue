@@ -600,6 +600,7 @@ onMounted(() => {
           class="layerboard-sidebar"
           :class="{ 'is-active': activePanel === 'sidebar' }"
           :style="sidebarStyle"
+          aria-label="Map layers"
         >
           <slot name="sidebar" :layers="layerList" :visible-layers="visibleLayers" :layer-opacities="layerOpacities" :loading-layers="loadingLayers" :layer-errors="layerErrors" :current-zoom="currentZoom" :toggle-layer="toggleLayer" :set-layer-visible="setLayerVisible" :set-layers-visible="setLayersVisible" :set-opacity="setLayerOpacity" :tiled-layers="tiledLayers" :visible-tiled-layers="visibleTiledLayers" :tiled-layer-opacities="tiledLayerOpacities" :toggle-tiled-layer="toggleTiledLayer" :set-tiled-layer-visible="setTiledLayerVisible" :set-tiled-layer-opacity="setTiledLayerOpacity" :data-sources-state="dataSourcesState" :data-sources-loading="dataSourcesLoading" :get-data-source="getDataSourceData" :refetch-data-source="refetchDataSource">
             <!-- Default: LayerPanel for flat layer list -->
@@ -621,7 +622,7 @@ onMounted(() => {
         </aside>
 
         <!-- Map Panel -->
-        <div class="layerboard-map" :class="{ 'is-active': activePanel === 'map' }">
+        <div id="main-content" role="main" aria-label="Map" class="layerboard-map" :class="{ 'is-active': activePanel === 'map' }">
           <MapPanel
             :visible-layers="visibleLayers"
             :layer-opacities="layerOpacities"
