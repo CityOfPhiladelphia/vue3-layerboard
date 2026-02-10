@@ -190,4 +190,14 @@ function toggleAccordion() {
 .topic-accordion.is-expanded .topic-header {
   background: #e8e8e8;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .topic-header {
+    transition: none;
+  }
+
+  .topic-chevron {
+    transition: none;
+  }
+}
 </style>
