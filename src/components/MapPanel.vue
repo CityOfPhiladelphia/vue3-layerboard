@@ -1002,8 +1002,6 @@ const popupHtml = computed(() => {
       html += `<tr><th scope="row">${escapeHtml(field.label)}</th><td>${displayValue}</td></tr>`;
     }
     html += `</table>`;
-  } else {
-    html += `<p class="popup-no-fields">No additional information available.</p>`;
   }
 
   html += `</div>`;

@@ -932,6 +932,7 @@ body {
 .popup-table td {
   padding: 4px 8px 4px 0;
   text-align: left;
+  vertical-align: top;
   border-bottom: 1px solid #eee;
 }
 
@@ -939,6 +940,7 @@ body {
   font-weight: 600;
   color: #666;
   width: 40%;
+  overflow-wrap: break-word;
 }
 
 .popup-table td {
