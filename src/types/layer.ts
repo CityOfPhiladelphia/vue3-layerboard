@@ -25,6 +25,7 @@ export interface PopupField {
 export interface PopupConfig {
   title: string;
   fields: PopupField[];
+  showTime?: boolean;
 }
 
 /**

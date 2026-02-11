@@ -709,11 +709,14 @@ function escapeHtml(str: string): string {
 }
 
 // Format field value for display
-function formatFieldValue(value: unknown, format?: PopupFieldFormat): string {
+function formatFieldValue(value: unknown, format?: PopupFieldFormat, showTime?: boolean): string {
   if (value === null || value === undefined) return "-";
 
   if (format?.dateFormat && typeof value === "number") {
     const date = new Date(value);
+    if (showTime && format.dateFormat === "shortDateShortTime") {
+      return date.toLocaleString();
+    }
     switch (format.dateFormat) {
       case "shortDateShortTime":
         return date.toLocaleDateString();
@@ -994,7 +997,7 @@ const popupHtml = computed(() => {
   if (feature.popupConfig?.fields?.length) {
     html += `<table class="popup-table" aria-label="${escapeHtml(popupTitle.value)}">`;
     for (const field of feature.popupConfig.fields) {
-      const value = formatFieldValue(feature.properties[field.field], field.format);
+      const value = formatFieldValue(feature.properties[field.field], field.format, feature.popupConfig.showTime);
       const isUrl = value.startsWith("http://") || value.startsWith("https://");
       const displayValue = isUrl
         ? `<a href="${escapeHtml(value)}" target="_blank" rel="noopener noreferrer">${escapeHtml(value)}</a>`

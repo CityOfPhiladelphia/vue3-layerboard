@@ -11737,6 +11737,7 @@
         }
       },
       "popupInfo": {
+        "showTime": true,
         "popupElements": [{ "type": "fields" }],
         "fieldInfos": [
           { "fieldName": "dc_dist", "isEditable": true, "label": "DC_DIST", "visible": false },
