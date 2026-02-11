@@ -409,7 +409,7 @@ function convertUniqueValueRenderer(
   layerOpacity?: number,
   customLabelMap?: Map<string, string>,
 ): RendererResult {
-  const field = renderer.field1!;
+  const field = renderer.field1!.toLowerCase();
   const uniqueValueInfos = renderer.uniqueValueInfos || [];
   const defaultSymbol = renderer.defaultSymbol;
 
@@ -563,7 +563,7 @@ function convertUniqueValueRenderer(
  * (dark blue → green → yellow) based on HEI_SCORE values.
  */
 function convertClassBreaksRenderer(renderer: EsriRenderer, layerOpacity?: number): RendererResult {
-  const field = renderer.field!;
+  const field = renderer.field!.toLowerCase();
   const classBreakInfos = renderer.classBreakInfos || [];
 
   // Check for visualVariables with colorInfo (continuous color ramp)
