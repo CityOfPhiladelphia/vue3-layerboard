@@ -35,6 +35,7 @@ This package requires the following peer dependencies:
 The phila-ui TextField component has a standard height of 56px, designed for form inputs where touch targets and readability are priorities. In the layerboard context (sidebar filter and map search control), we intentionally use a more compact ~40px version to save vertical space.
 
 This is achieved through CSS overrides in:
+
 - **LayerPanel.vue** - for the layer filter search box
 - **MapPanel.vue** - for the MapSearchControl on the map
 

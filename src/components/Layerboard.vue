@@ -13,142 +13,142 @@
  * All layer state management is handled internally.
  */
 
-import { ref, computed, onMounted, onBeforeUnmount, nextTick, provide, readonly } from 'vue'
-import "@phila/phila-ui-core/styles/tokens.css"
-import "@phila/phila-ui-core/styles/template-light.css"
-import "@phila/phila-ui-map-core/dist/assets/phila-ui-map-core.css"
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, provide, readonly } from "vue";
+import "@phila/phila-ui-core/styles/tokens.css";
+import "@phila/phila-ui-core/styles/template-light.css";
+import "@phila/phila-ui-map-core/dist/assets/phila-ui-map-core.css";
 
-import MapPanel from './MapPanel.vue'
-import LayerPanel from './LayerPanel.vue'
-import { Icon } from "@phila/phila-ui-core"
-import { faCaretLeft, faCaretRight, faXmark, faBars } from "@fortawesome/pro-solid-svg-icons"
-import type { CyclomediaConfig, PictometryCredentials } from "@phila/phila-ui-map-core"
+import MapPanel from "./MapPanel.vue";
+import LayerPanel from "./LayerPanel.vue";
+import { Icon } from "@phila/phila-ui-core";
+import { faCaretLeft, faCaretRight, faXmark, faBars } from "@fortawesome/pro-solid-svg-icons";
+import type { CyclomediaConfig, PictometryCredentials } from "@phila/phila-ui-map-core";
 
-import { getLayerConfigs, clearCache } from '@/services/layerConfigService'
-import type { LayerConfig, TiledLayerConfig, LayerStyleOverride } from '@/types/layer'
-import type { DataSourceConfig } from '@/types/dataSource'
-import { useApiDataSources } from '@/composables/useApiDataSources'
+import { getLayerConfigs, clearCache } from "@/services/layerConfigService";
+import type { LayerConfig, TiledLayerConfig, LayerStyleOverride } from "@/types/layer";
+import type { DataSourceConfig } from "@/types/dataSource";
+import { useApiDataSources } from "@/composables/useApiDataSources";
 
 // ============================================================================
 // PROPS
 // ============================================================================
 
 // Control position type for map controls
-type ControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+type ControlPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
 const props = withDefaults(
   defineProps<{
     /** App title displayed in header */
-    title: string
+    title: string;
     /** Optional subtitle displayed in header */
-    subtitle?: string
+    subtitle?: string;
     /** WebMap ID to load layers from */
-    webMapId: string
+    webMapId: string;
     /** Primary theme color for header/footer (CSS color value) */
-    themeColor?: string
+    themeColor?: string;
     /** Cyclomedia street-level imagery configuration */
-    cyclomediaConfig?: CyclomediaConfig
+    cyclomediaConfig?: CyclomediaConfig;
     /** Pictometry oblique imagery credentials */
-    pictometryCredentials?: PictometryCredentials
+    pictometryCredentials?: PictometryCredentials;
     /** Whether to show the default LayerPanel in sidebar (set false when using sidebar slot) */
-    showDefaultSidebar?: boolean
+    showDefaultSidebar?: boolean;
     /** Sidebar width in CSS units */
-    sidebarWidth?: string
+    sidebarWidth?: string;
     /** Label for mobile toggle button when showing map */
-    sidebarLabel?: string
+    sidebarLabel?: string;
     /** Label for mobile toggle button when showing sidebar */
-    mapLabel?: string
+    mapLabel?: string;
     /** Whether to fetch metadata from Carto for layer info links */
-    fetchMetadata?: boolean
+    fetchMetadata?: boolean;
     /** Tiled layer configurations (ESRI MapServer tiles separate from WebMap) */
-    tiledLayers?: TiledLayerConfig[]
+    tiledLayers?: TiledLayerConfig[];
     /** API data source configurations for fetching external data (notices, status, etc.) */
-    dataSources?: DataSourceConfig[]
+    dataSources?: DataSourceConfig[];
     /** Layer style overrides - override paint/legend for specific layers by ID */
-    layerStyleOverrides?: Record<string, LayerStyleOverride>
+    layerStyleOverrides?: Record<string, LayerStyleOverride>;
     /** Position of basemap toggle/dropdown control */
-    basemapControlPosition?: ControlPosition
+    basemapControlPosition?: ControlPosition;
     /** Position of zoom in/out navigation control */
-    navigationControlPosition?: ControlPosition
+    navigationControlPosition?: ControlPosition;
     /** Position of geolocation (find me) control */
-    geolocationControlPosition?: ControlPosition
+    geolocationControlPosition?: ControlPosition;
     /** Position of address search control */
-    searchControlPosition?: ControlPosition
+    searchControlPosition?: ControlPosition;
     /** Position of draw tool control (set to null to remove) */
-    drawControlPosition?: ControlPosition | null
+    drawControlPosition?: ControlPosition | null;
     /** Position of Cyclomedia street view button */
-    cyclomediaButtonPosition?: ControlPosition
+    cyclomediaButtonPosition?: ControlPosition;
     /** Position of Pictometry oblique imagery button */
-    pictometryButtonPosition?: ControlPosition
+    pictometryButtonPosition?: ControlPosition;
     /** Initial map zoom level */
-    initialZoom?: number
+    initialZoom?: number;
     /** Initial map center [lng, lat] */
-    initialCenter?: [number, number]
+    initialCenter?: [number, number];
   }>(),
   {
-    themeColor: '#0f4d90',
+    themeColor: "#0f4d90",
     showDefaultSidebar: true,
-    sidebarWidth: '30%',
-    sidebarLabel: 'Layers',
-    mapLabel: 'Map',
+    sidebarWidth: "30%",
+    sidebarLabel: "Layers",
+    mapLabel: "Map",
     fetchMetadata: false,
     tiledLayers: () => [],
     dataSources: () => [],
     layerStyleOverrides: () => ({}),
-    basemapControlPosition: 'top-right',
-    navigationControlPosition: 'bottom-right',
-    geolocationControlPosition: 'bottom-right',
-    searchControlPosition: 'top-left',
-    drawControlPosition: 'bottom-left',
-    cyclomediaButtonPosition: 'top-right',
-    pictometryButtonPosition: 'top-right',
-  }
-)
+    basemapControlPosition: "top-right",
+    navigationControlPosition: "bottom-right",
+    geolocationControlPosition: "bottom-right",
+    searchControlPosition: "top-left",
+    drawControlPosition: "bottom-left",
+    cyclomediaButtonPosition: "top-right",
+    pictometryButtonPosition: "top-right",
+  },
+);
 
 // ============================================================================
 // EMITS
 // ============================================================================
 const emit = defineEmits<{
   /** Emitted when layer configs are loaded */
-  (e: 'configs-loaded', configs: LayerConfig[]): void
+  (e: "configs-loaded", configs: LayerConfig[]): void;
   /** Emitted when loading fails */
-  (e: 'load-error', error: string): void
+  (e: "load-error", error: string): void;
   /** Emitted when zoom level changes */
-  (e: 'zoom', zoom: number): void
-}>()
+  (e: "zoom", zoom: number): void;
+}>();
 
 // ============================================================================
 // LAYER STATE
 // ============================================================================
-const layerList = ref<Array<{ config: LayerConfig; component: string }>>([])
-const configsLoading = ref(true)
-const configsError = ref<string | null>(null)
+const layerList = ref<Array<{ config: LayerConfig; component: string }>>([]);
+const configsLoading = ref(true);
+const configsError = ref<string | null>(null);
 
-const currentZoom = ref(12)
-const searchQuery = ref("")
-const visibleLayers = ref<Set<string>>(new Set())
-const layerOpacities = ref<Record<string, number>>({})
-const loadingLayers = ref<Set<string>>(new Set())
-const layerErrors = ref<Record<string, string>>({})
+const currentZoom = ref(12);
+const searchQuery = ref("");
+const visibleLayers = ref<Set<string>>(new Set());
+const layerOpacities = ref<Record<string, number>>({});
+const loadingLayers = ref<Set<string>>(new Set());
+const layerErrors = ref<Record<string, string>>({});
 
 // Metadata lookup (for OpenMaps-style layer info links)
-const layerMetadata = ref<Record<string, string>>({})
+const layerMetadata = ref<Record<string, string>>({});
 
 // ============================================================================
 // TILED LAYER STATE
 // ============================================================================
 /** Set of currently visible tiled layer IDs */
-const visibleTiledLayers = ref<Set<string>>(new Set())
+const visibleTiledLayers = ref<Set<string>>(new Set());
 /** Opacity values for tiled layers (0-1) */
-const tiledLayerOpacities = ref<Record<string, number>>({})
+const tiledLayerOpacities = ref<Record<string, number>>({});
 
 // Initialize tiled layer opacities when props change
 function initTiledLayerOpacities() {
-  const opacities: Record<string, number> = {}
+  const opacities: Record<string, number> = {};
   for (const tiled of props.tiledLayers) {
-    opacities[tiled.id] = tiled.opacity ?? 1.0
+    opacities[tiled.id] = tiled.opacity ?? 1.0;
   }
-  tiledLayerOpacities.value = opacities
+  tiledLayerOpacities.value = opacities;
 }
 
 // ============================================================================
@@ -156,141 +156,142 @@ function initTiledLayerOpacities() {
 // ============================================================================
 function toggleTiledLayer(layerId: string) {
   if (visibleTiledLayers.value.has(layerId)) {
-    visibleTiledLayers.value.delete(layerId)
+    visibleTiledLayers.value.delete(layerId);
   } else {
-    visibleTiledLayers.value.add(layerId)
+    visibleTiledLayers.value.add(layerId);
   }
-  visibleTiledLayers.value = new Set(visibleTiledLayers.value)
+  visibleTiledLayers.value = new Set(visibleTiledLayers.value);
 }
 
 function setTiledLayerVisible(layerId: string, visible: boolean) {
   if (visible) {
-    visibleTiledLayers.value.add(layerId)
+    visibleTiledLayers.value.add(layerId);
   } else {
-    visibleTiledLayers.value.delete(layerId)
+    visibleTiledLayers.value.delete(layerId);
   }
-  visibleTiledLayers.value = new Set(visibleTiledLayers.value)
+  visibleTiledLayers.value = new Set(visibleTiledLayers.value);
 }
 
 function setTiledLayerOpacity(layerId: string, opacity: number) {
-  tiledLayerOpacities.value = { ...tiledLayerOpacities.value, [layerId]: opacity }
+  tiledLayerOpacities.value = { ...tiledLayerOpacities.value, [layerId]: opacity };
 }
 
 // ============================================================================
 // API DATA SOURCES
 // ============================================================================
 // Initialize data sources composable (only if configs provided)
-const dataSourcesComposable = props.dataSources.length > 0
-  ? useApiDataSources(props.dataSources)
-  : null
+const dataSourcesComposable = props.dataSources.length > 0 ? useApiDataSources(props.dataSources) : null;
 
 // Expose data source state and methods
-const dataSourcesState = computed(() => dataSourcesComposable?.state.value ?? {})
-const dataSourcesLoading = computed(() => dataSourcesComposable?.isLoading.value ?? false)
+const dataSourcesState = computed(() => dataSourcesComposable?.state.value ?? {});
+const dataSourcesLoading = computed(() => dataSourcesComposable?.isLoading.value ?? false);
 
 function getDataSourceData<T = unknown>(id: string): T | null {
-  return dataSourcesComposable?.getData<T>(id) ?? null
+  return dataSourcesComposable?.getData<T>(id) ?? null;
 }
 
 function refetchDataSource(id: string): Promise<void> {
-  return dataSourcesComposable?.refetch(id) ?? Promise.resolve()
+  return dataSourcesComposable?.refetch(id) ?? Promise.resolve();
 }
 
 // ============================================================================
 // PROVIDE STATE TO CHILD COMPONENTS
 // ============================================================================
 // These are provided so custom sidebar content can access layer state
-provide('layerboard-layers', readonly(layerList))
-provide('layerboard-visible', visibleLayers)
-provide('layerboard-opacities', layerOpacities)
-provide('layerboard-loading', readonly(loadingLayers))
-provide('layerboard-errors', readonly(layerErrors))
-provide('layerboard-zoom', readonly(currentZoom))
-provide('layerboard-toggle-layer', toggleLayer)
-provide('layerboard-set-layer-visible', setLayerVisible)
-provide('layerboard-set-layers-visible', setLayersVisible)
-provide('layerboard-set-opacity', setLayerOpacity)
+provide("layerboard-layers", readonly(layerList));
+provide("layerboard-visible", visibleLayers);
+provide("layerboard-opacities", layerOpacities);
+provide("layerboard-loading", readonly(loadingLayers));
+provide("layerboard-errors", readonly(layerErrors));
+provide("layerboard-zoom", readonly(currentZoom));
+provide("layerboard-toggle-layer", toggleLayer);
+provide("layerboard-set-layer-visible", setLayerVisible);
+provide("layerboard-set-layers-visible", setLayersVisible);
+provide("layerboard-set-opacity", setLayerOpacity);
 // Tiled layer state
-provide('layerboard-tiled-layers', readonly(computed(() => props.tiledLayers)))
-provide('layerboard-visible-tiled', visibleTiledLayers)
-provide('layerboard-tiled-opacities', tiledLayerOpacities)
-provide('layerboard-toggle-tiled', toggleTiledLayer)
-provide('layerboard-set-tiled-opacity', setTiledLayerOpacity)
-provide('layerboard-set-tiled-visible', setTiledLayerVisible)
+provide("layerboard-tiled-layers", readonly(computed(() => props.tiledLayers)));
+provide("layerboard-visible-tiled", visibleTiledLayers);
+provide("layerboard-tiled-opacities", tiledLayerOpacities);
+provide("layerboard-toggle-tiled", toggleTiledLayer);
+provide("layerboard-set-tiled-opacity", setTiledLayerOpacity);
+provide("layerboard-set-tiled-visible", setTiledLayerVisible);
 // Data source state
-provide('layerboard-data-sources-state', dataSourcesState)
-provide('layerboard-data-sources-loading', dataSourcesLoading)
-provide('layerboard-get-data-source', getDataSourceData)
-provide('layerboard-refetch-data-source', refetchDataSource)
+provide("layerboard-data-sources-state", dataSourcesState);
+provide("layerboard-data-sources-loading", dataSourcesLoading);
+provide("layerboard-get-data-source", getDataSourceData);
+provide("layerboard-refetch-data-source", refetchDataSource);
 
 // ============================================================================
 // COMPUTED
 // ============================================================================
 const headerStyle = computed(() => ({
   backgroundColor: props.themeColor,
-}))
+}));
 
 const footerStyle = computed(() => ({
   backgroundColor: props.themeColor,
-}))
+}));
 
 const mobileToggleStyle = computed(() => ({
   backgroundColor: props.themeColor,
-}))
+}));
 
 const sidebarStyle = computed(() => ({
-  width: sidebarCollapsed.value ? '0' : props.sidebarWidth,
-}))
+  width: sidebarCollapsed.value ? "0" : props.sidebarWidth,
+}));
 
 // ============================================================================
 // LAYER LOADING
 // ============================================================================
 async function loadLayerConfigs() {
   try {
-    configsLoading.value = true
-    configsError.value = null
+    configsLoading.value = true;
+    configsError.value = null;
 
-    const configs = await getLayerConfigs(props.webMapId)
+    const configs = await getLayerConfigs(props.webMapId);
 
     // Apply layer style overrides if provided
     const overriddenConfigs = configs.map(config => {
-      const override = props.layerStyleOverrides[config.id]
+      const override = props.layerStyleOverrides[config.id];
       if (override) {
-        console.log(`[Layerboard] Applying style override for layer: ${config.id}`)
+        console.log(`[Layerboard] Applying style override for layer: ${config.id}`);
         return {
           ...config,
           paint: override.paint ?? config.paint,
           outlinePaint: override.outlinePaint ?? config.outlinePaint,
           legend: override.legend ?? config.legend,
           type: override.type ?? config.type,
-        }
+        };
       }
-      return config
-    })
+      return config;
+    });
 
     // Build layerList from configs
     layerList.value = overriddenConfigs.map(config => ({
       config,
       component: config.type,
-    }))
+    }));
 
     // Initialize layer opacities
-    const initialOpacities: Record<string, number> = {}
+    const initialOpacities: Record<string, number> = {};
     overriddenConfigs.forEach(config => {
-      initialOpacities[config.id] = config.opacity ?? 1.0
-    })
-    layerOpacities.value = initialOpacities
+      initialOpacities[config.id] = config.opacity ?? 1.0;
+    });
+    layerOpacities.value = initialOpacities;
 
-    console.log(`[Layerboard] Loaded ${overriddenConfigs.length} layer configs from WebMap ${props.webMapId}`)
-    console.log('[Layerboard] Layer IDs:', overriddenConfigs.map(c => c.id))
-    emit('configs-loaded', overriddenConfigs)
+    console.log(`[Layerboard] Loaded ${overriddenConfigs.length} layer configs from WebMap ${props.webMapId}`);
+    console.log(
+      "[Layerboard] Layer IDs:",
+      overriddenConfigs.map(c => c.id),
+    );
+    emit("configs-loaded", overriddenConfigs);
   } catch (error) {
-    console.error('[Layerboard] Failed to load layer configs:', error)
-    const errorMsg = error instanceof Error ? error.message : 'Failed to load layer configurations'
-    configsError.value = errorMsg
-    emit('load-error', errorMsg)
+    console.error("[Layerboard] Failed to load layer configs:", error);
+    const errorMsg = error instanceof Error ? error.message : "Failed to load layer configurations";
+    configsError.value = errorMsg;
+    emit("load-error", errorMsg);
   } finally {
-    configsLoading.value = false
+    configsLoading.value = false;
   }
 }
 
@@ -298,39 +299,41 @@ async function loadLayerConfigs() {
 // METADATA LOADING (optional)
 // ============================================================================
 function normalizeUrl(url: string): string {
-  let normalized = url.split("?")[0] || url
-  normalized = normalized.replace(/\/query$/, "")
-  normalized = normalized.replace(/\/$/, "")
-  return normalized.toLowerCase()
+  let normalized = url.split("?")[0] || url;
+  normalized = normalized.replace(/\/query$/, "");
+  normalized = normalized.replace(/\/$/, "");
+  return normalized.toLowerCase();
 }
 
 async function fetchMetadataLookup() {
-  if (!props.fetchMetadata) return
+  if (!props.fetchMetadata) return;
 
   try {
-    const apiUrl = "https://phl.carto.com/api/v2/sql?q=" + encodeURIComponent(
-      "select url_text, COALESCE(representation, '') as representation " +
-      "from phl.knack_metadata_reps_endpoints_join " +
-      "WHERE ( format = 'API' OR format = 'GeoService' ) " +
-      "AND url_text IS NOT null"
-    )
-    const response = await fetch(apiUrl)
-    if (!response.ok) return
+    const apiUrl =
+      "https://phl.carto.com/api/v2/sql?q=" +
+      encodeURIComponent(
+        "select url_text, COALESCE(representation, '') as representation " +
+          "from phl.knack_metadata_reps_endpoints_join " +
+          "WHERE ( format = 'API' OR format = 'GeoService' ) " +
+          "AND url_text IS NOT null",
+      );
+    const response = await fetch(apiUrl);
+    if (!response.ok) return;
 
-    const data = await response.json()
-    const lookup: Record<string, string> = {}
+    const data = await response.json();
+    const lookup: Record<string, string> = {};
 
     for (const row of data.rows || []) {
       if (row.url_text && row.representation) {
-        const normalizedUrl = normalizeUrl(row.url_text)
-        const metadataUrl = `https://metadata.phila.gov/#home/representationdetails/${row.representation}/`
-        lookup[normalizedUrl] = metadataUrl
+        const normalizedUrl = normalizeUrl(row.url_text);
+        const metadataUrl = `https://metadata.phila.gov/#home/representationdetails/${row.representation}/`;
+        lookup[normalizedUrl] = metadataUrl;
       }
     }
 
-    layerMetadata.value = lookup
+    layerMetadata.value = lookup;
   } catch (err) {
-    console.error("[Layerboard] Error fetching metadata:", err)
+    console.error("[Layerboard] Error fetching metadata:", err);
   }
 }
 
@@ -338,212 +341,217 @@ async function fetchMetadataLookup() {
 // EVENT HANDLERS
 // ============================================================================
 function onZoomChange(zoom: number) {
-  currentZoom.value = zoom
-  emit('zoom', zoom)
+  currentZoom.value = zoom;
+  emit("zoom", zoom);
 }
 
 function toggleLayer(layerId: string) {
   if (visibleLayers.value.has(layerId)) {
-    visibleLayers.value.delete(layerId)
+    visibleLayers.value.delete(layerId);
   } else {
-    visibleLayers.value.add(layerId)
+    visibleLayers.value.add(layerId);
   }
-  visibleLayers.value = new Set(visibleLayers.value)
+  visibleLayers.value = new Set(visibleLayers.value);
 }
 
 function setLayerVisible(layerId: string, visible: boolean) {
   if (visible) {
-    visibleLayers.value.add(layerId)
+    visibleLayers.value.add(layerId);
   } else {
-    visibleLayers.value.delete(layerId)
+    visibleLayers.value.delete(layerId);
   }
-  visibleLayers.value = new Set(visibleLayers.value)
+  visibleLayers.value = new Set(visibleLayers.value);
 }
 
 function setLayersVisible(layerIds: string[], visible: boolean) {
   for (const layerId of layerIds) {
     if (visible) {
-      visibleLayers.value.add(layerId)
+      visibleLayers.value.add(layerId);
     } else {
-      visibleLayers.value.delete(layerId)
+      visibleLayers.value.delete(layerId);
     }
   }
-  visibleLayers.value = new Set(visibleLayers.value)
+  visibleLayers.value = new Set(visibleLayers.value);
 }
 
 function setLayerOpacity(layerId: string, opacity: number) {
-  layerOpacities.value = { ...layerOpacities.value, [layerId]: opacity }
+  layerOpacities.value = { ...layerOpacities.value, [layerId]: opacity };
 }
 
 function setLayerLoading(layerId: string, loading: boolean) {
   if (loading) {
-    loadingLayers.value.add(layerId)
+    loadingLayers.value.add(layerId);
   } else {
-    loadingLayers.value.delete(layerId)
+    loadingLayers.value.delete(layerId);
   }
-  loadingLayers.value = new Set(loadingLayers.value)
+  loadingLayers.value = new Set(loadingLayers.value);
 }
 
 function setLayerError(layerId: string, error: string | null) {
   if (error) {
-    layerErrors.value = { ...layerErrors.value, [layerId]: error }
+    layerErrors.value = { ...layerErrors.value, [layerId]: error };
   } else {
-    const { [layerId]: _, ...rest } = layerErrors.value
-    layerErrors.value = rest
+    const updated = { ...layerErrors.value };
+    delete updated[layerId];
+    layerErrors.value = updated;
   }
 }
 
 function updateSearch(query: string) {
-  searchQuery.value = query
+  searchQuery.value = query;
 }
 
 // ============================================================================
 // TEMPLATE REFS
 // ============================================================================
-const sidebarRef = ref<HTMLElement | null>(null)
-const hamburgerRef = ref<HTMLElement | null>(null)
-const mobileToggleRef = ref<HTMLElement | null>(null)
-const mobileMenuCloseRef = ref<HTMLElement | null>(null)
-const mobileMenuRef = ref<HTMLElement | null>(null)
-const modalRef = ref<HTMLElement | null>(null)
-const modalCloseRef = ref<HTMLElement | null>(null)
+const sidebarRef = ref<HTMLElement | null>(null);
+const hamburgerRef = ref<HTMLElement | null>(null);
+const mobileToggleRef = ref<HTMLElement | null>(null);
+const mobileMenuCloseRef = ref<HTMLElement | null>(null);
+const mobileMenuRef = ref<HTMLElement | null>(null);
+const modalRef = ref<HTMLElement | null>(null);
+const modalCloseRef = ref<HTMLElement | null>(null);
 
 // ============================================================================
 // MOBILE PANEL TOGGLE
 // ============================================================================
-const activePanel = ref<"sidebar" | "map">("map")
+const activePanel = ref<"sidebar" | "map">("map");
 
 function togglePanel() {
-  activePanel.value = activePanel.value === "sidebar" ? "map" : "sidebar"
+  activePanel.value = activePanel.value === "sidebar" ? "map" : "sidebar";
   nextTick(() => {
     if (activePanel.value === "sidebar") {
-      sidebarRef.value?.focus()
+      sidebarRef.value?.focus();
     }
-  })
+  });
 }
 
 // ============================================================================
 // MOBILE HAMBURGER MENU
 // ============================================================================
-const mobileMenuOpen = ref(false)
+const mobileMenuOpen = ref(false);
 
 function toggleMobileMenu() {
-  mobileMenuOpen.value = !mobileMenuOpen.value
+  mobileMenuOpen.value = !mobileMenuOpen.value;
   if (mobileMenuOpen.value) {
     nextTick(() => {
-      mobileMenuCloseRef.value?.focus()
-    })
+      mobileMenuCloseRef.value?.focus();
+    });
   }
 }
 
 function closeMobileMenu() {
-  mobileMenuOpen.value = false
+  mobileMenuOpen.value = false;
   nextTick(() => {
-    hamburgerRef.value?.focus()
-  })
+    hamburgerRef.value?.focus();
+  });
 }
 
 // ============================================================================
 // DESKTOP SIDEBAR COLLAPSE
 // ============================================================================
-const sidebarCollapsed = ref(false)
+const sidebarCollapsed = ref(false);
 
 function toggleSidebarCollapse() {
-  sidebarCollapsed.value = !sidebarCollapsed.value
+  sidebarCollapsed.value = !sidebarCollapsed.value;
 }
 
 // ============================================================================
 // MODAL SYSTEM
 // ============================================================================
-const isModalOpen = ref(false)
-const modalTriggerElement = ref<HTMLElement | null>(null)
+const isModalOpen = ref(false);
+const modalTriggerElement = ref<HTMLElement | null>(null);
 
 function openModal() {
-  modalTriggerElement.value = document.activeElement as HTMLElement | null
-  isModalOpen.value = true
+  modalTriggerElement.value = document.activeElement as HTMLElement | null;
+  isModalOpen.value = true;
   nextTick(() => {
-    modalCloseRef.value?.focus()
-  })
+    modalCloseRef.value?.focus();
+  });
 }
 
 function closeModal() {
-  isModalOpen.value = false
+  isModalOpen.value = false;
   nextTick(() => {
-    modalTriggerElement.value?.focus()
-    modalTriggerElement.value = null
-  })
+    modalTriggerElement.value?.focus();
+    modalTriggerElement.value = null;
+  });
 }
 
 function handleModalBackdropClick(event: MouseEvent) {
   // Only close if clicking the backdrop itself, not the modal content
-  if ((event.target as HTMLElement).classList.contains('layerboard-modal-backdrop')) {
-    closeModal()
+  if ((event.target as HTMLElement).classList.contains("layerboard-modal-backdrop")) {
+    closeModal();
   }
 }
 
 function handleMobileMenuKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape') {
-    closeMobileMenu()
-    return
+  if (event.key === "Escape") {
+    closeMobileMenu();
+    return;
   }
 
-  if (event.key === 'Tab' && mobileMenuRef.value) {
-    const focusable = Array.from(mobileMenuRef.value.querySelectorAll<HTMLElement>(
-      'a[href], button:not([disabled]), textarea, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    ))
-    if (focusable.length === 0) return
+  if (event.key === "Tab" && mobileMenuRef.value) {
+    const focusable = Array.from(
+      mobileMenuRef.value.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    );
+    if (focusable.length === 0) return;
 
-    const first = focusable[0]!
-    const last = focusable[focusable.length - 1]!
+    const first = focusable[0]!;
+    const last = focusable[focusable.length - 1]!;
 
     if (event.shiftKey) {
       if (document.activeElement === first) {
-        event.preventDefault()
-        last.focus()
+        event.preventDefault();
+        last.focus();
       }
     } else {
       if (document.activeElement === last) {
-        event.preventDefault()
-        first.focus()
+        event.preventDefault();
+        first.focus();
       }
     }
   }
 }
 
 function handleModalKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape') {
-    closeModal()
-    return
+  if (event.key === "Escape") {
+    closeModal();
+    return;
   }
 
   // Focus trap: keep Tab cycling within the modal
-  if (event.key === 'Tab' && modalRef.value) {
-    const focusable = Array.from(modalRef.value.querySelectorAll<HTMLElement>(
-      'a[href], button:not([disabled]), textarea, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    ))
-    if (focusable.length === 0) return
+  if (event.key === "Tab" && modalRef.value) {
+    const focusable = Array.from(
+      modalRef.value.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    );
+    if (focusable.length === 0) return;
 
-    const first = focusable[0]!
-    const last = focusable[focusable.length - 1]!
+    const first = focusable[0]!;
+    const last = focusable[focusable.length - 1]!;
 
     if (event.shiftKey) {
       if (document.activeElement === first) {
-        event.preventDefault()
-        last.focus()
+        event.preventDefault();
+        last.focus();
       }
     } else {
       if (document.activeElement === last) {
-        event.preventDefault()
-        first.focus()
+        event.preventDefault();
+        first.focus();
       }
     }
   }
 }
 
 // Provide modal functions so footer slot can trigger modals
-provide('layerboard-open-modal', openModal)
-provide('layerboard-close-modal', closeModal)
-provide('layerboard-is-modal-open', readonly(isModalOpen))
+provide("layerboard-open-modal", openModal);
+provide("layerboard-close-modal", closeModal);
+provide("layerboard-is-modal-open", readonly(isModalOpen));
 
 // ============================================================================
 // EXPOSE API FOR PARENT COMPONENTS
@@ -600,14 +608,14 @@ defineExpose({
   openModal,
   /** Close the modal */
   closeModal,
-})
+});
 
 // ============================================================================
 // KEYBOARD HANDLERS
 // ============================================================================
 function handleGlobalKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && mobileMenuOpen.value) {
-    closeMobileMenu()
+  if (event.key === "Escape" && mobileMenuOpen.value) {
+    closeMobileMenu();
   }
 }
 
@@ -615,29 +623,29 @@ function handleGlobalKeydown(event: KeyboardEvent) {
 // LIFECYCLE
 // ============================================================================
 onMounted(() => {
-  loadLayerConfigs()
-  fetchMetadataLookup()
-  initTiledLayerOpacities()
-  document.addEventListener('keydown', handleGlobalKeydown)
-})
+  loadLayerConfigs();
+  fetchMetadataLookup();
+  initTiledLayerOpacities();
+  document.addEventListener("keydown", handleGlobalKeydown);
+});
 
 onBeforeUnmount(() => {
-  document.removeEventListener('keydown', handleGlobalKeydown)
-})
+  document.removeEventListener("keydown", handleGlobalKeydown);
+});
 </script>
 
 <template>
   <div class="layerboard-layout">
-    <a
-      href="#main-content"
-      class="skip-to-main-content-link"
-    >Skip to main content</a>
+    <a href="#main-content" class="skip-to-main-content-link">Skip to main content</a>
 
     <!-- Header -->
     <header class="layerboard-header" :style="headerStyle">
       <!-- Desktop: Logo and divider -->
       <a href="https://www.phila.gov/" class="layerboard-logo layerboard-desktop-only">
-        <img src="https://standards.phila.gov/img/logo/city-of-philadelphia-yellow-white.png" alt="City of Philadelphia">
+        <img
+          src="https://standards.phila.gov/img/logo/city-of-philadelphia-yellow-white.png"
+          alt="City of Philadelphia"
+        />
       </a>
       <span class="layerboard-header-divider layerboard-desktop-only" aria-hidden="true"></span>
 
@@ -646,8 +654,8 @@ onBeforeUnmount(() => {
         ref="hamburgerRef"
         class="layerboard-hamburger layerboard-mobile-only"
         :aria-expanded="mobileMenuOpen"
-        @click="toggleMobileMenu"
         aria-label="Toggle menu"
+        @click="toggleMobileMenu"
       >
         <Icon :icon-definition="faBars" size="medium" decorative />
       </button>
@@ -676,19 +684,15 @@ onBeforeUnmount(() => {
         <button
           ref="mobileMenuCloseRef"
           class="layerboard-mobile-menu-close"
-          @click="closeMobileMenu"
           aria-label="Close menu"
+          @click="closeMobileMenu"
         >
           <Icon :icon-definition="faXmark" size="medium" decorative />
         </button>
       </div>
 
       <!-- Mobile menu backdrop -->
-      <div
-        v-if="mobileMenuOpen"
-        class="layerboard-mobile-menu-backdrop"
-        @click="closeMobileMenu"
-      ></div>
+      <div v-if="mobileMenuOpen" class="layerboard-mobile-menu-backdrop" @click="closeMobileMenu"></div>
     </header>
 
     <!-- Main content area -->
@@ -703,11 +707,7 @@ onBeforeUnmount(() => {
       <div v-else-if="configsError" class="layerboard-error" role="alert">
         <h2>Error Loading Layers</h2>
         <p>{{ configsError }}</p>
-        <button
-          class="layerboard-retry-button"
-          :style="{ backgroundColor: themeColor }"
-          @click="loadLayerConfigs"
-        >
+        <button class="layerboard-retry-button" :style="{ backgroundColor: themeColor }" @click="loadLayerConfigs">
           Retry
         </button>
       </div>
@@ -716,15 +716,37 @@ onBeforeUnmount(() => {
       <template v-else>
         <!-- Sidebar Panel -->
         <aside
-          ref="sidebarRef"
           id="main-content"
+          ref="sidebarRef"
           class="layerboard-sidebar"
           :class="{ 'is-active': activePanel === 'sidebar' }"
           :style="sidebarStyle"
           aria-label="Map layers"
           tabindex="-1"
         >
-          <slot name="sidebar" :layers="layerList" :visible-layers="visibleLayers" :layer-opacities="layerOpacities" :loading-layers="loadingLayers" :layer-errors="layerErrors" :current-zoom="currentZoom" :toggle-layer="toggleLayer" :set-layer-visible="setLayerVisible" :set-layers-visible="setLayersVisible" :set-opacity="setLayerOpacity" :tiled-layers="tiledLayers" :visible-tiled-layers="visibleTiledLayers" :tiled-layer-opacities="tiledLayerOpacities" :toggle-tiled-layer="toggleTiledLayer" :set-tiled-layer-visible="setTiledLayerVisible" :set-tiled-layer-opacity="setTiledLayerOpacity" :data-sources-state="dataSourcesState" :data-sources-loading="dataSourcesLoading" :get-data-source="getDataSourceData" :refetch-data-source="refetchDataSource">
+          <slot
+            name="sidebar"
+            :layers="layerList"
+            :visible-layers="visibleLayers"
+            :layer-opacities="layerOpacities"
+            :loading-layers="loadingLayers"
+            :layer-errors="layerErrors"
+            :current-zoom="currentZoom"
+            :toggle-layer="toggleLayer"
+            :set-layer-visible="setLayerVisible"
+            :set-layers-visible="setLayersVisible"
+            :set-opacity="setLayerOpacity"
+            :tiled-layers="tiledLayers"
+            :visible-tiled-layers="visibleTiledLayers"
+            :tiled-layer-opacities="tiledLayerOpacities"
+            :toggle-tiled-layer="toggleTiledLayer"
+            :set-tiled-layer-visible="setTiledLayerVisible"
+            :set-tiled-layer-opacity="setTiledLayerOpacity"
+            :data-sources-state="dataSourcesState"
+            :data-sources-loading="dataSourcesLoading"
+            :get-data-source="getDataSourceData"
+            :refetch-data-source="refetchDataSource"
+          >
             <!-- Default: LayerPanel for flat layer list -->
             <LayerPanel
               v-if="showDefaultSidebar"
@@ -774,26 +796,17 @@ onBeforeUnmount(() => {
           class="layerboard-sidebar-toggle"
           :class="{ 'is-collapsed': sidebarCollapsed }"
           :style="{ left: sidebarCollapsed ? '0' : props.sidebarWidth }"
-          @click="toggleSidebarCollapse"
           :aria-expanded="!sidebarCollapsed"
           :aria-label="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+          @click="toggleSidebarCollapse"
         >
-          <Icon
-            :icon-definition="sidebarCollapsed ? faCaretRight : faCaretLeft"
-            size="medium"
-            decorative
-          />
+          <Icon :icon-definition="sidebarCollapsed ? faCaretRight : faCaretLeft" size="medium" decorative />
         </button>
       </template>
     </div>
 
     <!-- Mobile toggle button -->
-    <button
-      ref="mobileToggleRef"
-      class="layerboard-mobile-toggle"
-      :style="mobileToggleStyle"
-      @click="togglePanel"
-    >
+    <button ref="mobileToggleRef" class="layerboard-mobile-toggle" :style="mobileToggleStyle" @click="togglePanel">
       <span v-if="activePanel === 'map'">{{ sidebarLabel }}</span>
       <span v-else>{{ mapLabel }}</span>
     </button>
@@ -812,19 +825,8 @@ onBeforeUnmount(() => {
       @click="handleModalBackdropClick"
       @keydown="handleModalKeydown"
     >
-      <div
-        ref="modalRef"
-        class="layerboard-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Application information"
-      >
-        <button
-          ref="modalCloseRef"
-          class="layerboard-modal-close"
-          @click="closeModal"
-          aria-label="Close modal"
-        >
+      <div ref="modalRef" class="layerboard-modal" role="dialog" aria-modal="true" aria-label="Application information">
+        <button ref="modalCloseRef" class="layerboard-modal-close" aria-label="Close modal" @click="closeModal">
           <Icon :icon-definition="faXmark" size="medium" decorative />
         </button>
         <slot name="modal" :close-modal="closeModal">
@@ -833,13 +835,16 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <span class="sr-only" aria-live="polite">{{ activePanel === 'sidebar' ? 'Showing layers panel' : 'Showing map' }}</span>
+    <span class="sr-only" aria-live="polite">{{
+      activePanel === "sidebar" ? "Showing layers panel" : "Showing map"
+    }}</span>
   </div>
 </template>
 
 <style>
 /* Global reset for Layerboard app - ensures no scrollbars */
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -969,14 +974,16 @@ html, body {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+    sans-serif;
 }
 
 .skip-to-main-content-link {
   position: absolute;
   left: -9999px;
   z-index: 999;
-  padding: .5em;
+  padding: 0.5em;
   background-color: #0f4d90;
   color: white;
   opacity: 0;
@@ -1310,8 +1317,12 @@ html, body {
 }
 
 @keyframes layerboard-spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .layerboard-loading p {
@@ -1403,7 +1414,9 @@ html, body {
   justify-content: center;
   border-radius: 50%;
   color: #666;
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
 .layerboard-modal-close:hover {

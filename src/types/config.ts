@@ -1,51 +1,51 @@
 // LayerboardConfig - Main configuration interface for the framework
 
-import type { LayerConfig } from './layer'
+import type { LayerConfig } from "./layer";
 
 export interface LayerboardConfig {
   /**
    * ArcGIS Online WebMap ID to fetch layer configuration from
    */
-  webMapId: string
+  webMapId: string;
 
   /**
    * Mode for layer configuration
    * - 'dynamic': Fetch from ArcGIS Online at runtime (recommended)
    * - 'static': Use pre-generated static config files
    */
-  mode?: 'dynamic' | 'static'
+  mode?: "dynamic" | "static";
 
   /**
    * Layer panel display mode
    * - 'flat': Simple list of all layers (OpenMaps style)
    * - 'topics': Grouped by topic in accordion (StreetSmartPHL style)
    */
-  panelMode?: 'flat' | 'topics'
+  panelMode?: "flat" | "topics";
 
   /**
    * Topic configuration (required when panelMode is 'topics')
    */
-  topics?: TopicConfig[]
+  topics?: TopicConfig[];
 
   /**
    * Static layer configurations (used when mode is 'static')
    */
-  staticLayers?: LayerConfig[]
+  staticLayers?: LayerConfig[];
 
   /**
    * Initial map view settings
    */
-  initialView?: InitialViewConfig
+  initialView?: InitialViewConfig;
 
   /**
    * Feature flags to enable/disable framework features
    */
-  features?: FeatureFlags
+  features?: FeatureFlags;
 
   /**
    * Optional callback when map is ready
    */
-  onMapReady?: (map: unknown) => void
+  onMapReady?: (map: unknown) => void;
 }
 
 /**
@@ -53,13 +53,13 @@ export interface LayerboardConfig {
  */
 export interface InitialViewConfig {
   /** Center coordinates [longitude, latitude] */
-  center: [number, number]
+  center: [number, number];
   /** Initial zoom level */
-  zoom: number
+  zoom: number;
   /** Optional min zoom constraint */
-  minZoom?: number
+  minZoom?: number;
   /** Optional max zoom constraint */
-  maxZoom?: number
+  maxZoom?: number;
 }
 
 /**
@@ -67,23 +67,23 @@ export interface InitialViewConfig {
  */
 export interface FeatureFlags {
   /** Enable address search (default: true) */
-  search?: boolean
+  search?: boolean;
   /** Enable geolocation/locate me button (default: true) */
-  geolocation?: boolean
+  geolocation?: boolean;
   /** Enable Cyclomedia street-level imagery integration */
-  cyclomedia?: boolean
+  cyclomedia?: boolean;
   /** Enable Pictometry oblique imagery integration */
-  pictometry?: boolean
+  pictometry?: boolean;
   /** Enable layer opacity controls (default: true) */
-  opacitySliders?: boolean
+  opacitySliders?: boolean;
   /** Enable layer legends (default: true) */
-  legends?: boolean
+  legends?: boolean;
 }
 
 export interface TopicConfig {
-  id: string
-  title: string
-  icon?: string
-  layerIds: string[]
-  defaultExpanded?: boolean
+  id: string;
+  title: string;
+  icon?: string;
+  layerIds: string[];
+  defaultExpanded?: boolean;
 }

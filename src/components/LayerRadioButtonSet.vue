@@ -7,30 +7,30 @@
 // - shouldShowLegendBox: false hides the legend
 // - layerNameChange: overrides the display label
 
-import type { LayerConfig } from '@/types/layer'
+import type { LayerConfig } from "@/types/layer";
 
 const props = withDefaults(
   defineProps<{
     /** Array of layer configurations to display */
-    layers: LayerConfig[]
+    layers: LayerConfig[];
     /** Set of currently visible layer IDs */
-    visibleLayerIds: Set<string>
+    visibleLayerIds: Set<string>;
     /** Map of layer IDs to opacity values (0-1) */
-    layerOpacities?: Record<string, number>
+    layerOpacities?: Record<string, number>;
     /** Set of layer IDs currently loading */
-    loadingLayerIds?: Set<string>
+    loadingLayerIds?: Set<string>;
     /** Map of layer IDs to error messages */
-    layerErrors?: Record<string, string>
+    layerErrors?: Record<string, string>;
     /** Current map zoom level (for zoom-based availability) */
-    currentZoom?: number
+    currentZoom?: number;
     /** Whether to show opacity sliders (can be overridden per-layer) */
-    showOpacity?: boolean
+    showOpacity?: boolean;
     /** Whether to show legends (can be overridden per-layer) */
-    showLegend?: boolean
+    showLegend?: boolean;
     /** Unique name for the radio button group */
-    groupName?: string
+    groupName?: string;
     /** Accessible label for the group */
-    groupLabel?: string
+    groupLabel?: string;
   }>(),
   {
     layerOpacities: () => ({}),
@@ -39,82 +39,76 @@ const props = withDefaults(
     currentZoom: 12,
     showOpacity: true,
     showLegend: true,
-    groupName: 'layer-radio-group',
-  }
-)
+    groupName: "layer-radio-group",
+  },
+);
 
 const emit = defineEmits<{
   /** Emitted when a layer is selected (turn on) and others should be turned off */
-  (e: 'selectLayer', layerId: string, previousLayerIds: string[]): void
+  (e: "selectLayer", layerId: string, previousLayerIds: string[]): void;
   /** Emitted when a layer's opacity is changed */
-  (e: 'setOpacity', layerId: string, opacity: number): void
-}>()
+  (e: "setOpacity", layerId: string, opacity: number): void;
+}>();
 
 // Helper functions for visibility and state
 function isVisible(layerId: string): boolean {
-  return props.visibleLayerIds.has(layerId)
+  return props.visibleLayerIds.has(layerId);
 }
 
 function getLayerOpacity(layerId: string): number {
-  return props.layerOpacities[layerId] ?? 1
+  return props.layerOpacities[layerId] ?? 1;
 }
 
 function isLayerLoading(layerId: string): boolean {
-  return props.loadingLayerIds.has(layerId)
+  return props.loadingLayerIds.has(layerId);
 }
 
 function getLayerError(layerId: string): string | null {
-  return props.layerErrors[layerId] || null
+  return props.layerErrors[layerId] || null;
 }
 
 function isLayerAvailableAtZoom(config: LayerConfig): boolean {
-  const zoom = props.currentZoom
-  const minZoom = config.minZoom
-  const maxZoom = config.maxZoom
-  if (minZoom !== undefined && zoom < minZoom) return false
-  if (maxZoom !== undefined && zoom > maxZoom) return false
-  return true
+  const zoom = props.currentZoom;
+  const minZoom = config.minZoom;
+  const maxZoom = config.maxZoom;
+  if (minZoom !== undefined && zoom < minZoom) return false;
+  if (maxZoom !== undefined && zoom > maxZoom) return false;
+  return true;
 }
 
 // Helper functions for display options
 function shouldShowSlider(config: LayerConfig): boolean {
   // Check both component prop and per-layer option
-  if (!props.showOpacity) return false
-  return config.displayOptions?.shouldShowSlider !== false
+  if (!props.showOpacity) return false;
+  return config.displayOptions?.shouldShowSlider !== false;
 }
 
 function shouldShowLegendBox(config: LayerConfig): boolean {
   // Check both component prop and per-layer option
-  if (!props.showLegend) return false
-  return config.displayOptions?.shouldShowLegendBox !== false
+  if (!props.showLegend) return false;
+  return config.displayOptions?.shouldShowLegendBox !== false;
 }
 
 function getLayerDisplayName(config: LayerConfig): string {
   // Use layerNameChange if provided, otherwise use title
-  return config.displayOptions?.layerNameChange || config.title
+  return config.displayOptions?.layerNameChange || config.title;
 }
 
 function onSelectLayer(layerId: string) {
   // Find all currently visible layers in this set to turn off
-  const previousLayerIds = props.layers
-    .filter(l => props.visibleLayerIds.has(l.id) && l.id !== layerId)
-    .map(l => l.id)
-  emit('selectLayer', layerId, previousLayerIds)
+  const previousLayerIds = props.layers.filter(l => props.visibleLayerIds.has(l.id) && l.id !== layerId).map(l => l.id);
+  emit("selectLayer", layerId, previousLayerIds);
 }
 
 function onOpacityChange(layerId: string, event: Event) {
-  const input = event.target as HTMLInputElement
-  emit('setOpacity', layerId, parseFloat(input.value))
+  const input = event.target as HTMLInputElement;
+  emit("setOpacity", layerId, parseFloat(input.value));
 }
 </script>
 
 <template>
   <div class="layer-radio-set" role="radiogroup" :aria-label="groupLabel">
-    <div
-      v-for="layer in layers"
-      :key="layer.id"
-      class="layer-item"
-    >
+    <div v-for="layer in layers" :key="layer.id" class="layer-item">
       <!-- Radio button for layer selection -->
       <label
         class="layer-radio"
@@ -132,9 +126,7 @@ function onOpacityChange(layerId: string, event: Event) {
         />
         <span class="layer-title">
           {{ getLayerDisplayName(layer) }}
-          <span v-if="isLayerLoading(layer.id)" class="loading-indicator" role="status">
-            Loading...
-          </span>
+          <span v-if="isLayerLoading(layer.id)" class="loading-indicator" role="status"> Loading... </span>
           <span
             v-if="getLayerError(layer.id)"
             class="error-indicator"
@@ -143,9 +135,7 @@ function onOpacityChange(layerId: string, event: Event) {
           >
             Error
           </span>
-          <span v-if="!isLayerAvailableAtZoom(layer)" class="zoom-indicator">
-            (zoom in)
-          </span>
+          <span v-if="!isLayerAvailableAtZoom(layer)" class="zoom-indicator"> (zoom in) </span>
         </span>
       </label>
 
@@ -173,11 +163,7 @@ function onOpacityChange(layerId: string, event: Event) {
         class="layer-legend"
         :aria-label="'Legend for ' + getLayerDisplayName(layer)"
       >
-        <li
-          v-for="(item, index) in layer.legend"
-          :key="index"
-          class="legend-item"
-        >
+        <li v-for="(item, index) in layer.legend" :key="index" class="legend-item">
           <!-- Circle symbol -->
           <span
             v-if="item.type === 'circle'"
@@ -211,9 +197,7 @@ function onOpacityChange(layerId: string, event: Event) {
     </div>
 
     <!-- Empty state -->
-    <div v-if="layers.length === 0" class="empty-state">
-      No layers available
-    </div>
+    <div v-if="layers.length === 0" class="empty-state">No layers available</div>
   </div>
 </template>
 

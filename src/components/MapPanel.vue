@@ -10,11 +10,7 @@ import {
   DrawTool,
   MapMarker,
 } from "@phila/phila-ui-map-core";
-import type {
-  CyclomediaConfig,
-  PictometryCredentials,
-  AisGeocodeResult,
-} from "@phila/phila-ui-map-core";
+import type { CyclomediaConfig, PictometryCredentials, AisGeocodeResult } from "@phila/phila-ui-map-core";
 import type { LngLatLike, CircleLayerSpecification, LineLayerSpecification } from "maplibre-gl";
 import bboxClip from "@turf/bbox-clip";
 import type { TiledLayerConfig } from "@/types/layer";
@@ -28,13 +24,14 @@ interface Bounds {
 }
 
 // Control position type
-type ControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+type ControlPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
 // Props from parent
 const props = withDefaults(
   defineProps<{
     visibleLayers: Set<string>;
     layerOpacities: Record<string, number>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     layerList: Array<{ config: any; component: string }>;
     // Tiled layer props
     tiledLayers?: TiledLayerConfig[];
@@ -55,14 +52,14 @@ const props = withDefaults(
     initialCenter?: [number, number];
   }>(),
   {
-    basemapControlPosition: 'top-right',
-    navigationControlPosition: 'bottom-right',
-    geolocationControlPosition: 'bottom-right',
-    searchControlPosition: 'top-left',
-    drawControlPosition: 'bottom-left',
-    cyclomediaButtonPosition: 'top-right',
-    pictometryButtonPosition: 'top-right',
-  }
+    basemapControlPosition: "top-right",
+    navigationControlPosition: "bottom-right",
+    geolocationControlPosition: "bottom-right",
+    searchControlPosition: "top-left",
+    drawControlPosition: "bottom-left",
+    cyclomediaButtonPosition: "top-right",
+    pictometryButtonPosition: "top-right",
+  },
 );
 
 // Emit events to parent
@@ -76,6 +73,7 @@ const emit = defineEmits<{
 // MAP REF & ZOOM/SCALE TRACKING
 // ============================================================================
 const mapRef = ref<InstanceType<typeof PhilaMap> | null>(null);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mapInstance = ref<any>(null); // Store the actual MapLibre map instance
 
 // Current map scale (calculated from zoom level and latitude)
@@ -96,6 +94,7 @@ function onZoomChange(zoom: number) {
  * At the equator, zoom 0 = scale 559082264.028
  * Scale = 559082264.028 / 2^zoom * cos(latitude)
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function calculateMapScale(map: any): number {
   const zoom = map.getZoom();
   const center = map.getCenter();
@@ -107,7 +106,7 @@ function calculateMapScale(map: any): number {
 
   // Adjust for latitude (cos of latitude in radians)
   const latRadians = (latitude * Math.PI) / 180;
-  const scale = SCALE_AT_ZOOM_0 * Math.cos(latRadians) / Math.pow(2, zoom);
+  const scale = (SCALE_AT_ZOOM_0 * Math.cos(latRadians)) / Math.pow(2, zoom);
 
   return scale;
 }
@@ -138,7 +137,7 @@ async function fetchFeaturesInBounds(
   url: string,
   bounds: Bounds,
   layerId: string,
-  where?: string
+  where?: string,
 ): Promise<GeoJSON.FeatureCollection> {
   const whereClause = encodeURIComponent(where || "1=1");
 
@@ -166,7 +165,7 @@ async function fetchFeaturesInBounds(
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    const data = await response.json() as GeoJSON.FeatureCollection;
+    const data = (await response.json()) as GeoJSON.FeatureCollection;
 
     if (data.features && data.features.length > 0) {
       allFeatures = allFeatures.concat(data.features);
@@ -185,8 +184,7 @@ async function fetchFeaturesInBounds(
 
     allFeatures = allFeatures.map(feature => {
       // Only clip polygon geometries (the complex ones causing performance issues)
-      if (feature.geometry &&
-          (feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon')) {
+      if (feature.geometry && (feature.geometry.type === "Polygon" || feature.geometry.type === "MultiPolygon")) {
         try {
           // Clip the feature to the viewport bounds
           // Type assertion needed because we've already verified it's a Polygon or MultiPolygon
@@ -213,7 +211,7 @@ async function fetchFeaturesInBounds(
 // This is used to fetch only newly visible layers without re-fetching already loaded layers
 async function fetchSpecificLayers(bounds: Bounds, layerIds: string[]) {
   // Build array of fetch promises for parallel loading
-  const fetchPromises = layerIds.map(async (layerId) => {
+  const fetchPromises = layerIds.map(async layerId => {
     const config = props.layerList.find(l => l.config.id === layerId)?.config;
     if (!config) return;
 
@@ -249,6 +247,7 @@ function onMoveEnd(data: { center: { lng: number; lat: number }; zoom: number; b
 }
 
 // Handle map load event - get initial bounds, zoom, and scale
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function onMapLoad(map: any) {
   // Store the MapLibre map instance for later use
   mapInstance.value = map;
@@ -286,9 +285,7 @@ watch(
     if (currentBounds.value) {
       // Determine which layers are newly visible by comparing current vs previous visibility
       const currentVisibleIds = new Set(props.visibleLayers);
-      const newlyVisibleIds = [...currentVisibleIds].filter(
-        id => !previouslyVisibleLayers.value.has(id)
-      );
+      const newlyVisibleIds = [...currentVisibleIds].filter(id => !previouslyVisibleLayers.value.has(id));
 
       // Update the tracking set for next time
       previouslyVisibleLayers.value = new Set(currentVisibleIds);
@@ -298,7 +295,7 @@ watch(
         await fetchSpecificLayers(currentBounds.value, newlyVisibleIds);
       }
     }
-  }
+  },
 );
 
 // ============================================================================
@@ -309,6 +306,7 @@ function isVisible(layerId: string) {
 }
 
 // Check if layer has data ready to render
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function hasSourceReady(layer: any): boolean {
   return !!layerData.value[layer.id];
 }
@@ -316,25 +314,27 @@ function hasSourceReady(layer: any): boolean {
 const visibleCircleLayers = computed(() =>
   props.layerList
     .filter(l => l.config.type === "circle" && isVisible(l.config.id) && hasSourceReady(l.config))
-    .map(l => l.config)
+    .map(l => l.config),
 );
 
 const visibleFillLayers = computed(() =>
   props.layerList
     .filter(l => l.config.type === "fill" && isVisible(l.config.id) && hasSourceReady(l.config))
-    .map(l => l.config)
+    .map(l => l.config),
 );
 
 const visibleFillLayersWithOutline = computed(() =>
   props.layerList
-    .filter(l => l.config.type === "fill" && l.config.outlinePaint && isVisible(l.config.id) && hasSourceReady(l.config))
-    .map(l => l.config)
+    .filter(
+      l => l.config.type === "fill" && l.config.outlinePaint && isVisible(l.config.id) && hasSourceReady(l.config),
+    )
+    .map(l => l.config),
 );
 
 const visibleLineLayers = computed(() =>
   props.layerList
     .filter(l => l.config.type === "line" && isVisible(l.config.id) && hasSourceReady(l.config))
-    .map(l => l.config)
+    .map(l => l.config),
 );
 
 // ============================================================================
@@ -355,7 +355,7 @@ function getTiledLayerOpacity(layerId: string): number {
 // ESRI tile services use {z}/{y}/{x} format
 function getEsriTileUrl(baseUrl: string): string {
   // Remove trailing slash if present
-  const url = baseUrl.replace(/\/$/, '');
+  const url = baseUrl.replace(/\/$/, "");
   // ESRI MapServer tile endpoint pattern
   return `${url}/tile/{z}/{y}/{x}`;
 }
@@ -363,10 +363,10 @@ function getEsriTileUrl(baseUrl: string): string {
 // Get raster source configuration for a tiled layer
 function getTiledLayerSource(layer: TiledLayerConfig) {
   return {
-    type: 'raster' as const,
+    type: "raster" as const,
     tiles: [getEsriTileUrl(layer.url)],
     tileSize: 256,
-    attribution: layer.attribution || '',
+    attribution: layer.attribution || "",
   };
 }
 
@@ -396,7 +396,7 @@ async function fetchMapServerMetadata(layer: TiledLayerConfig): Promise<void> {
   metadataFetchedFor.value.add(layer.id);
 
   try {
-    const url = layer.url.replace(/\/$/, '');
+    const url = layer.url.replace(/\/$/, "");
     const response = await fetch(`${url}?f=json`);
     if (!response.ok) {
       console.warn(`[MapPanel] Failed to fetch metadata for ${layer.id}: ${response.status}`);
@@ -409,7 +409,7 @@ async function fetchMapServerMetadata(layer: TiledLayerConfig): Promise<void> {
     // The "layers" array contains sublayer definitions with scale info
     // We use the service-level minScale/maxScale as the switch threshold
     // because it represents the bounds of the tiled cache
-    let minScale = data.minScale || 0;
+    const minScale = data.minScale || 0;
     let maxScale = data.maxScale || 0;
 
     // If service-level scales aren't set, look at the sublayers
@@ -460,20 +460,20 @@ onMounted(() => {
  *
  * Returns: 'tiled' | 'dynamic' | 'none'
  */
-function getScaleBasedRenderMode(layer: TiledLayerConfig): 'tiled' | 'dynamic' | 'none' {
+function getScaleBasedRenderMode(layer: TiledLayerConfig): "tiled" | "dynamic" | "none" {
   if (!layer.scaleBasedRendering) {
-    return 'tiled'; // Non-scale-based layers always use tiled
+    return "tiled"; // Non-scale-based layers always use tiled
   }
 
   const metadata = mapServerMetadata.value[layer.id];
   if (!metadata) {
     // Metadata not yet loaded - default to tiled until we know better
-    return 'tiled';
+    return "tiled";
   }
 
   const scale = currentScale.value;
   if (scale === 0) {
-    return 'tiled'; // Map not ready yet
+    return "tiled"; // Map not ready yet
   }
 
   // ArcGIS scale logic:
@@ -482,9 +482,9 @@ function getScaleBasedRenderMode(layer: TiledLayerConfig): 'tiled' | 'dynamic' |
   // - When scale > metadata.maxScale, we're zoomed out -> use tiles
   // - When scale <= metadata.maxScale, we're zoomed in -> use dynamic
   if (scale > metadata.maxScale) {
-    return 'tiled';
+    return "tiled";
   } else {
-    return 'dynamic';
+    return "dynamic";
   }
 }
 
@@ -492,19 +492,24 @@ function getScaleBasedRenderMode(layer: TiledLayerConfig): 'tiled' | 'dynamic' |
  * Build the dynamic export URL for a MapServer layer.
  * This uses the /export endpoint which renders imagery on-demand at any scale.
  */
-function getDynamicExportSource(layer: TiledLayerConfig, bounds: Bounds): { type: 'raster'; tiles: string[]; tileSize: number; attribution: string } {
-  const url = layer.url.replace(/\/$/, '');
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function getDynamicExportSource(
+  layer: TiledLayerConfig,
+  bounds: Bounds,
+): { type: "raster"; tiles: string[]; tileSize: number; attribution: string } {
+  const url = layer.url.replace(/\/$/, "");
 
   // Build the export URL with the current bounds
   // We use 256x256 tiles to match the standard tile size
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const bbox = `${bounds.west},${bounds.south},${bounds.east},${bounds.north}`;
   const exportUrl = `${url}/export?bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=256,256&format=png32&transparent=true&f=image`;
 
   return {
-    type: 'raster' as const,
+    type: "raster" as const,
     tiles: [exportUrl],
     tileSize: 256,
-    attribution: layer.attribution || '',
+    attribution: layer.attribution || "",
   };
 }
 
@@ -516,7 +521,7 @@ const visibleTiledLayersList = computed(() => {
 
     // For scale-based layers, only include if we should use tiled mode
     if (layer.scaleBasedRendering) {
-      return getScaleBasedRenderMode(layer) === 'tiled';
+      return getScaleBasedRenderMode(layer) === "tiled";
     }
     return true;
   });
@@ -530,7 +535,7 @@ const visibleDynamicExportLayersList = computed(() => {
 
     // Only include scale-based layers that should use dynamic mode
     if (layer.scaleBasedRendering) {
-      return getScaleBasedRenderMode(layer) === 'dynamic';
+      return getScaleBasedRenderMode(layer) === "dynamic";
     }
     return false;
   });
@@ -541,23 +546,24 @@ const visibleDynamicExportLayersList = computed(() => {
  * This creates a raster source that uses the MapServer /export endpoint.
  */
 function getDynamicExportLayerSource(layer: TiledLayerConfig) {
-  const url = layer.url.replace(/\/$/, '');
+  const url = layer.url.replace(/\/$/, "");
 
   // Use MapLibre's built-in {bbox-epsg-3857} template for dynamic export
   // This automatically substitutes the current tile bounds in Web Mercator
   const exportUrl = `${url}/export?bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=256,256&format=png32&transparent=true&f=image`;
 
   return {
-    type: 'raster' as const,
+    type: "raster" as const,
     tiles: [exportUrl],
     tileSize: 256,
-    attribution: layer.attribution || '',
+    attribution: layer.attribution || "",
   };
 }
 
 // ============================================================================
 // GENERIC SOURCE & PAINT HELPERS
 // ============================================================================
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getSource(layer: any) {
   const data = layerData.value[layer.id];
   // Data should always exist here because we filter with hasSourceReady()
@@ -568,24 +574,20 @@ function getLayerOpacity(layerId: string): number {
   return props.layerOpacities[layerId] ?? 1;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getDynamicPaint(layer: any) {
   const sliderOpacity = getLayerOpacity(layer.id);
   const opacityKey =
-    layer.type === "circle" ? "circle-opacity" :
-    layer.type === "fill" ? "fill-opacity" :
-    "line-opacity";
+    layer.type === "circle" ? "circle-opacity" : layer.type === "fill" ? "fill-opacity" : "line-opacity";
 
   // For fill layers, check if the base paint has fill-opacity of 0 (transparent fill)
   // If so, keep it at 0 regardless of slider (the slider controls outline visibility instead)
-  if (layer.type === "fill" && layer.paint['fill-opacity'] === 0) {
-    return { ...layer.paint, 'fill-opacity': 0 };
+  if (layer.type === "fill" && layer.paint["fill-opacity"] === 0) {
+    return { ...layer.paint, "fill-opacity": 0 };
   }
 
   // Extract color key based on layer type
-  const colorKey =
-    layer.type === "circle" ? "circle-color" :
-    layer.type === "fill" ? "fill-color" :
-    "line-color";
+  const colorKey = layer.type === "circle" ? "circle-color" : layer.type === "fill" ? "fill-color" : "line-color";
 
   const paint = { ...layer.paint };
   const color = paint[colorKey];
@@ -595,7 +597,7 @@ function getDynamicPaint(layer: any) {
   // it means the transformer intentionally moved opacity to the color channel
   // In this case, don't override with the slider's initial value
   const transformerSetOpacityToOne = paint[opacityKey] === 1.0;
-  const colorHasAlpha = typeof color === 'string' && color.startsWith('rgba(');
+  const colorHasAlpha = typeof color === "string" && color.startsWith("rgba(");
 
   if (transformerSetOpacityToOne && colorHasAlpha) {
     // Transformer handled opacity via color alpha channel
@@ -636,6 +638,7 @@ function getDynamicPaint(layer: any) {
   return paint;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getOutlinePaint(layer: any) {
   const sliderOpacity = getLayerOpacity(layer.id);
   // Use the slider value as the final opacity for outlines too
@@ -689,11 +692,7 @@ function substituteTemplate(template: string, properties: Record<string, unknown
 }
 
 function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 // Format field value for display
@@ -746,9 +745,9 @@ function formatFieldValue(value: unknown, format?: PopupFieldFormat): string {
 // MapLibre may return the same feature multiple times (e.g., from fill + outline layers)
 function deduplicateFeatures(features: MapLibreFeature[]): MapLibreFeature[] {
   const seen = new Set<string>();
-  return features.filter((feature) => {
+  return features.filter(feature => {
     // Create a unique key from base layer ID (without -outline suffix) and stringified properties
-    const baseLayerId = feature.layer.id.replace(/-outline$/, '');
+    const baseLayerId = feature.layer.id.replace(/-outline$/, "");
     const key = `${baseLayerId}:${JSON.stringify(feature.properties)}`;
     if (seen.has(key)) {
       return false;
@@ -767,8 +766,8 @@ function getFullGeometry(layerId: string, properties: Record<string, unknown>): 
 
   const objectId = properties.objectid ?? properties.OBJECTID ?? properties.FID;
   if (objectId != null) {
-    const match = data.features.find(f =>
-      (f.properties?.objectid ?? f.properties?.OBJECTID ?? f.properties?.FID) === objectId
+    const match = data.features.find(
+      f => (f.properties?.objectid ?? f.properties?.OBJECTID ?? f.properties?.FID) === objectId,
     );
     if (match) return match.geometry;
   }
@@ -778,10 +777,7 @@ function getFullGeometry(layerId: string, properties: Record<string, unknown>): 
 
 // Sort features by layer order (layers rendered on top appear first)
 // Uses the layer config order to determine which features should be shown first
-function sortFeaturesByLayerOrder(
-  features: MapLibreFeature[],
-  layerConfigs: Array<{ id: string }>
-): MapLibreFeature[] {
+function sortFeaturesByLayerOrder(features: MapLibreFeature[], layerConfigs: Array<{ id: string }>): MapLibreFeature[] {
   // Create a map of layer ID to its index in the config (lower index = rendered earlier = lower priority)
   const layerIndexMap = new Map<string, number>();
   layerConfigs.forEach((config, index) => {
@@ -790,8 +786,8 @@ function sortFeaturesByLayerOrder(
 
   // Sort features by their layer's index (higher index = rendered later = shown first)
   return features.sort((a, b) => {
-    const baseLayerIdA = a.layer.id.replace(/-outline$/, '');
-    const baseLayerIdB = b.layer.id.replace(/-outline$/, '');
+    const baseLayerIdA = a.layer.id.replace(/-outline$/, "");
+    const baseLayerIdB = b.layer.id.replace(/-outline$/, "");
     const indexA = layerIndexMap.get(baseLayerIdA) ?? -1;
     const indexB = layerIndexMap.get(baseLayerIdB) ?? -1;
     return indexB - indexA; // Reverse order: higher index first
@@ -845,20 +841,22 @@ function handleLayerClick(e: { lngLat: { lng: number; lat: number } }) {
   const sortedFeatures = sortFeaturesByLayerOrder(uniqueFeatures, layerConfigs);
 
   // Convert to PopupFeature format, storing geometry for highlight use on navigation
-  const newFeatures: PopupFeature[] = sortedFeatures.map((feature) => {
-    const baseLayerId = feature.layer.id.replace(/-outline$/, '');
-    const config = getLayerConfig(baseLayerId);
-    if (!config) return null;
+  const newFeatures: PopupFeature[] = sortedFeatures
+    .map(feature => {
+      const baseLayerId = feature.layer.id.replace(/-outline$/, "");
+      const config = getLayerConfig(baseLayerId);
+      if (!config) return null;
 
-    const fullGeometry = getFullGeometry(config.id, feature.properties || {});
-    return {
-      layerId: config.id,
-      layerTitle: config.title,
-      properties: feature.properties || {},
-      geometry: fullGeometry || feature.geometry,
-      popupConfig: config.popup,
-    };
-  }).filter((f): f is PopupFeature => f !== null);
+      const fullGeometry = getFullGeometry(config.id, feature.properties || {});
+      return {
+        layerId: config.id,
+        layerTitle: config.title,
+        properties: feature.properties || {},
+        geometry: fullGeometry || feature.geometry,
+        popupConfig: config.popup,
+      };
+    })
+    .filter((f): f is PopupFeature => f !== null);
 
   if (newFeatures.length === 0) return;
 
@@ -909,22 +907,22 @@ function handleKeyDown(event: KeyboardEvent) {
 
   // Don't interfere with text input fields
   const target = event.target as HTMLElement;
-  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+  if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
     return;
   }
 
   switch (event.key) {
-    case 'ArrowLeft':
-    case 'ArrowUp':
+    case "ArrowLeft":
+    case "ArrowUp":
       event.preventDefault();
       goToPreviousFeature();
       break;
-    case 'ArrowRight':
-    case 'ArrowDown':
+    case "ArrowRight":
+    case "ArrowDown":
       event.preventDefault();
       goToNextFeature();
       break;
-    case 'Escape':
+    case "Escape":
       event.preventDefault();
       closePopup();
       break;
@@ -932,11 +930,11 @@ function handleKeyDown(event: KeyboardEvent) {
 }
 
 onMounted(() => {
-  window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener("keydown", handleKeyDown);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyDown);
+  window.removeEventListener("keydown", handleKeyDown);
 });
 
 // Navigate to next feature in the popup
@@ -984,7 +982,7 @@ const popupHtml = computed(() => {
     html += `<table class="popup-table" aria-label="${escapeHtml(popupTitle.value)}">`;
     for (const field of feature.popupConfig.fields) {
       const value = formatFieldValue(feature.properties[field.field], field.format);
-      const isUrl = value.startsWith('http://') || value.startsWith('https://');
+      const isUrl = value.startsWith("http://") || value.startsWith("https://");
       const displayValue = isUrl
         ? `<a href="${escapeHtml(value)}" target="_blank" rel="noopener noreferrer">${escapeHtml(value)}</a>`
         : escapeHtml(value);
@@ -1033,20 +1031,20 @@ const highlightLinesPaint: LineLayerSpecification["paint"] = {
 // ============================================================================
 interface SelectedFeature {
   geometry: GeoJSON.Geometry;
-  geometryType: 'Point' | 'LineString' | 'Polygon' | 'MultiPoint' | 'MultiLineString' | 'MultiPolygon';
+  geometryType: "Point" | "LineString" | "Polygon" | "MultiPoint" | "MultiLineString" | "MultiPolygon";
   layerId: string;
   properties: Record<string, unknown>;
   originalStyle: {
-    radius?: number;  // for circles
-    width?: number;   // for lines
+    radius?: number; // for circles
+    width?: number; // for lines
   };
 }
 
 const selectedFeature = ref<SelectedFeature | null>(null);
 
 // Helper function to determine geometry type from a feature
-function getGeometryType(geometry: GeoJSON.Geometry): SelectedFeature['geometryType'] {
-  return geometry.type as SelectedFeature['geometryType'];
+function getGeometryType(geometry: GeoJSON.Geometry): SelectedFeature["geometryType"] {
+  return geometry.type as SelectedFeature["geometryType"];
 }
 
 // Helper function to get original style properties for a layer
@@ -1056,10 +1054,10 @@ function getOriginalStyleProperties(layerId: string, layerType: string): { radiu
 
   const paint = config.paint || {};
 
-  if (layerType === 'circle') {
+  if (layerType === "circle") {
     // Extract circle-radius - handle both static values and expressions
-    const radiusValue = paint['circle-radius'];
-    if (typeof radiusValue === 'number') {
+    const radiusValue = paint["circle-radius"];
+    if (typeof radiusValue === "number") {
       return { radius: radiusValue };
     }
     // For expressions, we'll use a default for now
@@ -1067,16 +1065,16 @@ function getOriginalStyleProperties(layerId: string, layerType: string): { radiu
     return { radius: 5 };
   }
 
-  if (layerType === 'line' || layerType === 'fill') {
+  if (layerType === "line" || layerType === "fill") {
     // Extract line-width
-    const widthValue = paint['line-width'];
-    if (typeof widthValue === 'number') {
+    const widthValue = paint["line-width"];
+    if (typeof widthValue === "number") {
       return { width: widthValue };
     }
     // Check outlinePaint for fill layers
-    if (config.outlinePaint && config.outlinePaint['line-width']) {
-      const outlineWidth = config.outlinePaint['line-width'];
-      if (typeof outlineWidth === 'number') {
+    if (config.outlinePaint && config.outlinePaint["line-width"]) {
+      const outlineWidth = config.outlinePaint["line-width"];
+      if (typeof outlineWidth === "number") {
         return { width: outlineWidth };
       }
     }
@@ -1107,70 +1105,76 @@ function createHighlightGeoJSON(feature: SelectedFeature): GeoJSON.FeatureCollec
   const { geometry, geometryType, originalStyle } = feature;
 
   // For Point geometries, add +3px to the original radius for visibility
-  if (geometryType === 'Point' || geometryType === 'MultiPoint') {
+  if (geometryType === "Point" || geometryType === "MultiPoint") {
     const originalRadius = originalStyle.radius || 5;
     const highlightRadius = originalRadius + 3;
     return {
-      type: 'FeatureCollection',
-      features: [{
-        type: 'Feature',
-        geometry,
-        properties: {
-          highlightRadius,
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          geometry,
+          properties: {
+            highlightRadius,
+          },
         },
-      }],
+      ],
     };
   }
 
   // For LineString geometries, add +3px to the original width for visibility
-  if (geometryType === 'LineString' || geometryType === 'MultiLineString') {
+  if (geometryType === "LineString" || geometryType === "MultiLineString") {
     const originalWidth = originalStyle.width || 2;
     const highlightWidth = originalWidth + 3;
     return {
-      type: 'FeatureCollection',
-      features: [{
-        type: 'Feature',
-        geometry,
-        properties: {
-          highlightWidth,
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          geometry,
+          properties: {
+            highlightWidth,
+          },
         },
-      }],
+      ],
     };
   }
 
   // For Polygon geometries, extract the border and add +3px to the original width
   // We only highlight the border, not the fill, for better visual clarity
-  if (geometryType === 'Polygon') {
+  if (geometryType === "Polygon") {
     const polygonCoords = (geometry as GeoJSON.Polygon).coordinates;
     const borderCoords = extractPolygonBorder(polygonCoords);
     const originalWidth = originalStyle.width || 2;
     const highlightWidth = originalWidth + 3;
 
     return {
-      type: 'FeatureCollection',
-      features: [{
-        type: 'Feature',
-        geometry: {
-          type: 'LineString',
-          coordinates: borderCoords,
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: borderCoords,
+          },
+          properties: {
+            highlightWidth,
+          },
         },
-        properties: {
-          highlightWidth,
-        },
-      }],
+      ],
     };
   }
 
   // For MultiPolygon, convert each polygon's border to a LineString
-  if (geometryType === 'MultiPolygon') {
+  if (geometryType === "MultiPolygon") {
     const multiPolygonCoords = (geometry as GeoJSON.MultiPolygon).coordinates;
     const originalWidth = originalStyle.width || 2;
     const highlightWidth = originalWidth + 3;
 
-    const features = multiPolygonCoords.map((polygonCoords) => ({
-      type: 'Feature' as const,
+    const features = multiPolygonCoords.map(polygonCoords => ({
+      type: "Feature" as const,
       geometry: {
-        type: 'LineString' as const,
+        type: "LineString" as const,
         coordinates: extractPolygonBorder(polygonCoords),
       },
       properties: {
@@ -1179,14 +1183,14 @@ function createHighlightGeoJSON(feature: SelectedFeature): GeoJSON.FeatureCollec
     }));
 
     return {
-      type: 'FeatureCollection',
+      type: "FeatureCollection",
       features,
     };
   }
 
   // Return empty collection for unsupported geometry types
   return {
-    type: 'FeatureCollection',
+    type: "FeatureCollection",
     features: [],
   };
 }
@@ -1202,25 +1206,25 @@ function updateHighlightLayers(feature: SelectedFeature | null) {
   const highlightGeoJSON = createHighlightGeoJSON(feature);
 
   // Route to the appropriate highlight layer based on geometry type
-  if (feature.geometryType === 'Point' || feature.geometryType === 'MultiPoint') {
+  if (feature.geometryType === "Point" || feature.geometryType === "MultiPoint") {
     highlightCirclesSource.value = highlightGeoJSON;
-    highlightLinesSource.value = { type: 'FeatureCollection', features: [] };
+    highlightLinesSource.value = { type: "FeatureCollection", features: [] };
   } else {
     // Lines, Polygons, and MultiPolygons all use the lines layer
     highlightLinesSource.value = highlightGeoJSON;
-    highlightCirclesSource.value = { type: 'FeatureCollection', features: [] };
+    highlightCirclesSource.value = { type: "FeatureCollection", features: [] };
   }
 }
 
 // Clear all highlight layers by resetting to empty feature collections
 function clearHighlightLayers() {
-  highlightCirclesSource.value = { type: 'FeatureCollection', features: [] };
-  highlightLinesSource.value = { type: 'FeatureCollection', features: [] };
+  highlightCirclesSource.value = { type: "FeatureCollection", features: [] };
+  highlightLinesSource.value = { type: "FeatureCollection", features: [] };
 }
 
 // Watch for changes to selectedFeature and update highlights accordingly
 // This automatically syncs the highlight layers with feature selection/deselection
-watch(selectedFeature, (newFeature) => {
+watch(selectedFeature, newFeature => {
   updateHighlightLayers(newFeature);
 });
 
@@ -1228,14 +1232,14 @@ watch(selectedFeature, (newFeature) => {
 // If the currently selected feature's layer is toggled off, clear the highlight
 watch(
   () => props.visibleLayers,
-  (newVisibleLayers) => {
+  newVisibleLayers => {
     if (selectedFeature.value && !newVisibleLayers.has(selectedFeature.value.layerId)) {
       // The selected feature's layer was toggled off, clear the highlight and popup
       selectedFeature.value = null;
       closePopup();
     }
   },
-  { deep: true }
+  { deep: true },
 );
 
 // Watch for changes to currentFeatureIndex to update highlight when navigating between features
@@ -1310,8 +1314,8 @@ function handleSearchResult(result: AisGeocodeResult) {
       <!-- Tiled Layers (ESRI MapServer pre-rendered tiles) - for zoomed out views -->
       <RasterLayer
         v-for="tiledLayer in visibleTiledLayersList"
-        :key="'tiled-' + tiledLayer.id"
         :id="'tiled-' + tiledLayer.id"
+        :key="'tiled-' + tiledLayer.id"
         :source="getTiledLayerSource(tiledLayer)"
         :paint="{ 'raster-opacity': getTiledLayerOpacity(tiledLayer.id) }"
         :minzoom="tiledLayer.minZoom"
@@ -1322,8 +1326,8 @@ function handleSearchResult(result: AisGeocodeResult) {
       <!-- These render on-demand at any scale, providing sharp imagery when zoomed in -->
       <RasterLayer
         v-for="dynamicLayer in visibleDynamicExportLayersList"
-        :key="'dynamic-' + dynamicLayer.id"
         :id="'dynamic-' + dynamicLayer.id"
+        :key="'dynamic-' + dynamicLayer.id"
         :source="getDynamicExportLayerSource(dynamicLayer)"
         :paint="{ 'raster-opacity': getTiledLayerOpacity(dynamicLayer.id) }"
         :minzoom="dynamicLayer.minZoom"
@@ -1333,8 +1337,8 @@ function handleSearchResult(result: AisGeocodeResult) {
       <!-- Circle Layers - positioned before highlight layers -->
       <CircleLayer
         v-for="layer in visibleCircleLayers"
-        :key="layer.id"
         :id="layer.id"
+        :key="layer.id"
         :source="getSource(layer)"
         :paint="getDynamicPaint(layer)"
         :minzoom="layer.minZoom"
@@ -1346,8 +1350,8 @@ function handleSearchResult(result: AisGeocodeResult) {
       <!-- Fill Layers - positioned before highlight layers -->
       <FillLayer
         v-for="layer in visibleFillLayers"
-        :key="layer.id"
         :id="layer.id"
+        :key="layer.id"
         :source="getSource(layer)"
         :paint="getDynamicPaint(layer)"
         :minzoom="layer.minZoom"
@@ -1359,8 +1363,8 @@ function handleSearchResult(result: AisGeocodeResult) {
       <!-- Outline LineLayer for Fill Layers that have outlinePaint - positioned before highlight layers -->
       <LineLayer
         v-for="layer in visibleFillLayersWithOutline"
-        :key="layer.id + '-outline'"
         :id="layer.id + '-outline'"
+        :key="layer.id + '-outline'"
         :source="getSource(layer)"
         :paint="getOutlinePaint(layer)"
         :minzoom="layer.minZoom"
@@ -1372,8 +1376,8 @@ function handleSearchResult(result: AisGeocodeResult) {
       <!-- Line Layers - positioned before highlight layers -->
       <LineLayer
         v-for="layer in visibleLineLayers"
-        :key="layer.id"
         :id="layer.id"
+        :key="layer.id"
         :source="getSource(layer)"
         :paint="getDynamicPaint(layer)"
         :minzoom="layer.minZoom"
@@ -1385,23 +1389,20 @@ function handleSearchResult(result: AisGeocodeResult) {
       <!-- Highlight Layers - Must be last to render on top of all feature layers -->
       <!-- These show the currently selected feature with electric blue highlighting -->
       <CircleLayer
-        key="highlight-circles-layer"
         id="highlight-circles"
+        key="highlight-circles-layer"
         :source="{ type: 'geojson', data: highlightCirclesSource }"
         :paint="highlightCirclesPaint"
       />
       <LineLayer
-        key="highlight-lines-layer"
         id="highlight-lines"
+        key="highlight-lines-layer"
         :source="{ type: 'geojson', data: highlightLinesSource }"
         :paint="highlightLinesPaint"
       />
 
       <!-- Search Result Marker - Shows a pin at the searched address -->
-      <MapMarker
-        :lng-lat="searchMarkerLngLat"
-        color="#2176d2"
-      />
+      <MapMarker :lng-lat="searchMarkerLngLat" color="#2176d2" />
 
       <!-- Popup -->
       <MapPopup
@@ -1427,6 +1428,4 @@ function handleSearchResult(result: AisGeocodeResult) {
   height: 100%;
   position: relative;
 }
-
-
 </style>

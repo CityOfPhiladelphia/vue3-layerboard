@@ -30,6 +30,7 @@ There is no natural "accessible alternative" for this. A blind user cannot meani
 ## What Can Be Done Within layerboard and openmaps
 
 ### Layerboard panel accessibility (very doable)
+
 - Layer group expand/collapse needs `aria-expanded`
 - Layer checkboxes need proper labels and `aria-checked`
 - Layer group headers need keyboard support
@@ -38,24 +39,26 @@ There is no natural "accessible alternative" for this. A blind user cannot meani
 - `:focus-visible` styles on all interactive elements
 
 ### openmaps controls (doable)
+
 - Search bar accessibility (labels, announcements)
 - Map container labeled with `role="img"` and `aria-label` describing the tool
 - All buttons get `aria-label`, toggles get `aria-pressed`
 - Screen reader users can navigate controls and skip past the map
 
 ### What requires a product/policy decision
+
 - **Does openmaps need an alternative non-visual way to access the underlying data?** The map layers show things like zoning districts, parcels, flood zones, etc. If a resident needs this information, is the map the only way to get it, or do other city resources (phila.gov pages, PDF documents, phone services) provide the same data?
 - If openmaps must provide accessible data access itself, that would mean building something like a "query by address" feature that returns text descriptions of what layers show at that location — a significant product decision, not just an a11y retrofit.
 
 ## Summary
 
-| Area | Feasibility | Blocked? |
-|------|-------------|----------|
-| Layerboard panel controls | Very doable | No |
-| Map-core controls (buttons, popups) | Doable | No |
-| openmaps search and UI controls | Doable | No |
-| Visual map exploration for blind users | Not possible | Fundamental limitation |
-| Alternative data access for openmaps | Possible but significant | Needs product/policy decision |
+| Area                                   | Feasibility              | Blocked?                      |
+| -------------------------------------- | ------------------------ | ----------------------------- |
+| Layerboard panel controls              | Very doable              | No                            |
+| Map-core controls (buttons, popups)    | Doable                   | No                            |
+| openmaps search and UI controls        | Doable                   | No                            |
+| Visual map exploration for blind users | Not possible             | Fundamental limitation        |
+| Alternative data access for openmaps   | Possible but significant | Needs product/policy decision |
 
 ## Cross-References
 
