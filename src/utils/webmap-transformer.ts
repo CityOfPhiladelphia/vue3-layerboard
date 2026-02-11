@@ -843,8 +843,8 @@ export function transformEsriRenderer(
 export function transformPopupConfig(popupInfo?: EsriPopupInfo): PopupConfig | null {
   if (!popupInfo) return null;
 
-  // ArcGIS returns lowercase field names in GeoJSON format (f=geojson),
-  // but webmap popupInfo uses uppercase. Lowercase the template placeholders to match.
+  // Property keys are normalized to lowercase at fetch time, but webmap popupInfo
+  // uses uppercase. Lowercase the template placeholders to match.
   const title = (popupInfo.title || "").replace(/\{([^}]+)\}/g, (_m, name) => `{${name.toLowerCase()}}`);
   const fieldInfos = popupInfo.fieldInfos || [];
 
