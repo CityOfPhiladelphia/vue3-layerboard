@@ -25,7 +25,7 @@ import { faCaretLeft, faCaretRight, faXmark, faBars } from "@fortawesome/pro-sol
 import type { CyclomediaConfig, PictometryCredentials } from "@phila/phila-ui-map-core";
 
 import { getLayerConfigs, clearCache } from "@/services/layerConfigService";
-import type { LayerConfig, TiledLayerConfig, LayerStyleOverride } from "@/types/layer";
+import type { LayerConfig, TiledLayerConfig, LayerStyleOverride, PopupOverride } from "@/types/layer";
 import type { DataSourceConfig } from "@/types/dataSource";
 import { useApiDataSources } from "@/composables/useApiDataSources";
 
@@ -66,6 +66,8 @@ const props = withDefaults(
     dataSources?: DataSourceConfig[];
     /** Layer style overrides - override paint/legend for specific layers by ID */
     layerStyleOverrides?: Record<string, LayerStyleOverride>;
+    /** Popup overrides - override popup behavior for specific layers by ID */
+    popupOverrides?: Record<string, PopupOverride>;
     /** Position of basemap toggle/dropdown control */
     basemapControlPosition?: ControlPosition;
     /** Position of zoom in/out navigation control */
@@ -95,6 +97,7 @@ const props = withDefaults(
     tiledLayers: () => [],
     dataSources: () => [],
     layerStyleOverrides: () => ({}),
+    popupOverrides: () => ({}),
     basemapControlPosition: "top-right",
     navigationControlPosition: "bottom-right",
     geolocationControlPosition: "bottom-right",
@@ -250,20 +253,28 @@ async function loadLayerConfigs() {
 
     const configs = await getLayerConfigs(props.webMapId);
 
-    // Apply layer style overrides if provided
+    // Apply layer style and popup overrides if provided
     const overriddenConfigs = configs.map(config => {
-      const override = props.layerStyleOverrides[config.id];
-      if (override) {
+      let result = config;
+      const styleOverride = props.layerStyleOverrides[config.id];
+      if (styleOverride) {
         console.log(`[Layerboard] Applying style override for layer: ${config.id}`);
-        return {
-          ...config,
-          paint: override.paint ?? config.paint,
-          outlinePaint: override.outlinePaint ?? config.outlinePaint,
-          legend: override.legend ?? config.legend,
-          type: override.type ?? config.type,
+        result = {
+          ...result,
+          paint: styleOverride.paint ?? result.paint,
+          outlinePaint: styleOverride.outlinePaint ?? result.outlinePaint,
+          legend: styleOverride.legend ?? result.legend,
+          type: styleOverride.type ?? result.type,
         };
       }
-      return config;
+      const popupOverride = props.popupOverrides[config.id];
+      if (popupOverride && result.popup) {
+        result = {
+          ...result,
+          popup: { ...result.popup, ...popupOverride },
+        };
+      }
+      return result;
     });
 
     // Build layerList from configs

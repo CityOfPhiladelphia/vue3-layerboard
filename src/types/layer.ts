@@ -61,6 +61,13 @@ export interface LayerConfig {
 }
 
 /**
+ * Override configuration for popup behavior
+ */
+export interface PopupOverride {
+  showTime?: boolean;
+}
+
+/**
  * Override configuration for layer styles
  * Allows overriding the paint and legend from WebMap with custom values
  */
