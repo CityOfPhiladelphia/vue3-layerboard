@@ -661,6 +661,7 @@ interface PopupFeature {
   layerId: string;
   layerTitle: string;
   properties: Record<string, unknown>;
+  geometry: GeoJSON.Geometry;
   popupConfig: {
     title: string;
     fields: PopupField[];
@@ -825,7 +826,7 @@ function handleLayerClick(e: { lngLat: { lng: number; lat: number } }) {
   const layerConfigs = props.layerList.map(item => item.config);
   const sortedFeatures = sortFeaturesByLayerOrder(uniqueFeatures, layerConfigs);
 
-  // Convert to PopupFeature format
+  // Convert to PopupFeature format, storing geometry for highlight use on navigation
   const newFeatures: PopupFeature[] = sortedFeatures.map((feature) => {
     const baseLayerId = feature.layer.id.replace(/-outline$/, '');
     const config = getLayerConfig(baseLayerId);
@@ -835,6 +836,7 @@ function handleLayerClick(e: { lngLat: { lng: number; lat: number } }) {
       layerId: config.id,
       layerTitle: config.title,
       properties: feature.properties || {},
+      geometry: feature.geometry,
       popupConfig: config.popup,
     };
   }).filter((f): f is PopupFeature => f !== null);
@@ -845,20 +847,19 @@ function handleLayerClick(e: { lngLat: { lng: number; lat: number } }) {
   currentFeatureIndex.value = 0;
   popupLngLat.value = [e.lngLat.lng, e.lngLat.lat];
 
-  // Store selected feature for highlighting (use the first feature from the sorted list)
-  const firstFeature = sortedFeatures[0];
-  if (firstFeature && firstFeature.geometry) {
-    const baseLayerId = firstFeature.layer.id.replace(/-outline$/, '');
-    const config = getLayerConfig(baseLayerId);
+  // Store selected feature for highlighting (use the first feature)
+  const firstPopupFeature = newFeatures[0];
+  if (firstPopupFeature) {
+    const config = getLayerConfig(firstPopupFeature.layerId);
     if (config) {
-      const geometryType = getGeometryType(firstFeature.geometry);
+      const geometryType = getGeometryType(firstPopupFeature.geometry);
       const originalStyle = getOriginalStyleProperties(config.id, config.type);
 
       selectedFeature.value = {
-        geometry: firstFeature.geometry,
+        geometry: firstPopupFeature.geometry,
         geometryType,
         layerId: config.id,
-        properties: firstFeature.properties || {},
+        properties: firstPopupFeature.properties,
         originalStyle,
       };
     }
@@ -1221,50 +1222,18 @@ watch(currentFeatureIndex, () => {
     return;
   }
 
-  // Get the actual feature with geometry from the original query
-  // We need to re-query to get the geometry since popupFeatures only has properties
-  const map = mapInstance.value;
-  if (!map || !popupLngLat.value) return;
+  const config = getLayerConfig(feature.layerId);
+  if (config) {
+    const geometryType = getGeometryType(feature.geometry);
+    const originalStyle = getOriginalStyleProperties(config.id, config.type);
 
-  // Build array of visible layer IDs
-  const visibleLayerIds: string[] = [];
-  props.layerList.forEach(layerItem => {
-    const layerConfig = layerItem.config;
-    if (props.visibleLayers.has(layerConfig.id)) {
-      visibleLayerIds.push(layerConfig.id);
-      if (layerConfig.outlinePaint) {
-        visibleLayerIds.push(`${layerConfig.id}-outline`);
-      }
-    }
-  });
-
-  // Query features at the popup location
-  const point = map.project(popupLngLat.value as [number, number]);
-  const allFeatures = map.queryRenderedFeatures(point, {
-    layers: visibleLayerIds,
-  });
-
-  // Find the feature that matches the current popup feature
-  const matchingFeature = allFeatures.find((f: { properties?: Record<string, unknown>; geometry?: GeoJSON.Geometry; layer: { id: string } }) => {
-    const baseLayerId = f.layer.id.replace(/-outline$/, '');
-    return baseLayerId === feature.layerId &&
-           JSON.stringify(f.properties) === JSON.stringify(feature.properties);
-  });
-
-  if (matchingFeature && matchingFeature.geometry) {
-    const config = getLayerConfig(feature.layerId);
-    if (config) {
-      const geometryType = getGeometryType(matchingFeature.geometry);
-      const originalStyle = getOriginalStyleProperties(config.id, config.type);
-
-      selectedFeature.value = {
-        geometry: matchingFeature.geometry,
-        geometryType,
-        layerId: config.id,
-        properties: matchingFeature.properties || {},
-        originalStyle,
-      };
-    }
+    selectedFeature.value = {
+      geometry: feature.geometry,
+      geometryType,
+      layerId: config.id,
+      properties: feature.properties,
+      originalStyle,
+    };
   }
 });
 
