@@ -1024,6 +1024,11 @@ const highlightLinesSource = ref<GeoJSON.FeatureCollection>({
   features: [],
 });
 
+const highlightFillSource = ref<GeoJSON.FeatureCollection>({
+  type: "FeatureCollection",
+  features: [],
+});
+
 // Highlight layer paint properties
 const highlightCirclesPaint: CircleLayerSpecification["paint"] = {
   "circle-radius": ["get", "highlightRadius"],
@@ -1037,6 +1042,11 @@ const highlightLinesPaint: LineLayerSpecification["paint"] = {
   "line-width": ["get", "highlightWidth"],
   "line-color": "#00FFFF",
   "line-opacity": 0.9,
+};
+
+const highlightFillPaint = {
+  "fill-color": "#808080",
+  "fill-opacity": 0.5,
 };
 
 // ============================================================================
@@ -1208,6 +1218,20 @@ function createHighlightGeoJSON(feature: SelectedFeature): GeoJSON.FeatureCollec
   };
 }
 
+// Build GeoJSON for polygon fill highlighting (preserves original polygon geometry)
+function createHighlightFillGeoJSON(feature: SelectedFeature): GeoJSON.FeatureCollection {
+  const { geometry, geometryType } = feature;
+
+  if (geometryType === "Polygon" || geometryType === "MultiPolygon") {
+    return {
+      type: "FeatureCollection",
+      features: [{ type: "Feature", geometry, properties: {} }],
+    };
+  }
+
+  return { type: "FeatureCollection", features: [] };
+}
+
 // Update highlight layer sources with the selected feature's geometry
 // Routes to the appropriate layer (circles or lines) based on geometry type
 function updateHighlightLayers(feature: SelectedFeature | null) {
@@ -1222,10 +1246,12 @@ function updateHighlightLayers(feature: SelectedFeature | null) {
   if (feature.geometryType === "Point" || feature.geometryType === "MultiPoint") {
     highlightCirclesSource.value = highlightGeoJSON;
     highlightLinesSource.value = { type: "FeatureCollection", features: [] };
+    highlightFillSource.value = { type: "FeatureCollection", features: [] };
   } else {
     // Lines, Polygons, and MultiPolygons all use the lines layer
     highlightLinesSource.value = highlightGeoJSON;
     highlightCirclesSource.value = { type: "FeatureCollection", features: [] };
+    highlightFillSource.value = createHighlightFillGeoJSON(feature);
   }
 }
 
@@ -1233,6 +1259,7 @@ function updateHighlightLayers(feature: SelectedFeature | null) {
 function clearHighlightLayers() {
   highlightCirclesSource.value = { type: "FeatureCollection", features: [] };
   highlightLinesSource.value = { type: "FeatureCollection", features: [] };
+  highlightFillSource.value = { type: "FeatureCollection", features: [] };
 }
 
 // Watch for changes to selectedFeature and update highlights accordingly
@@ -1406,6 +1433,12 @@ function handleSearchResult(result: AisGeocodeResult) {
         key="highlight-circles-layer"
         :source="{ type: 'geojson', data: highlightCirclesSource }"
         :paint="highlightCirclesPaint"
+      />
+      <FillLayer
+        id="highlight-fill"
+        key="highlight-fill-layer"
+        :source="{ type: 'geojson', data: highlightFillSource }"
+        :paint="highlightFillPaint"
       />
       <LineLayer
         id="highlight-lines"
