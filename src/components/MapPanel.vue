@@ -921,21 +921,23 @@ onUnmounted(() => {
 });
 
 // Navigate to next feature in the popup
-// Cycles through all features collected at the click point
+// Stops at the last feature (no wrapping)
 function goToNextFeature() {
   const total = popupFeatures.value.length;
   if (total <= 1) return;
+  if (currentFeatureIndex.value >= total - 1) return;
 
-  currentFeatureIndex.value = (currentFeatureIndex.value + 1) % total;
+  currentFeatureIndex.value = currentFeatureIndex.value + 1;
 }
 
 // Navigate to previous feature in the popup
-// Cycles through all features collected at the click point
+// Stops at the first feature (no wrapping)
 function goToPreviousFeature() {
   const total = popupFeatures.value.length;
   if (total <= 1) return;
+  if (currentFeatureIndex.value <= 0) return;
 
-  currentFeatureIndex.value = (currentFeatureIndex.value - 1 + total) % total;
+  currentFeatureIndex.value = currentFeatureIndex.value - 1;
 }
 
 // Current feature for display
