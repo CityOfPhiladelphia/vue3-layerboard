@@ -758,6 +758,24 @@ function deduplicateFeatures(features: MapLibreFeature[]): MapLibreFeature[] {
   });
 }
 
+// Look up the full unclipped geometry from layerData for a given feature
+// MapLibre internally tiles GeoJSON sources, so queryRenderedFeatures returns
+// tile-clipped geometry. This retrieves the original geometry from our fetched data.
+function getFullGeometry(layerId: string, properties: Record<string, unknown>): GeoJSON.Geometry | null {
+  const data = layerData.value[layerId];
+  if (!data?.features) return null;
+
+  const objectId = properties.objectid ?? properties.OBJECTID ?? properties.FID;
+  if (objectId != null) {
+    const match = data.features.find(f =>
+      (f.properties?.objectid ?? f.properties?.OBJECTID ?? f.properties?.FID) === objectId
+    );
+    if (match) return match.geometry;
+  }
+
+  return null;
+}
+
 // Sort features by layer order (layers rendered on top appear first)
 // Uses the layer config order to determine which features should be shown first
 function sortFeaturesByLayerOrder(
@@ -832,11 +850,12 @@ function handleLayerClick(e: { lngLat: { lng: number; lat: number } }) {
     const config = getLayerConfig(baseLayerId);
     if (!config) return null;
 
+    const fullGeometry = getFullGeometry(config.id, feature.properties || {});
     return {
       layerId: config.id,
       layerTitle: config.title,
       properties: feature.properties || {},
-      geometry: feature.geometry,
+      geometry: fullGeometry || feature.geometry,
       popupConfig: config.popup,
     };
   }).filter((f): f is PopupFeature => f !== null);
