@@ -886,10 +886,16 @@ export function transformPopupConfig(popupInfo?: EsriPopupInfo): PopupConfig | n
       return field;
     });
 
-  return {
+  const result: PopupConfig = {
     title,
     fields: visibleFields,
   };
+
+  if (popupInfo.showTime) {
+    result.showTime = true;
+  }
+
+  return result;
 }
 
 /**
