@@ -967,7 +967,7 @@ const popupHtml = computed(() => {
       const value = formatFieldValue(feature.properties[field.field], field.format);
       const isUrl = value.startsWith('http://') || value.startsWith('https://');
       const displayValue = isUrl
-        ? `<a href="${escapeHtml(value)}" target="_blank" rel="noopener noreferrer">Link</a>`
+        ? `<a href="${escapeHtml(value)}" target="_blank" rel="noopener noreferrer">${escapeHtml(value)}</a>`
         : escapeHtml(value);
       html += `<tr><th scope="row">${escapeHtml(field.label)}</th><td>${displayValue}</td></tr>`;
     }
