@@ -965,7 +965,11 @@ const popupHtml = computed(() => {
     html += `<table class="popup-table" aria-label="${escapeHtml(popupTitle.value)}">`;
     for (const field of feature.popupConfig.fields) {
       const value = formatFieldValue(feature.properties[field.field], field.format);
-      html += `<tr><th scope="row">${escapeHtml(field.label)}</th><td>${escapeHtml(value)}</td></tr>`;
+      const isUrl = value.startsWith('http://') || value.startsWith('https://');
+      const displayValue = isUrl
+        ? `<a href="${escapeHtml(value)}" target="_blank" rel="noopener noreferrer">Link</a>`
+        : escapeHtml(value);
+      html += `<tr><th scope="row">${escapeHtml(field.label)}</th><td>${displayValue}</td></tr>`;
     }
     html += `</table>`;
   } else {
