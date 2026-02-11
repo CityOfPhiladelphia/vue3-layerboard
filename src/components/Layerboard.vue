@@ -947,6 +947,11 @@ body {
   border-bottom: 1px solid #eee;
 }
 
+.popup-table tr:last-child th,
+.popup-table tr:last-child td {
+  border-bottom: none;
+}
+
 .popup-table th {
   font-weight: 600;
   color: #666;

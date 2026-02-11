@@ -139,7 +139,7 @@ export function useLayerboard(config: LayerboardConfig) {
     const url = buildWebMapUrl(webMapId);
     console.log(`[useLayerboard] Fetching WebMap from: ${url}`);
 
-    const response = await fetch(url);
+    const response = await fetch(url, { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Failed to fetch WebMap: ${response.status} ${response.statusText}`);
     }
