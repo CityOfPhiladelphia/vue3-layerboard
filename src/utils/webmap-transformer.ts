@@ -835,7 +835,9 @@ export function transformEsriRenderer(
 export function transformPopupConfig(popupInfo?: EsriPopupInfo): PopupConfig | null {
   if (!popupInfo) return null;
 
-  const title = popupInfo.title || '';
+  // ArcGIS returns lowercase field names in GeoJSON format (f=geojson),
+  // but webmap popupInfo uses uppercase. Lowercase the template placeholders to match.
+  const title = (popupInfo.title || '').replace(/\{([^}]+)\}/g, (_m, name) => `{${name.toLowerCase()}}`);
   const fieldInfos = popupInfo.fieldInfos || [];
 
   // Filter to visible fields only and include format info
@@ -851,7 +853,7 @@ export function transformPopupConfig(popupInfo?: EsriPopupInfo): PopupConfig | n
           places?: number;
         };
       } = {
-        field: f.fieldName,
+        field: f.fieldName.toLowerCase(),
         label: f.label || f.fieldName,
       };
 

@@ -704,7 +704,7 @@ function formatFieldValue(value: unknown, format?: PopupFieldFormat): string {
     const date = new Date(value);
     switch (format.dateFormat) {
       case "shortDateShortTime":
-        return date.toLocaleString();
+        return date.toLocaleDateString();
       case "longMonthDayYear":
         return date.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
       case "shortDate":
