@@ -299,35 +299,14 @@ function convertSimpleRenderer(renderer: EsriRenderer, layerOpacity?: number, la
       "fill-opacity": fillOpacity,
     };
 
-    // For fill layers with visible outlines, create separate outline paint
-    // MapLibre's fill-outline-color only supports 1px, so we need a LineLayer for thicker outlines
     if (hasVisibleOutline(symbol.outline)) {
       const outlineWidth = symbol.outline!.width || 1;
       const outlineColor = esriColorToCSS(symbol.outline!.color);
 
-      console.log("[Transformer] Fill layer with outline:", {
-        fillAlpha,
-        outlineWidth,
-        outlineColor,
-        willCreateOutlinePaint: outlineWidth > 1 || fillAlpha === 0,
-      });
-
-      // For transparent fills, don't use fill-outline-color as it can cause rendering issues
-      // Instead, rely solely on the separate LineLayer for the outline
-      if (fillAlpha !== 0) {
-        paint["fill-outline-color"] = outlineColor;
-      }
-
-      // If outline is thicker than 1px OR fill is transparent, create separate line paint
-      if (outlineWidth > 1 || fillAlpha === 0) {
-        outlinePaint = {
-          "line-color": outlineColor,
-          "line-width": outlineWidth,
-        };
-        console.log("[Transformer] Created outlinePaint:", outlinePaint);
-      }
-    } else {
-      console.log("[Transformer] No visible outline for fill layer, hasVisibleOutline returned false");
+      outlinePaint = {
+        "line-color": outlineColor,
+        "line-width": outlineWidth,
+      };
     }
 
     legend = [
@@ -467,18 +446,13 @@ function convertUniqueValueRenderer(
 
     // Handle outline if present
     if (hasVisibleOutline(firstSymbol?.outline)) {
-      const outlineWidth = firstSymbol!.outline!.width || 1;
+      const outlineWidth = Math.max(firstSymbol!.outline!.width || 1, 1);
       const outlineColor = esriColorToCSS(firstSymbol!.outline!.color);
 
-      paint["fill-outline-color"] = outlineColor;
-
-      // If outline is thicker than 1px, create separate line paint
-      if (outlineWidth > 1) {
-        outlinePaint = {
-          "line-color": outlineColor,
-          "line-width": outlineWidth,
-        };
-      }
+      outlinePaint = {
+        "line-color": outlineColor,
+        "line-width": outlineWidth,
+      };
     }
   } else if (geomType === "line") {
     // Use to-string to ensure field values match string literals in the expression
@@ -618,14 +592,10 @@ function convertClassBreaksRenderer(renderer: EsriRenderer, layerOpacity?: numbe
       const outlineWidth = firstSymbol!.outline!.width || 1;
       const outlineColor = esriColorToCSS(firstSymbol!.outline!.color);
 
-      paint["fill-outline-color"] = outlineColor;
-
-      if (outlineWidth > 1) {
-        outlinePaint = {
-          "line-color": outlineColor,
-          "line-width": outlineWidth,
-        };
-      }
+      outlinePaint = {
+        "line-color": outlineColor,
+        "line-width": outlineWidth,
+      };
     }
   } else if (geomType === "line") {
     // Build step expression for line-color
@@ -735,19 +705,14 @@ function convertColorInfoRenderer(
       "fill-opacity": convertOpacity(layerOpacity),
     };
 
-    // Check for outline on default symbol or first class break symbol
     if (hasVisibleOutline(firstSymbol?.outline)) {
       const outlineWidth = firstSymbol!.outline!.width || 1;
       const outlineColor = esriColorToCSS(firstSymbol!.outline!.color);
 
-      paint["fill-outline-color"] = outlineColor;
-
-      if (outlineWidth > 1) {
-        outlinePaint = {
-          "line-color": outlineColor,
-          "line-width": outlineWidth,
-        };
-      }
+      outlinePaint = {
+        "line-color": outlineColor,
+        "line-width": outlineWidth,
+      };
     }
   }
 
@@ -1200,6 +1165,10 @@ export async function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): Pro
       const needsServiceRenderer = !drawingInfo || !drawingInfo.renderer;
       const forceServiceRenderer = USE_SERVICE_RENDERER.includes(layer.title);
 
+      // Preserve webmap outline info before potentially replacing with service renderer
+      const webmapOutline = drawingInfo?.renderer?.uniqueValueInfos?.[0]?.symbol?.outline
+        || drawingInfo?.renderer?.defaultSymbol?.outline;
+
       if ((needsServiceRenderer || forceServiceRenderer) && layer.url) {
         if (forceServiceRenderer) {
           console.log(
@@ -1212,6 +1181,25 @@ export async function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): Pro
         const serviceData = await fetchServiceDrawingInfo(layer.url);
         if (serviceData) {
           drawingInfo = serviceData.drawingInfo;
+
+          // If the webmap had a visible outline but the service renderer doesn't,
+          // apply the webmap outline to the service renderer's symbols
+          if (webmapOutline && hasVisibleOutline(webmapOutline) && drawingInfo?.renderer) {
+            const renderer = drawingInfo.renderer;
+            const serviceOutline = renderer.uniqueValueInfos?.[0]?.symbol?.outline
+              || renderer.defaultSymbol?.outline;
+            if (!hasVisibleOutline(serviceOutline)) {
+              for (const info of renderer.uniqueValueInfos || []) {
+                if (info.symbol) {
+                  info.symbol.outline = webmapOutline;
+                }
+              }
+              if (renderer.defaultSymbol) {
+                renderer.defaultSymbol.outline = webmapOutline;
+              }
+            }
+          }
+
           console.log(
             `[Transformer] Fetched renderer from service for "${layer.title}":`,
             serviceData.drawingInfo?.renderer?.type,
