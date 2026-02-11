@@ -937,6 +937,7 @@ html, body {
 
 .popup-table td {
   color: #333;
+  word-break: break-all;
 }
 
 .popup-no-fields {
