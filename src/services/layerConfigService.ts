@@ -148,7 +148,7 @@ async function fetchWebMapJson(webMapId: string, token?: string): Promise<EsriWe
   // Log URL without token for security
   console.log(`[LayerConfigService] Fetching WebMap from: ${buildWebMapUrl(webMapId)}${token ? " (with token)" : ""}`);
 
-  const response = await fetch(url);
+  const response = await fetch(url, { cache: "no-store" });
 
   if (!response.ok) {
     throw new Error(`Failed to fetch WebMap: ${response.status} ${response.statusText}`);
