@@ -919,6 +919,7 @@ html, body {
 
 .popup-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
 }
 
@@ -937,7 +938,7 @@ html, body {
 
 .popup-table td {
   color: #333;
-  word-break: break-all;
+  overflow-wrap: break-word;
 }
 
 .popup-no-fields {
