@@ -177,6 +177,19 @@ async function fetchFeaturesInBounds(
     }
   }
 
+  // Normalize property keys to lowercase — some ArcGIS services return uppercase
+  // field names even with f=geojson, while popup config expects lowercase
+  allFeatures = allFeatures.map(feature => {
+    if (feature.properties) {
+      const lowered: Record<string, unknown> = {};
+      for (const key of Object.keys(feature.properties)) {
+        lowered[key.toLowerCase()] = feature.properties[key];
+      }
+      return { ...feature, properties: lowered };
+    }
+    return feature;
+  });
+
   // Clip geometries to viewport bounds for configured layers
   // This reduces MapLibre's rendering workload - similar to how Leaflet only rendered visible portions
   if (CLIP_TO_VIEWPORT_LAYER_IDS.includes(layerId)) {
