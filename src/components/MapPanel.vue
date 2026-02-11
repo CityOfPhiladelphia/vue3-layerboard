@@ -716,7 +716,7 @@ function formatFieldValue(value: unknown, format?: PopupFieldFormat, showTime?: 
   if (format?.dateFormat && typeof value === "number") {
     const date = new Date(value);
     if (showTime && format.dateFormat === "shortDateShortTime") {
-      return date.toLocaleString();
+      return date.toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" });
     }
     switch (format.dateFormat) {
       case "shortDateShortTime":
