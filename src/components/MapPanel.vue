@@ -681,6 +681,7 @@ interface PopupFeature {
   popupConfig: {
     title: string;
     fields: PopupField[];
+    showTime?: boolean;
   } | null;
 }
 
