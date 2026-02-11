@@ -741,6 +741,9 @@ function formatFieldValue(value: unknown, format?: PopupFieldFormat, showTime?: 
     const useDigitSeparator = format?.digitSeparator ?? true;
 
     if (places !== undefined) {
+      if (Number.isInteger(value) && places > 0) {
+        return String(value);
+      }
       const formatted = value.toFixed(places);
       if (useDigitSeparator) {
         const parts = formatted.split(".");
