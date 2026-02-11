@@ -5,14 +5,14 @@
  * Fetches Esri WebMap JSON at runtime and transforms it to LayerConfig format.
  */
 
-import type { LayerConfig } from '@/types/layer';
-import { transformWebMapToLayerConfigs, type EsriWebMap } from '@/utils/webmap-transformer';
+import type { LayerConfig } from "@/types/layer";
+import { transformWebMapToLayerConfigs, type EsriWebMap } from "@/utils/webmap-transformer";
 
 /**
  * The default Esri WebMap ID (OpenMaps)
  * This can be overridden by passing a webMapId to getLayerConfigs()
  */
-export const DEFAULT_WEBMAP_ID = '376af635c84643cd816a8c5d017a53aa';
+export const DEFAULT_WEBMAP_ID = "376af635c84643cd816a8c5d017a53aa";
 
 /**
  * @deprecated Use DEFAULT_WEBMAP_ID instead
@@ -84,8 +84,8 @@ let tokenExpiry: number = 0;
  * @returns Promise resolving to the token string, or undefined if credentials not available
  */
 async function generateArcGISToken(): Promise<string | undefined> {
-  const username = typeof import.meta !== 'undefined' && import.meta.env?.VITE_AGO_USERNAME;
-  const password = typeof import.meta !== 'undefined' && import.meta.env?.VITE_AGO_PASSWORD;
+  const username = typeof import.meta !== "undefined" && import.meta.env?.VITE_AGO_USERNAME;
+  const password = typeof import.meta !== "undefined" && import.meta.env?.VITE_AGO_PASSWORD;
 
   if (!username || !password) {
     return undefined;
@@ -93,40 +93,40 @@ async function generateArcGISToken(): Promise<string | undefined> {
 
   // Return cached token if still valid (with 5 minute buffer)
   if (cachedToken && Date.now() < tokenExpiry - 300000) {
-    console.log('[LayerConfigService] Using cached ArcGIS token');
+    console.log("[LayerConfigService] Using cached ArcGIS token");
     return cachedToken;
   }
 
-  console.log('[LayerConfigService] Generating new ArcGIS token...');
+  console.log("[LayerConfigService] Generating new ArcGIS token...");
 
   try {
-    const response = await fetch('https://www.arcgis.com/sharing/rest/generateToken', {
-      method: 'POST',
+    const response = await fetch("https://www.arcgis.com/sharing/rest/generateToken", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        "Content-Type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams({
-        'f': 'json',
-        'username': username,
-        'password': password,
-        'referer': window.location.origin || 'https://localhost',
-        'expiration': '120', // 2 hours
-      })
+        f: "json",
+        username: username,
+        password: password,
+        referer: window.location.origin || "https://localhost",
+        expiration: "120", // 2 hours
+      }),
     });
 
     const data = await response.json();
 
     if (data.error) {
-      console.error('[LayerConfigService] Failed to generate token:', data.error);
+      console.error("[LayerConfigService] Failed to generate token:", data.error);
       return undefined;
     }
 
     cachedToken = data.token;
     tokenExpiry = data.expires;
-    console.log('[LayerConfigService] ArcGIS token generated successfully');
+    console.log("[LayerConfigService] ArcGIS token generated successfully");
     return cachedToken;
   } catch (err) {
-    console.error('[LayerConfigService] Error generating ArcGIS token:', err);
+    console.error("[LayerConfigService] Error generating ArcGIS token:", err);
     return undefined;
   }
 }
@@ -146,7 +146,7 @@ async function fetchWebMapJson(webMapId: string, token?: string): Promise<EsriWe
   const url = buildWebMapUrl(webMapId, token);
 
   // Log URL without token for security
-  console.log(`[LayerConfigService] Fetching WebMap from: ${buildWebMapUrl(webMapId)}${token ? ' (with token)' : ''}`);
+  console.log(`[LayerConfigService] Fetching WebMap from: ${buildWebMapUrl(webMapId)}${token ? " (with token)" : ""}`);
 
   const response = await fetch(url);
 
@@ -158,7 +158,7 @@ async function fetchWebMapJson(webMapId: string, token?: string): Promise<EsriWe
 
   // Check for ArcGIS error response (they return 200 with error in body)
   if (json.error) {
-    throw new Error(`ArcGIS error: ${json.error.message || json.error.code || 'Unknown error'}`);
+    throw new Error(`ArcGIS error: ${json.error.message || json.error.code || "Unknown error"}`);
   }
 
   return json as EsriWebMap;
@@ -180,15 +180,17 @@ async function loadDynamicConfigs(webMapId: string): Promise<LayerConfig[]> {
     const webMapJson = await fetchWebMapJson(webMapId, token);
 
     // Transform to layer configs
-    console.log('[LayerConfigService] Transforming WebMap to layer configs');
+    console.log("[LayerConfigService] Transforming WebMap to layer configs");
     const configs = await transformWebMapToLayerConfigs(webMapJson);
 
     console.log(`[LayerConfigService] Successfully loaded ${configs.length} layer configs`);
 
     return configs;
   } catch (error) {
-    console.error('[LayerConfigService] Error loading dynamic configs:', error);
-    throw new Error(`Failed to load dynamic layer configs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error("[LayerConfigService] Error loading dynamic configs:", error);
+    throw new Error(
+      `Failed to load dynamic layer configs: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
 
@@ -209,7 +211,7 @@ export async function getLayerConfigs(webMapId: string = DEFAULT_WEBMAP_ID): Pro
   const cached = configCache.get(webMapId);
   if (cached) {
     console.log(`[LayerConfigService] ⚠️ Returning CACHED configs for ${webMapId} (transformer will NOT run)`);
-    console.log('[LayerConfigService] To force refresh, call clearCache() or reload with Ctrl+Shift+R');
+    console.log("[LayerConfigService] To force refresh, call clearCache() or reload with Ctrl+Shift+R");
     return cached;
   }
 

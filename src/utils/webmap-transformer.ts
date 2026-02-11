@@ -5,7 +5,7 @@
  * Extracted from the CLI converter script for use at runtime.
  */
 
-import type { LayerConfig, LegendItem, PopupConfig } from '@/types';
+import type { LayerConfig, LegendItem, PopupConfig } from "@/types";
 
 // ============================================================================
 // TYPES
@@ -37,7 +37,7 @@ export interface EsriDrawingInfo {
 }
 
 export interface EsriRenderer {
-  type: 'simple' | 'uniqueValue' | 'classBreaks';
+  type: "simple" | "uniqueValue" | "classBreaks";
   symbol?: EsriSymbol;
   label?: string;
   field?: string;
@@ -57,7 +57,7 @@ export interface EsriRenderer {
     symbol?: EsriSymbol;
   }>;
   visualVariables?: Array<{
-    type: 'colorInfo' | 'sizeInfo' | 'opacityInfo' | 'rotationInfo';
+    type: "colorInfo" | "sizeInfo" | "opacityInfo" | "rotationInfo";
     field?: string;
     stops?: Array<{
       value: number;
@@ -71,7 +71,7 @@ export interface EsriRenderer {
 }
 
 export interface EsriSymbol {
-  type: 'esriSFS' | 'esriSLS' | 'esriSMS' | 'esriPMS' | 'esriPFS';
+  type: "esriSFS" | "esriSLS" | "esriSMS" | "esriPMS" | "esriPFS";
   color?: number[];
   size?: number;
   width?: number;
@@ -101,7 +101,7 @@ export interface EsriPopupInfo {
 interface RendererResult {
   paint: Record<string, unknown>;
   legend: LegendItem[];
-  geomType: 'fill' | 'line' | 'circle';
+  geomType: "fill" | "line" | "circle";
   outlinePaint: Record<string, unknown> | null;
 }
 
@@ -122,7 +122,7 @@ interface RendererResult {
  * esriColorToCSS([255, 0, 0, 128]) // Returns "rgba(255, 0, 0, 0.50)"
  */
 export function esriColorToCSS(color: number[] | null | undefined): string {
-  if (!color || !Array.isArray(color) || color.length < 3) return '#888888';
+  if (!color || !Array.isArray(color) || color.length < 3) return "#888888";
 
   const r = color[0]!;
   const g = color[1]!;
@@ -133,7 +133,7 @@ export function esriColorToCSS(color: number[] | null | undefined): string {
 
   if (alpha === 1) {
     // Return hex for full opacity
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
   }
 
   return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(2)})`;
@@ -214,22 +214,22 @@ export function convertScaleToZoom(minScale?: number, maxScale?: number): { minZ
 /**
  * Detect geometry type from Esri symbol type
  */
-function detectGeometryType(symbol?: EsriSymbol): 'fill' | 'line' | 'circle' {
-  if (!symbol) return 'fill';
+function detectGeometryType(symbol?: EsriSymbol): "fill" | "line" | "circle" {
+  if (!symbol) return "fill";
 
   switch (symbol.type) {
-    case 'esriSFS': // Simple Fill Symbol
-      return 'fill';
-    case 'esriSLS': // Simple Line Symbol
-      return 'line';
-    case 'esriSMS': // Simple Marker Symbol
-      return 'circle';
-    case 'esriPMS': // Picture Marker Symbol
-      return 'circle';
-    case 'esriPFS': // Picture Fill Symbol
-      return 'fill';
+    case "esriSFS": // Simple Fill Symbol
+      return "fill";
+    case "esriSLS": // Simple Line Symbol
+      return "line";
+    case "esriSMS": // Simple Marker Symbol
+      return "circle";
+    case "esriPMS": // Picture Marker Symbol
+      return "circle";
+    case "esriPFS": // Picture Fill Symbol
+      return "fill";
     default:
-      return 'fill';
+      return "fill";
   }
 }
 
@@ -243,7 +243,7 @@ function detectGeometryType(symbol?: EsriSymbol): 'fill' | 'line' | 'circle' {
  */
 function hasVisibleOutline(outline?: { style?: string; color?: number[] | null; width?: number }): boolean {
   if (!outline) return false;
-  if (outline.style === 'esriSLSNull') return false;
+  if (outline.style === "esriSLSNull") return false;
   if (outline.color === null) return false;
   if (outline.width === 0) return false;
   // Check if alpha channel is 0 (fully transparent)
@@ -269,34 +269,34 @@ function convertSimpleRenderer(renderer: EsriRenderer, layerOpacity?: number, la
   const symbol = renderer.symbol;
   const geomType = detectGeometryType(symbol);
 
-  console.log('[Transformer] convertSimpleRenderer - geomType:', geomType, 'symbol:', symbol);
+  console.log("[Transformer] convertSimpleRenderer - geomType:", geomType, "symbol:", symbol);
 
   let paint: Record<string, unknown> = {};
   let legend: LegendItem[] = [];
   let outlinePaint: Record<string, unknown> | null = null;
 
-  if (geomType === 'fill' && symbol) {
+  if (geomType === "fill" && symbol) {
     // Check if fill color is null (no fill) or has alpha = 0 (fully transparent)
     const fillAlpha = symbol.color === null ? 0 : (symbol.color?.[3] ?? 255);
     // Use transparent color when alpha is 0 or color is null to ensure no fill is rendered
-    const fillColor = fillAlpha === 0 ? 'rgba(0, 0, 0, 0)' : esriColorToCSS(symbol.color);
+    const fillColor = fillAlpha === 0 ? "rgba(0, 0, 0, 0)" : esriColorToCSS(symbol.color);
 
     // If symbol color already has transparency (alpha < 255), that transparency is baked into fillColor
     // In this case, use fill-opacity: 1.0 to avoid double-applying opacity
     // Otherwise, use the layer's opacity value
-    const fillOpacity = fillAlpha === 0 ? 0 : (fillAlpha < 255 ? 1.0 : convertOpacity(layerOpacity));
+    const fillOpacity = fillAlpha === 0 ? 0 : fillAlpha < 255 ? 1.0 : convertOpacity(layerOpacity);
 
     console.log(`[Transformer] Fill layer opacity calculation for "${layerTitle}":`, {
       symbolColor: symbol.color,
       fillAlpha,
       layerOpacity,
       fillOpacity,
-      fillColor
+      fillColor,
     });
 
     paint = {
-      'fill-color': fillColor,
-      'fill-opacity': fillOpacity,
+      "fill-color": fillColor,
+      "fill-opacity": fillOpacity,
     };
 
     // For fill layers with visible outlines, create separate outline paint
@@ -305,70 +305,76 @@ function convertSimpleRenderer(renderer: EsriRenderer, layerOpacity?: number, la
       const outlineWidth = symbol.outline!.width || 1;
       const outlineColor = esriColorToCSS(symbol.outline!.color);
 
-      console.log('[Transformer] Fill layer with outline:', {
+      console.log("[Transformer] Fill layer with outline:", {
         fillAlpha,
         outlineWidth,
         outlineColor,
-        willCreateOutlinePaint: outlineWidth > 1 || fillAlpha === 0
+        willCreateOutlinePaint: outlineWidth > 1 || fillAlpha === 0,
       });
 
       // For transparent fills, don't use fill-outline-color as it can cause rendering issues
       // Instead, rely solely on the separate LineLayer for the outline
       if (fillAlpha !== 0) {
-        paint['fill-outline-color'] = outlineColor;
+        paint["fill-outline-color"] = outlineColor;
       }
 
       // If outline is thicker than 1px OR fill is transparent, create separate line paint
       if (outlineWidth > 1 || fillAlpha === 0) {
         outlinePaint = {
-          'line-color': outlineColor,
-          'line-width': outlineWidth,
+          "line-color": outlineColor,
+          "line-width": outlineWidth,
         };
-        console.log('[Transformer] Created outlinePaint:', outlinePaint);
+        console.log("[Transformer] Created outlinePaint:", outlinePaint);
       }
     } else {
-      console.log('[Transformer] No visible outline for fill layer, hasVisibleOutline returned false');
+      console.log("[Transformer] No visible outline for fill layer, hasVisibleOutline returned false");
     }
 
-    legend = [{
-      type: 'fill',
-      color: esriColorToCSS(symbol.color),
-      label: renderer.label || 'Feature',
-    }];
-  } else if (geomType === 'line' && symbol) {
+    legend = [
+      {
+        type: "fill",
+        color: esriColorToCSS(symbol.color),
+        label: renderer.label || "Feature",
+      },
+    ];
+  } else if (geomType === "line" && symbol) {
     paint = {
-      'line-color': esriColorToCSS(symbol.color),
-      'line-width': symbol.width || 1,
-      'line-opacity': convertOpacity(layerOpacity),
+      "line-color": esriColorToCSS(symbol.color),
+      "line-width": symbol.width || 1,
+      "line-opacity": convertOpacity(layerOpacity),
     };
 
-    legend = [{
-      type: 'line',
-      color: esriColorToCSS(symbol.color),
-      width: symbol.width || 1,
-      label: renderer.label || 'Feature',
-    }];
-  } else if (geomType === 'circle' && symbol) {
+    legend = [
+      {
+        type: "line",
+        color: esriColorToCSS(symbol.color),
+        width: symbol.width || 1,
+        label: renderer.label || "Feature",
+      },
+    ];
+  } else if (geomType === "circle" && symbol) {
     // Esri size is diameter in points, MapLibre radius is in pixels
     // Empirically tuned multiplier to match Esri rendering
     const radius = Math.round((symbol.size || 6) * 0.71 * 100) / 100;
 
     paint = {
-      'circle-color': esriColorToCSS(symbol.color),
-      'circle-radius': radius,
-      'circle-opacity': convertOpacity(layerOpacity),
+      "circle-color": esriColorToCSS(symbol.color),
+      "circle-radius": radius,
+      "circle-opacity": convertOpacity(layerOpacity),
     };
 
     if (hasVisibleOutline(symbol.outline)) {
-      paint['circle-stroke-color'] = esriColorToCSS(symbol.outline!.color);
-      paint['circle-stroke-width'] = symbol.outline!.width || 1;
+      paint["circle-stroke-color"] = esriColorToCSS(symbol.outline!.color);
+      paint["circle-stroke-width"] = symbol.outline!.width || 1;
     }
 
-    legend = [{
-      type: 'circle',
-      color: esriColorToCSS(symbol.color),
-      label: renderer.label || 'Feature',
-    }];
+    legend = [
+      {
+        type: "circle",
+        color: esriColorToCSS(symbol.color),
+        label: renderer.label || "Feature",
+      },
+    ];
   }
 
   return { paint, legend, geomType, outlinePaint };
@@ -401,7 +407,7 @@ function convertSimpleRenderer(renderer: EsriRenderer, layerOpacity?: number, la
 function convertUniqueValueRenderer(
   renderer: EsriRenderer,
   layerOpacity?: number,
-  customLabelMap?: Map<string, string>
+  customLabelMap?: Map<string, string>,
 ): RendererResult {
   const field = renderer.field1!;
   const uniqueValueInfos = renderer.uniqueValueInfos || [];
@@ -415,13 +421,13 @@ function convertUniqueValueRenderer(
   const geomType = detectGeometryType(firstSymbol);
 
   let paint: Record<string, unknown> = {};
-  let legend: LegendItem[] = [];
+  const legend: LegendItem[] = [];
   let outlinePaint: Record<string, unknown> | null = null;
 
-  if (geomType === 'fill') {
+  if (geomType === "fill") {
     // Build match expression for fill-color
     // Use to-string to ensure field values match string literals in the expression
-    const colorMatch: unknown[] = ['match', ['to-string', ['get', field]]];
+    const colorMatch: unknown[] = ["match", ["to-string", ["get", field]]];
 
     for (const info of uniqueValueInfos) {
       colorMatch.push(coerceMatchValue(info.value));
@@ -445,18 +451,18 @@ function convertUniqueValueRenderer(
       const label = customLabel || info.label || valueStr;
 
       legend.push({
-        type: 'fill' as const,
+        type: "fill" as const,
         color: esriColorToCSS(info.symbol?.color),
         label: label,
       });
     }
 
     // Default color
-    colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : 'rgba(0, 0, 0, 0)');
+    colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : "rgba(0, 0, 0, 0)");
 
     paint = {
-      'fill-color': colorMatch,
-      'fill-opacity': convertOpacity(layerOpacity),
+      "fill-color": colorMatch,
+      "fill-opacity": convertOpacity(layerOpacity),
     };
 
     // Handle outline if present
@@ -464,19 +470,19 @@ function convertUniqueValueRenderer(
       const outlineWidth = firstSymbol!.outline!.width || 1;
       const outlineColor = esriColorToCSS(firstSymbol!.outline!.color);
 
-      paint['fill-outline-color'] = outlineColor;
+      paint["fill-outline-color"] = outlineColor;
 
       // If outline is thicker than 1px, create separate line paint
       if (outlineWidth > 1) {
         outlinePaint = {
-          'line-color': outlineColor,
-          'line-width': outlineWidth,
+          "line-color": outlineColor,
+          "line-width": outlineWidth,
         };
       }
     }
-  } else if (geomType === 'line') {
+  } else if (geomType === "line") {
     // Use to-string to ensure field values match string literals in the expression
-    const colorMatch: unknown[] = ['match', ['to-string', ['get', field]]];
+    const colorMatch: unknown[] = ["match", ["to-string", ["get", field]]];
 
     for (const info of uniqueValueInfos) {
       colorMatch.push(coerceMatchValue(info.value));
@@ -489,23 +495,23 @@ function convertUniqueValueRenderer(
       const label = customLabel || info.label || valueStr;
 
       legend.push({
-        type: 'line' as const,
+        type: "line" as const,
         color: esriColorToCSS(info.symbol?.color),
         width: info.symbol?.width || 1,
         label: label,
       });
     }
 
-    colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : 'rgba(0, 0, 0, 0)');
+    colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : "rgba(0, 0, 0, 0)");
 
     paint = {
-      'line-color': colorMatch,
-      'line-width': firstSymbol?.width || 2,
-      'line-opacity': convertOpacity(layerOpacity),
+      "line-color": colorMatch,
+      "line-width": firstSymbol?.width || 2,
+      "line-opacity": convertOpacity(layerOpacity),
     };
-  } else if (geomType === 'circle') {
+  } else if (geomType === "circle") {
     // Use to-string to ensure field values match string literals in the expression
-    const colorMatch: unknown[] = ['match', ['to-string', ['get', field]]];
+    const colorMatch: unknown[] = ["match", ["to-string", ["get", field]]];
 
     for (const info of uniqueValueInfos) {
       colorMatch.push(coerceMatchValue(info.value));
@@ -518,27 +524,27 @@ function convertUniqueValueRenderer(
       const label = customLabel || info.label || valueStr;
 
       legend.push({
-        type: 'circle' as const,
+        type: "circle" as const,
         color: esriColorToCSS(info.symbol?.color),
         label: label,
       });
     }
 
-    colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : 'rgba(0, 0, 0, 0)');
+    colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : "rgba(0, 0, 0, 0)");
 
     // Esri size is diameter in points, MapLibre radius is in pixels
     // Empirically tuned multiplier to match Esri rendering
     const radius = Math.round((firstSymbol?.size || 6) * 0.71 * 100) / 100;
 
     paint = {
-      'circle-color': colorMatch,
-      'circle-radius': radius,
-      'circle-opacity': convertOpacity(layerOpacity),
+      "circle-color": colorMatch,
+      "circle-radius": radius,
+      "circle-opacity": convertOpacity(layerOpacity),
     };
 
     if (hasVisibleOutline(firstSymbol?.outline)) {
-      paint['circle-stroke-color'] = esriColorToCSS(firstSymbol!.outline!.color);
-      paint['circle-stroke-width'] = firstSymbol!.outline!.width || 1;
+      paint["circle-stroke-color"] = esriColorToCSS(firstSymbol!.outline!.color);
+      paint["circle-stroke-width"] = firstSymbol!.outline!.width || 1;
     }
   }
 
@@ -561,7 +567,7 @@ function convertClassBreaksRenderer(renderer: EsriRenderer, layerOpacity?: numbe
   const classBreakInfos = renderer.classBreakInfos || [];
 
   // Check for visualVariables with colorInfo (continuous color ramp)
-  const colorVariable = renderer.visualVariables?.find(v => v.type === 'colorInfo');
+  const colorVariable = renderer.visualVariables?.find(v => v.type === "colorInfo");
 
   if (colorVariable?.stops && colorVariable.stops.length > 0) {
     // Use visualVariables for continuous color ramp
@@ -569,20 +575,20 @@ function convertClassBreaksRenderer(renderer: EsriRenderer, layerOpacity?: numbe
   }
 
   if (classBreakInfos.length === 0) {
-    return { paint: {}, legend: [], geomType: 'fill', outlinePaint: null };
+    return { paint: {}, legend: [], geomType: "fill", outlinePaint: null };
   }
 
   const firstSymbol = classBreakInfos[0]?.symbol;
   const geomType = detectGeometryType(firstSymbol);
 
   let paint: Record<string, unknown> = {};
-  let legend: LegendItem[] = [];
+  const legend: LegendItem[] = [];
   let outlinePaint: Record<string, unknown> | null = null;
 
-  if (geomType === 'fill') {
+  if (geomType === "fill") {
     // Build step expression for fill-color
     // step format: ["step", ["get", field], color0, stop1, color1, stop2, color2, ...]
-    const colorStep: unknown[] = ['step', ['get', field]];
+    const colorStep: unknown[] = ["step", ["get", field]];
 
     // Add first color (for values below first break)
     colorStep.push(esriColorToCSS(classBreakInfos[0]?.symbol?.color));
@@ -597,34 +603,34 @@ function convertClassBreaksRenderer(renderer: EsriRenderer, layerOpacity?: numbe
       }
 
       legend.push({
-        type: 'fill' as const,
+        type: "fill" as const,
         color: esriColorToCSS(info.symbol?.color),
         label: info.label || `${info.classMaxValue}`,
       });
     }
 
     paint = {
-      'fill-color': colorStep,
-      'fill-opacity': convertOpacity(layerOpacity),
+      "fill-color": colorStep,
+      "fill-opacity": convertOpacity(layerOpacity),
     };
 
     if (hasVisibleOutline(firstSymbol?.outline)) {
       const outlineWidth = firstSymbol!.outline!.width || 1;
       const outlineColor = esriColorToCSS(firstSymbol!.outline!.color);
 
-      paint['fill-outline-color'] = outlineColor;
+      paint["fill-outline-color"] = outlineColor;
 
       if (outlineWidth > 1) {
         outlinePaint = {
-          'line-color': outlineColor,
-          'line-width': outlineWidth,
+          "line-color": outlineColor,
+          "line-width": outlineWidth,
         };
       }
     }
-  } else if (geomType === 'line') {
+  } else if (geomType === "line") {
     // Build step expression for line-color
     // step format: ["step", ["get", field], color0, stop1, color1, stop2, color2, ...]
-    const colorStep: unknown[] = ['step', ['get', field]];
+    const colorStep: unknown[] = ["step", ["get", field]];
 
     // Add first color (for values below first break)
     colorStep.push(esriColorToCSS(classBreakInfos[0]?.symbol?.color));
@@ -642,7 +648,7 @@ function convertClassBreaksRenderer(renderer: EsriRenderer, layerOpacity?: numbe
       }
 
       legend.push({
-        type: 'line' as const,
+        type: "line" as const,
         color: esriColorToCSS(info.symbol?.color),
         width: info.symbol?.width || firstSymbol?.width || 2,
         label: info.label || `${prevMaxValue} - ${info.classMaxValue}`,
@@ -655,9 +661,9 @@ function convertClassBreaksRenderer(renderer: EsriRenderer, layerOpacity?: numbe
     const lineWidth = firstSymbol?.width || 2;
 
     paint = {
-      'line-color': colorStep,
-      'line-width': lineWidth,
-      'line-opacity': convertOpacity(layerOpacity),
+      "line-color": colorStep,
+      "line-width": lineWidth,
+      "line-opacity": convertOpacity(layerOpacity),
     };
   }
 
@@ -679,15 +685,15 @@ function convertClassBreaksRenderer(renderer: EsriRenderer, layerOpacity?: numbe
  * @param layerOpacity - Layer opacity
  */
 function convertColorInfoRenderer(
-  colorVariable: NonNullable<EsriRenderer['visualVariables']>[0],
+  colorVariable: NonNullable<EsriRenderer["visualVariables"]>[0],
   field: string,
   renderer: EsriRenderer,
-  layerOpacity?: number
+  layerOpacity?: number,
 ): RendererResult {
   const stops = colorVariable.stops || [];
 
   if (stops.length === 0) {
-    return { paint: {}, legend: [], geomType: 'fill', outlinePaint: null };
+    return { paint: {}, legend: [], geomType: "fill", outlinePaint: null };
   }
 
   // Determine geometry type from first classBreakInfo symbol or default symbol
@@ -695,13 +701,13 @@ function convertColorInfoRenderer(
   const geomType = detectGeometryType(firstSymbol);
 
   let paint: Record<string, unknown> = {};
-  let legend: LegendItem[] = [];
+  const legend: LegendItem[] = [];
   let outlinePaint: Record<string, unknown> | null = null;
 
-  if (geomType === 'fill') {
+  if (geomType === "fill") {
     // Build interpolate expression for smooth color transitions
     // interpolate format: ["interpolate", ["linear"], ["get", field], value1, color1, value2, color2, ...]
-    const colorInterpolate: unknown[] = ['interpolate', ['linear'], ['get', field]];
+    const colorInterpolate: unknown[] = ["interpolate", ["linear"], ["get", field]];
 
     for (const stop of stops) {
       colorInterpolate.push(stop.value);
@@ -709,7 +715,7 @@ function convertColorInfoRenderer(
 
       // Add legend entry for each stop
       legend.push({
-        type: 'fill' as const,
+        type: "fill" as const,
         color: esriColorToCSS(stop.color),
         label: stop.label || `${stop.value}`,
       });
@@ -718,15 +724,15 @@ function convertColorInfoRenderer(
     // Wrap interpolate in a case expression to handle null/undefined values
     // If field value is null, use transparent color so "no data" areas are not filled
     const colorExpression: unknown[] = [
-      'case',
-      ['==', ['get', field], null],
-      'rgba(0, 0, 0, 0)',  // Transparent for null/no-data values
-      colorInterpolate      // Otherwise use the interpolated color
+      "case",
+      ["==", ["get", field], null],
+      "rgba(0, 0, 0, 0)", // Transparent for null/no-data values
+      colorInterpolate, // Otherwise use the interpolated color
     ];
 
     paint = {
-      'fill-color': colorExpression,
-      'fill-opacity': convertOpacity(layerOpacity),
+      "fill-color": colorExpression,
+      "fill-opacity": convertOpacity(layerOpacity),
     };
 
     // Check for outline on default symbol or first class break symbol
@@ -734,12 +740,12 @@ function convertColorInfoRenderer(
       const outlineWidth = firstSymbol!.outline!.width || 1;
       const outlineColor = esriColorToCSS(firstSymbol!.outline!.color);
 
-      paint['fill-outline-color'] = outlineColor;
+      paint["fill-outline-color"] = outlineColor;
 
       if (outlineWidth > 1) {
         outlinePaint = {
-          'line-color': outlineColor,
-          'line-width': outlineWidth,
+          "line-color": outlineColor,
+          "line-width": outlineWidth,
         };
       }
     }
@@ -791,27 +797,29 @@ export function transformEsriRenderer(
   drawingInfo?: EsriDrawingInfo,
   layerOpacity?: number,
   customLabelMap?: Map<string, string>,
-  layerTitle?: string
+  layerTitle?: string,
 ): RendererResult {
   if (!drawingInfo?.renderer) {
-    console.warn('[Transformer] No renderer found in drawingInfo - layer will use service default (not available in WebMap)');
+    console.warn(
+      "[Transformer] No renderer found in drawingInfo - layer will use service default (not available in WebMap)",
+    );
     // Return empty paint - the layer will need to fetch service metadata for its default renderer
     // For now, this will result in MapLibre default styling (which may not be correct)
-    return { paint: {}, legend: [], geomType: 'fill', outlinePaint: null };
+    return { paint: {}, legend: [], geomType: "fill", outlinePaint: null };
   }
 
   const renderer = drawingInfo.renderer;
 
   switch (renderer.type) {
-    case 'simple':
+    case "simple":
       return convertSimpleRenderer(renderer, layerOpacity, layerTitle);
-    case 'uniqueValue':
+    case "uniqueValue":
       return convertUniqueValueRenderer(renderer, layerOpacity, customLabelMap);
-    case 'classBreaks':
+    case "classBreaks":
       return convertClassBreaksRenderer(renderer, layerOpacity);
     default:
       console.warn(`Unknown renderer type: ${(renderer as { type: string }).type}`);
-      return { paint: {}, legend: [], geomType: 'fill', outlinePaint: null };
+      return { paint: {}, legend: [], geomType: "fill", outlinePaint: null };
   }
 }
 
@@ -837,7 +845,7 @@ export function transformPopupConfig(popupInfo?: EsriPopupInfo): PopupConfig | n
 
   // ArcGIS returns lowercase field names in GeoJSON format (f=geojson),
   // but webmap popupInfo uses uppercase. Lowercase the template placeholders to match.
-  const title = (popupInfo.title || '').replace(/\{([^}]+)\}/g, (_m, name) => `{${name.toLowerCase()}}`);
+  const title = (popupInfo.title || "").replace(/\{([^}]+)\}/g, (_m, name) => `{${name.toLowerCase()}}`);
   const fieldInfos = popupInfo.fieldInfos || [];
 
   // Filter to visible fields only and include format info
@@ -902,7 +910,7 @@ export function transformPopupConfig(popupInfo?: EsriPopupInfo): PopupConfig | n
 export function transformLegendConfig(
   drawingInfo?: EsriDrawingInfo,
   layerOpacity?: number,
-  customLabelMap?: Map<string, string>
+  customLabelMap?: Map<string, string>,
 ): LegendItem[] {
   const result = transformEsriRenderer(drawingInfo, layerOpacity, customLabelMap);
   return result.legend;
@@ -933,23 +941,19 @@ export function buildWhereClause(layerDefinition?: { definitionExpression?: stri
  */
 function titleToKebab(title: string): string {
   // Remove the "Group_" prefix
-  const cleanTitle = title.includes('_')
-    ? title.split('_').slice(1).join(' ')
-    : title;
+  const cleanTitle = title.includes("_") ? title.split("_").slice(1).join(" ") : title;
 
   return cleanTitle
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 /**
  * Get display title (without group prefix)
  */
 function getDisplayTitle(title: string): string {
-  return title.includes('_')
-    ? title.split('_').slice(1).join(' ')
-    : title;
+  return title.includes("_") ? title.split("_").slice(1).join(" ") : title;
 }
 
 // ============================================================================
@@ -994,7 +998,7 @@ function parseServiceDescription(description: string | undefined): Map<string, s
   }
 
   // Split by newlines and parse each line
-  const lines = description.split('\n');
+  const lines = description.split("\n");
 
   // Match lines like "11 Residential Low Density" or "3 Commercial" (1-3 digits, space, label)
   const codePattern = /^(\d{1,3})\s+(.+)$/;
@@ -1052,7 +1056,9 @@ function parseServiceDescription(description: string | undefined): Map<string, s
  * @param serviceUrl The feature service URL (e.g., "https://services.arcgis.com/.../FeatureServer/0")
  * @returns Promise resolving to object with drawingInfo and optional description, or null if fetch fails
  */
-async function fetchServiceDrawingInfo(serviceUrl: string): Promise<{ drawingInfo: EsriDrawingInfo; description?: string } | null> {
+async function fetchServiceDrawingInfo(
+  serviceUrl: string,
+): Promise<{ drawingInfo: EsriDrawingInfo; description?: string } | null> {
   try {
     console.log(`[Transformer] Fetching service metadata from: ${serviceUrl}`);
     const response = await fetch(`${serviceUrl}?f=json`);
@@ -1070,7 +1076,7 @@ async function fetchServiceDrawingInfo(serviceUrl: string): Promise<{ drawingInf
     // Return both drawingInfo (for renderer) and description (for custom labels)
     return {
       drawingInfo: serviceData.drawingInfo,
-      description: serviceData.description
+      description: serviceData.description,
     };
   } catch (error) {
     console.error(`[Transformer] Error fetching service metadata:`, error);
@@ -1122,10 +1128,10 @@ export async function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): Pro
   // 3. Parse description for custom labels (e.g., "11 Residential Low Density")
   // 4. Merge service renderer (field/colors) with parsed labels
   // 5. Result: correct field, correct colors, human-readable labels
-  const USE_SERVICE_RENDERER: string[] = ['Zoning and Planning_Land Use'];
+  const USE_SERVICE_RENDERER: string[] = ["Zoning and Planning_Land Use"];
 
-  console.log('🔄 [Transformer] ===== STARTING FRESH TRANSFORMATION =====');
-  console.log('[Transformer] Starting transformation of', operationalLayers.length, 'layers');
+  console.log("🔄 [Transformer] ===== STARTING FRESH TRANSFORMATION =====");
+  console.log("[Transformer] Starting transformation of", operationalLayers.length, "layers");
 
   for (const layer of operationalLayers) {
     // Skip layers without URLs (like group layers)
@@ -1144,13 +1150,16 @@ export async function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): Pro
     // - Business Violations (under construction)
     // The production app filters these out but keeps "Vacancy Violations (under construction)"
     // which has a different itemId (0c88f402894440ca8b8005fdc71f5366)
-    if (layer.itemId === '4f39b829b96d437da9231727d9c91fab') {
+    if (layer.itemId === "4f39b829b96d437da9231727d9c91fab") {
       console.log(`Skipping layer with under-construction itemId: ${layer.title}`);
       continue;
     }
 
-    console.log('[Transformer] Processing layer:', layer.title);
-    console.log(`[Transformer] Layer "${layer.title}" - Renderer type:`, layer.layerDefinition?.drawingInfo?.renderer?.type);
+    console.log("[Transformer] Processing layer:", layer.title);
+    console.log(
+      `[Transformer] Layer "${layer.title}" - Renderer type:`,
+      layer.layerDefinition?.drawingInfo?.renderer?.type,
+    );
 
     try {
       // Get drawingInfo - either from WebMap or fetch from service
@@ -1187,7 +1196,9 @@ export async function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): Pro
 
       if ((needsServiceRenderer || forceServiceRenderer) && layer.url) {
         if (forceServiceRenderer) {
-          console.log(`[Transformer] Layer "${layer.title}" configured to use service renderer instead of WebMap renderer`);
+          console.log(
+            `[Transformer] Layer "${layer.title}" configured to use service renderer instead of WebMap renderer`,
+          );
         } else {
           console.log(`[Transformer] Layer "${layer.title}" has no renderer in WebMap, fetching from service...`);
         }
@@ -1195,7 +1206,10 @@ export async function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): Pro
         const serviceData = await fetchServiceDrawingInfo(layer.url);
         if (serviceData) {
           drawingInfo = serviceData.drawingInfo;
-          console.log(`[Transformer] Fetched renderer from service for "${layer.title}":`, serviceData.drawingInfo?.renderer?.type);
+          console.log(
+            `[Transformer] Fetched renderer from service for "${layer.title}":`,
+            serviceData.drawingInfo?.renderer?.type,
+          );
 
           // Parse description for custom labels (if description exists and is parseable)
           // This allows us to merge service renderer (field/colors) with custom labels (from description)
@@ -1217,10 +1231,12 @@ export async function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): Pro
         drawingInfo,
         layer.opacity,
         serviceLabelMap,
-        layer.title
+        layer.title,
       );
 
-      console.log(`[Transformer] Layer "${layer.title}" - Result: geomType=${geomType}, hasOutlinePaint=${!!outlinePaint}`);
+      console.log(
+        `[Transformer] Layer "${layer.title}" - Result: geomType=${geomType}, hasOutlinePaint=${!!outlinePaint}`,
+      );
 
       // Transform popup config
       const popup = transformPopupConfig(layer.popupInfo);
@@ -1229,10 +1245,7 @@ export async function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): Pro
       const where = buildWhereClause(layer.layerDefinition);
 
       // Convert scale range to zoom levels
-      const zoomRange = convertScaleToZoom(
-        layer.layerDefinition?.minScale,
-        layer.layerDefinition?.maxScale
-      );
+      const zoomRange = convertScaleToZoom(layer.layerDefinition?.minScale, layer.layerDefinition?.maxScale);
 
       // Generate IDs and titles
       const layerId = titleToKebab(layer.title);
@@ -1241,7 +1254,7 @@ export async function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): Pro
       // Determine effective opacity for the slider
       // For fill layers with transparent fills (alpha=0), use layer opacity for outline visibility
       // The fill will always stay at 0, but the slider controls the outline
-      let effectiveOpacity = layer.opacity ?? 1;
+      const effectiveOpacity = layer.opacity ?? 1;
 
       // Build layer config
       const config: LayerConfig = {

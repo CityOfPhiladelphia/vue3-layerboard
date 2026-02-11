@@ -2,51 +2,51 @@
 // TopicAccordion.vue - Accordion component for topic-based layer organization
 // Used by apps like StreetSmartPHL that group layers by topic
 
-import { ref, useId, watch } from 'vue'
+import { ref, useId, watch } from "vue";
 
 const props = withDefaults(
   defineProps<{
     /** Title displayed in the accordion header */
-    title: string
+    title: string;
     /** Optional icon name or component */
-    icon?: string
+    icon?: string;
     /** Whether the accordion is initially expanded */
-    expanded?: boolean
+    expanded?: boolean;
     /** Array of layer IDs associated with this topic */
-    layerIds?: string[]
+    layerIds?: string[];
     /** Optional CSS class for custom styling */
-    headerClass?: string
+    headerClass?: string;
   }>(),
   {
     expanded: false,
     layerIds: () => [],
-  }
-)
+  },
+);
 
 const emit = defineEmits<{
   /** Emitted when the accordion is toggled open/closed */
-  (e: 'toggle', expanded: boolean): void
+  (e: "toggle", expanded: boolean): void;
   /** Emitted when a layer within this topic changes */
-  (e: 'layerChange', layerId: string, visible: boolean): void
-}>()
+  (e: "layerChange", layerId: string, visible: boolean): void;
+}>();
 
 // Internal expanded state, initialized from prop
-const isExpanded = ref(props.expanded)
+const isExpanded = ref(props.expanded);
 
-const panelId = `topic-panel-${useId()}`
-const headerId = `topic-header-${useId()}`
+const panelId = `topic-panel-${useId()}`;
+const headerId = `topic-header-${useId()}`;
 
 // Watch for external changes to expanded prop
 watch(
   () => props.expanded,
-  (newVal) => {
-    isExpanded.value = newVal
-  }
-)
+  newVal => {
+    isExpanded.value = newVal;
+  },
+);
 
 function toggleAccordion() {
-  isExpanded.value = !isExpanded.value
-  emit('toggle', isExpanded.value)
+  isExpanded.value = !isExpanded.value;
+  emit("toggle", isExpanded.value);
 }
 </script>
 
@@ -92,13 +92,7 @@ function toggleAccordion() {
     </button>
 
     <!-- Accordion Content -->
-    <div
-      :id="panelId"
-      v-show="isExpanded"
-      role="region"
-      :aria-labelledby="headerId"
-      class="topic-content"
-    >
+    <div v-show="isExpanded" :id="panelId" role="region" :aria-labelledby="headerId" class="topic-content">
       <!-- Default slot for custom topic content (layer checkboxes, etc.) -->
       <slot>
         <p class="topic-empty">No content provided for this topic.</p>

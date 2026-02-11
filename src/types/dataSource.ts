@@ -10,17 +10,17 @@
  */
 export interface DataSourceConfig {
   /** Unique identifier for the data source */
-  id: string
+  id: string;
   /** URL to fetch data from */
-  url: string
+  url: string;
   /** Type of data source - determines how data is fetched */
-  type: 'http-get' | 'http-post' | 'esri'
+  type: "http-get" | "http-post" | "esri";
   /** Optional polling interval in milliseconds (for auto-refresh) */
-  pollInterval?: number
+  pollInterval?: number;
   /** Optional request options (headers, etc.) */
-  options?: RequestInit
+  options?: RequestInit;
   /** Optional transform function to process the response data */
-  transform?: (data: unknown) => unknown
+  transform?: (data: unknown) => unknown;
 }
 
 /**
@@ -28,16 +28,16 @@ export interface DataSourceConfig {
  */
 export interface DataSourceState<T = unknown> {
   /** The fetched data (null if not yet loaded or error) */
-  data: T | null
+  data: T | null;
   /** Whether the data is currently being fetched */
-  loading: boolean
+  loading: boolean;
   /** Error message if fetch failed */
-  error: string | null
+  error: string | null;
   /** Timestamp of last successful fetch */
-  lastFetched: number | null
+  lastFetched: number | null;
 }
 
 /**
  * Combined state for all data sources
  */
-export type DataSourcesState = Record<string, DataSourceState>
+export type DataSourcesState = Record<string, DataSourceState>;

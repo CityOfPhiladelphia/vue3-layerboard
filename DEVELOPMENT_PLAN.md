@@ -11,6 +11,7 @@ Published as `@phila/layerboard` on npm. Consumer apps (OpenMaps, StreetSmartPHL
 ### What is vue3-layerboard?
 
 A configuration-driven mapping framework that:
+
 - Displays Esri WebMaps using open-source MapLibre GL JS (instead of proprietary Esri APIs)
 - Presents layers in a configurable panel (flat list or topic-based accordion)
 - Supports layer toggling, legends, popups, and feature interaction
@@ -32,18 +33,23 @@ Different teams maintain these applications and don't want to share repositories
 ## Completed Work
 
 ### Runtime Layer Configuration
+
 Layers are fetched and transformed from Esri WebMap JSON at runtime, eliminating the need for pre-generated static config files. The WebMap ID is configurable per application.
 
 ### Feature Highlighting
+
 When a user clicks a feature and the popup opens, the feature is highlighted in electric blue with enhanced visibility (+3px larger/thicker). Highlights clear when popup closes or another feature is selected.
 
 ### Fill Layer Rendering
+
 Fixed fill layer rendering issues including opacity handling and numeric match values in style expressions.
 
 ### Multi-Layer Popup Navigation
+
 Users can cycle through multiple overlapping features at a click point using Previous/Next buttons in the popup. Layer name and feature counter (e.g., "1 of 3") are displayed.
 
 ### Layer Data Fetching Optimization
+
 Layers load in parallel instead of sequentially. Only newly-visible layers are fetched when toggling (existing layers don't re-fetch).
 
 ---
@@ -51,6 +57,7 @@ Layers load in parallel instead of sequentially. Only newly-visible layers are f
 ## Future Work
 
 See `bd list` for active issues. Major items include:
+
 - Keyboard navigation for popups
 - Mobile layout improvements
 - Framework documentation and npm publishing
@@ -63,10 +70,12 @@ See `bd list` for active issues. Major items include:
 ### Panel Modes
 
 **Flat layer list** (OpenMaps style):
+
 - `layerFilter: true` enables layer search/filter
 - All layers in a searchable, scrollable list
 
 **Topics accordion** (StreetSmartPHL style):
+
 - `defaultPanel: 'topics'` enables topic-based UI
 - Topics are Vue components (e.g., `PaveTopic.vue`), not config objects
 - Each topic contains layer toggles, info boxes, legends
@@ -74,6 +83,7 @@ See `bd list` for active issues. Major items include:
 ### Key Architectural Decision: Vue-Idiomatic Approach
 
 The old `@phila/layerboard` used a config-driven component system with problems:
+
 - Configuration as code - mixes data with logic, hard to type-check
 - Reinvents Vue - custom `components` array with `type: "paragraph"` instead of Vue components
 - Function slots everywhere - loses Vue reactivity benefits
@@ -82,6 +92,7 @@ The old `@phila/layerboard` used a config-driven component system with problems:
 **Decision: Do NOT maintain backwards compatibility with old config system.**
 
 Instead, use Vue-idiomatic patterns:
+
 - Topics are Vue components that compose framework building blocks
 - Framework provides reusable components with typed props
 - Data sources use Vue composables with proper reactivity
@@ -91,6 +102,7 @@ Tradeoff accepted: StreetSmartPHL needed significant rewriting, but the result i
 ### Framework Components
 
 **Reusable Vue Components:**
+
 - `<LayerCheckboxSet>` - Toggle multiple layers with legend and opacity options
 - `<TopicAccordion>` - Expandable accordion container for topics
 - `<DataTable>` - Display tabular data from data sources
@@ -98,6 +110,7 @@ Tradeoff accepted: StreetSmartPHL needed significant rewriting, but the result i
 - `<PopoverLink>` - Links that open popovers with additional content
 
 **Vue Composables:**
+
 - `useDataSource(config)` - Fetch from ArcGIS FeatureServer with Vue reactivity
 - `useLayerboard(config)` - Main framework composable for initialization
 
@@ -127,6 +140,7 @@ vue3-layerboard/
 ### Dependencies
 
 **Peer dependencies:**
+
 - `@phila/phila-ui-map-core` - Map components (MapLibreMap, etc.)
 - `@phila/phila-ui-core` - UI components and utilities
 - `maplibre-gl` - Map library
@@ -135,12 +149,14 @@ vue3-layerboard/
 ### App-Specific vs Framework Code
 
 **Framework** (in the package):
+
 - `components/LayerPanel.vue`, `MapPanel.vue`
 - `services/layerConfigService.ts`
 - `utils/webmap-transformer.ts`
 - Type definitions
 
 **App-specific** (in consumer repos):
+
 - `App.vue` - Layout and configuration
 - `main.ts` - App initialization
 - `assets/` - Styles and branding

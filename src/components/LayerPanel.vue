@@ -41,7 +41,7 @@ const props = withDefaults(
     showOpacity: true,
     showLegend: true,
     searchPlaceholder: "Filter layers...",
-  }
+  },
 );
 
 // Emit events for layer changes
@@ -61,9 +61,7 @@ const filteredLayerList = computed(() => {
     return props.layerList;
   }
   const query = props.searchQuery.toLowerCase();
-  return props.layerList.filter((layer) =>
-    layer.config.title.toLowerCase().includes(query)
-  );
+  return props.layerList.filter(layer => layer.config.title.toLowerCase().includes(query));
 });
 
 // Normalize URL for matching (same logic as App.vue)
@@ -82,7 +80,7 @@ function getMetadataUrl(layerUrl: string): string | null {
 
 // Check if any layer in the list has metadata (to reserve space for info icons)
 const anyLayerHasMetadata = computed(() => {
-  return props.layerList.some((layer) => getMetadataUrl(layer.config.url));
+  return props.layerList.some(layer => getMetadataUrl(layer.config.url));
 });
 
 // Helper functions
@@ -132,11 +130,7 @@ function onOpacityChange(layerId: string, event: Event) {
   <div class="layer-panel">
     <!-- Search box (configurable) -->
     <div v-if="showSearch" class="search-box">
-      <TextField
-        v-model="searchValue"
-        :placeholder="searchPlaceholder"
-        class-name="layer-search-field"
-      >
+      <TextField v-model="searchValue" :placeholder="searchPlaceholder" class-name="layer-search-field">
         <template #trailing-action>
           <Icon :icon-definition="faFilter" size="small" inline decorative />
         </template>
@@ -154,16 +148,8 @@ function onOpacityChange(layerId: string, event: Event) {
     </div>
 
     <!-- Flat mode: render layer list -->
-    <div
-      v-else
-      class="layer-list"
-      :class="{ 'has-metadata': anyLayerHasMetadata }"
-    >
-      <div
-        v-for="layer in filteredLayerList"
-        :key="layer.config.id"
-        class="layer-item"
-      >
+    <div v-else class="layer-list" :class="{ 'has-metadata': anyLayerHasMetadata }">
+      <div v-for="layer in filteredLayerList" :key="layer.config.id" class="layer-item">
         <div class="layer-row">
           <!-- Info icon (metadata link) - shows if this layer has metadata, or placeholder if any layer has metadata -->
           <a
@@ -175,17 +161,9 @@ function onOpacityChange(layerId: string, event: Event) {
             :aria-label="'View metadata for ' + layer.config.title"
             @click.stop
           >
-            <Icon
-              :icon-definition="faCircleInfo"
-              size="small"
-              inline
-              decorative
-            />
+            <Icon :icon-definition="faCircleInfo" size="small" inline decorative />
           </a>
-          <span
-            v-else-if="anyLayerHasMetadata"
-            class="metadata-placeholder"
-          ></span>
+          <span v-else-if="anyLayerHasMetadata" class="metadata-placeholder"></span>
 
           <label
             class="layer-checkbox"
@@ -202,13 +180,7 @@ function onOpacityChange(layerId: string, event: Event) {
             />
             <span class="layer-title">
               {{ layer.config.title }}
-              <span
-                v-if="isLayerLoading(layer.config.id)"
-                class="loading-indicator"
-                role="status"
-              >
-                Loading...
-              </span>
+              <span v-if="isLayerLoading(layer.config.id)" class="loading-indicator" role="status"> Loading... </span>
               <span
                 v-if="getLayerError(layer.config.id)"
                 class="error-indicator"
@@ -217,21 +189,13 @@ function onOpacityChange(layerId: string, event: Event) {
               >
                 Error
               </span>
-              <span
-                v-if="!isLayerAvailableAtZoom(layer.config)"
-                class="zoom-indicator"
-              >
-                (zoom in)
-              </span>
+              <span v-if="!isLayerAvailableAtZoom(layer.config)" class="zoom-indicator"> (zoom in) </span>
             </span>
           </label>
         </div>
 
         <!-- Opacity slider (shown when layer is visible and showOpacity is true) -->
-        <div
-          v-if="showOpacity && isVisible(layer.config.id)"
-          class="opacity-control"
-        >
+        <div v-if="showOpacity && isVisible(layer.config.id)" class="opacity-control">
           <label class="opacity-label" :for="'opacity-' + layer.config.id">
             Opacity: {{ Math.round(getLayerOpacity(layer.config.id) * 100) }}%
           </label>
@@ -254,11 +218,7 @@ function onOpacityChange(layerId: string, event: Event) {
           class="layer-legend"
           :aria-label="'Legend for ' + layer.config.title"
         >
-          <li
-            v-for="(item, index) in layer.config.legend"
-            :key="index"
-            class="legend-item"
-          >
+          <li v-for="(item, index) in layer.config.legend" :key="index" class="legend-item">
             <!-- Circle symbol -->
             <span
               v-if="item.type === 'circle'"
@@ -291,9 +251,7 @@ function onOpacityChange(layerId: string, event: Event) {
         </ul>
       </div>
 
-      <div v-if="filteredLayerList.length === 0" class="no-results">
-        No layers match "{{ searchQuery }}"
-      </div>
+      <div v-if="filteredLayerList.length === 0" class="no-results">No layers match "{{ searchQuery }}"</div>
     </div>
   </div>
 </template>

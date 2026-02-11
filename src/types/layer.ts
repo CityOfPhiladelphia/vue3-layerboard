@@ -3,28 +3,28 @@
  */
 
 export interface LegendItem {
-  type: 'fill' | 'line' | 'circle'
-  color: string
-  label: string
-  width?: number
-  radius?: number
+  type: "fill" | "line" | "circle";
+  color: string;
+  label: string;
+  width?: number;
+  radius?: number;
 }
 
 export interface PopupFieldFormat {
-  dateFormat?: string
-  digitSeparator?: boolean
-  places?: number
+  dateFormat?: string;
+  digitSeparator?: boolean;
+  places?: number;
 }
 
 export interface PopupField {
-  field: string
-  label: string
-  format?: PopupFieldFormat
+  field: string;
+  label: string;
+  format?: PopupFieldFormat;
 }
 
 export interface PopupConfig {
-  title: string
-  fields: PopupField[]
+  title: string;
+  fields: PopupField[];
 }
 
 /**
@@ -33,30 +33,30 @@ export interface PopupConfig {
  */
 export interface LayerDisplayOptions {
   /** Whether to show a checkbox for this layer (default: true) */
-  shouldShowCheckbox?: boolean
+  shouldShowCheckbox?: boolean;
   /** Whether to show an opacity slider for this layer (default: true) */
-  shouldShowSlider?: boolean
+  shouldShowSlider?: boolean;
   /** Whether to show the legend for this layer (default: true) */
-  shouldShowLegendBox?: boolean
+  shouldShowLegendBox?: boolean;
   /** Alternative display name (overrides title in UI) */
-  layerNameChange?: string
+  layerNameChange?: string;
 }
 
 export interface LayerConfig {
-  id: string
-  title: string
-  type: 'fill' | 'line' | 'circle'
-  url: string
-  where?: string
-  minZoom?: number
-  maxZoom?: number
-  opacity: number
-  paint?: Record<string, unknown>
-  outlinePaint?: Record<string, unknown>
-  legend: LegendItem[]
-  popup: PopupConfig | null
+  id: string;
+  title: string;
+  type: "fill" | "line" | "circle";
+  url: string;
+  where?: string;
+  minZoom?: number;
+  maxZoom?: number;
+  opacity: number;
+  paint?: Record<string, unknown>;
+  outlinePaint?: Record<string, unknown>;
+  legend: LegendItem[];
+  popup: PopupConfig | null;
   /** Display options for sidebar controls */
-  displayOptions?: LayerDisplayOptions
+  displayOptions?: LayerDisplayOptions;
 }
 
 /**
@@ -65,34 +65,34 @@ export interface LayerConfig {
  */
 export interface LayerStyleOverride {
   /** MapLibre paint properties to override */
-  paint?: Record<string, unknown>
+  paint?: Record<string, unknown>;
   /** MapLibre outline paint properties (for polygons) */
-  outlinePaint?: Record<string, unknown>
+  outlinePaint?: Record<string, unknown>;
   /** Legend items to override */
-  legend?: LegendItem[]
+  legend?: LegendItem[];
   /** Override the layer type (fill, line, circle) */
-  type?: 'fill' | 'line' | 'circle'
+  type?: "fill" | "line" | "circle";
 }
 
 // MapLibre-specific paint property interfaces
 export interface CirclePaint {
-  'circle-radius': number | unknown[]
-  'circle-color': string | unknown[]
-  'circle-opacity'?: number
-  'circle-stroke-width'?: number
-  'circle-stroke-color'?: string
+  "circle-radius": number | unknown[];
+  "circle-color": string | unknown[];
+  "circle-opacity"?: number;
+  "circle-stroke-width"?: number;
+  "circle-stroke-color"?: string;
 }
 
 export interface LinePaint {
-  'line-width': number | unknown[]
-  'line-color': string | unknown[]
-  'line-opacity'?: number
+  "line-width": number | unknown[];
+  "line-color": string | unknown[];
+  "line-opacity"?: number;
 }
 
 export interface FillPaint {
-  'fill-color': string | unknown[]
-  'fill-opacity'?: number
-  'fill-outline-color'?: string
+  "fill-color": string | unknown[];
+  "fill-opacity"?: number;
+  "fill-outline-color"?: string;
 }
 
 /**
@@ -102,26 +102,26 @@ export interface FillPaint {
  */
 export interface TiledLayerConfig {
   /** Unique identifier for the tiled layer */
-  id: string
+  id: string;
   /** Display title for the layer */
-  title: string
+  title: string;
   /** ESRI MapServer tile URL (e.g., https://tiles.arcgis.com/.../MapServer) */
-  url: string
+  url: string;
   /** Z-index for layer ordering (higher = on top) */
-  zIndex?: number
+  zIndex?: number;
   /** Attribution text to display on the map */
-  attribution?: string
+  attribution?: string;
   /** Minimum zoom level at which the layer is visible */
-  minZoom?: number
+  minZoom?: number;
   /** Maximum zoom level at which the layer is visible */
-  maxZoom?: number
+  maxZoom?: number;
   /** Initial opacity (0-1, default 1) */
-  opacity?: number
+  opacity?: number;
   /**
    * Enable scale-based switching between tiled and dynamic rendering.
    * When enabled, uses pre-rendered tiles when zoomed out (better performance)
    * and switches to dynamic /export/ rendering when zoomed in (sharper imagery).
    * The switch threshold is fetched from the MapServer's layer definitions.
    */
-  scaleBasedRendering?: boolean
+  scaleBasedRendering?: boolean;
 }

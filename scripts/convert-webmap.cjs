@@ -9,8 +9,8 @@
  * Example: node scripts/convert-webmap.js 1596df70df0349e293ceec46a06ccc50 ./src/layers
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 // ============================================================================
 // CONFIGURATION
@@ -18,10 +18,10 @@ const path = require('path');
 
 // Resolve output directory relative to this script's location (project root)
 const SCRIPT_DIR = __dirname;
-const PROJECT_ROOT = path.resolve(SCRIPT_DIR, '..');
+const PROJECT_ROOT = path.resolve(SCRIPT_DIR, "..");
 
-const WEBMAP_ID = process.argv[2] || '1596df70df0349e293ceec46a06ccc50';
-const OUTPUT_DIR = process.argv[3] || path.join(PROJECT_ROOT, 'src', 'layers');
+const WEBMAP_ID = process.argv[2] || "1596df70df0349e293ceec46a06ccc50";
+const OUTPUT_DIR = process.argv[3] || path.join(PROJECT_ROOT, "src", "layers");
 const WEBMAP_URL = `https://phl.maps.arcgis.com/sharing/rest/content/items/${WEBMAP_ID}/data?f=json`;
 
 // ============================================================================
@@ -33,14 +33,14 @@ const WEBMAP_URL = `https://phl.maps.arcgis.com/sharing/rest/content/items/${WEB
  * Esri alpha is 0-255, CSS is 0-1
  */
 function esriColorToCSS(color) {
-  if (!color || !Array.isArray(color)) return '#888888';
+  if (!color || !Array.isArray(color)) return "#888888";
 
   const [r, g, b, a = 255] = color;
   const alpha = a / 255;
 
   if (alpha === 1) {
     // Return hex for full opacity
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
   }
 
   return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(2)})`;
@@ -106,21 +106,21 @@ function convertScaleRange(minScale, maxScale) {
  * Detect geometry type from Esri symbol type
  */
 function detectGeometryType(symbol) {
-  if (!symbol) return 'fill';
+  if (!symbol) return "fill";
 
   switch (symbol.type) {
-    case 'esriSFS': // Simple Fill Symbol
-      return 'fill';
-    case 'esriSLS': // Simple Line Symbol
-      return 'line';
-    case 'esriSMS': // Simple Marker Symbol
-      return 'circle';
-    case 'esriPMS': // Picture Marker Symbol
-      return 'symbol';
-    case 'esriPFS': // Picture Fill Symbol
-      return 'fill';
+    case "esriSFS": // Simple Fill Symbol
+      return "fill";
+    case "esriSLS": // Simple Line Symbol
+      return "line";
+    case "esriSMS": // Simple Marker Symbol
+      return "circle";
+    case "esriPMS": // Picture Marker Symbol
+      return "symbol";
+    case "esriPFS": // Picture Fill Symbol
+      return "fill";
     default:
-      return 'fill';
+      return "fill";
   }
 }
 
@@ -134,7 +134,7 @@ function detectGeometryType(symbol) {
  */
 function hasVisibleOutline(outline) {
   if (!outline) return false;
-  if (outline.style === 'esriSLSNull') return false;
+  if (outline.style === "esriSLSNull") return false;
   if (outline.color === null) return false;
   return true;
 }
@@ -150,10 +150,10 @@ function convertSimpleRenderer(renderer, layerOpacity) {
   let legend = [];
   let outlinePaint = null;
 
-  if (geomType === 'fill' && symbol) {
+  if (geomType === "fill" && symbol) {
     paint = {
-      'fill-color': esriColorToCSS(symbol.color),
-      'fill-opacity': convertOpacity(layerOpacity),
+      "fill-color": esriColorToCSS(symbol.color),
+      "fill-opacity": convertOpacity(layerOpacity),
     };
 
     // For fill layers with visible outlines, create separate outline paint
@@ -163,56 +163,62 @@ function convertSimpleRenderer(renderer, layerOpacity) {
       const outlineColor = esriColorToCSS(symbol.outline.color);
 
       // Always add fill-outline-color for the 1px fallback
-      paint['fill-outline-color'] = outlineColor;
+      paint["fill-outline-color"] = outlineColor;
 
       // If outline is thicker than 1px, create separate line paint
       if (outlineWidth > 1) {
         outlinePaint = {
-          'line-color': outlineColor,
-          'line-width': outlineWidth,
+          "line-color": outlineColor,
+          "line-width": outlineWidth,
         };
       }
     }
 
-    legend = [{
-      type: 'fill',
-      color: esriColorToCSS(symbol.color),
-      label: renderer.label || 'Feature',
-    }];
-  } else if (geomType === 'line' && symbol) {
+    legend = [
+      {
+        type: "fill",
+        color: esriColorToCSS(symbol.color),
+        label: renderer.label || "Feature",
+      },
+    ];
+  } else if (geomType === "line" && symbol) {
     paint = {
-      'line-color': esriColorToCSS(symbol.color),
-      'line-width': symbol.width || 1,
-      'line-opacity': convertOpacity(layerOpacity),
+      "line-color": esriColorToCSS(symbol.color),
+      "line-width": symbol.width || 1,
+      "line-opacity": convertOpacity(layerOpacity),
     };
 
-    legend = [{
-      type: 'line',
-      color: esriColorToCSS(symbol.color),
-      width: symbol.width || 1,
-      label: renderer.label || 'Feature',
-    }];
-  } else if (geomType === 'circle' && symbol) {
+    legend = [
+      {
+        type: "line",
+        color: esriColorToCSS(symbol.color),
+        width: symbol.width || 1,
+        label: renderer.label || "Feature",
+      },
+    ];
+  } else if (geomType === "circle" && symbol) {
     // Esri size is diameter in points, MapLibre radius is in pixels
     // Empirically tuned multiplier to match Esri rendering
     const radius = Math.round((symbol.size || 6) * 0.71 * 100) / 100;
 
     paint = {
-      'circle-color': esriColorToCSS(symbol.color),
-      'circle-radius': radius,
-      'circle-opacity': convertOpacity(layerOpacity),
+      "circle-color": esriColorToCSS(symbol.color),
+      "circle-radius": radius,
+      "circle-opacity": convertOpacity(layerOpacity),
     };
 
     if (hasVisibleOutline(symbol.outline)) {
-      paint['circle-stroke-color'] = esriColorToCSS(symbol.outline.color);
-      paint['circle-stroke-width'] = symbol.outline.width || 1;
+      paint["circle-stroke-color"] = esriColorToCSS(symbol.outline.color);
+      paint["circle-stroke-width"] = symbol.outline.width || 1;
     }
 
-    legend = [{
-      type: 'circle',
-      color: esriColorToCSS(symbol.color),
-      label: renderer.label || 'Feature',
-    }];
+    legend = [
+      {
+        type: "circle",
+        color: esriColorToCSS(symbol.color),
+        label: renderer.label || "Feature",
+      },
+    ];
   }
 
   return { paint, legend, geomType, outlinePaint };
@@ -226,9 +232,9 @@ function convertSimpleRenderer(renderer, layerOpacity) {
 function coerceMatchValue(value) {
   // If it's a string that looks like a number, use the numeric form
   // since ArcGIS GeoJSON returns numeric fields as numbers
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     const num = Number(value);
-    if (!isNaN(num) && value.trim() !== '') {
+    if (!isNaN(num) && value.trim() !== "") {
       return num;
     }
   }
@@ -254,27 +260,27 @@ function convertUniqueValueRenderer(renderer, layerOpacity) {
   let legend = [];
   let outlinePaint = null;
 
-  if (geomType === 'fill') {
+  if (geomType === "fill") {
     // Build match expression for fill-color
-    const colorMatch = ['match', ['get', field]];
+    const colorMatch = ["match", ["get", field]];
 
     for (const info of uniqueValueInfos) {
       colorMatch.push(coerceMatchValue(info.value));
       colorMatch.push(esriColorToCSS(info.symbol?.color));
 
       legend.push({
-        type: 'fill',
+        type: "fill",
         color: esriColorToCSS(info.symbol?.color),
         label: info.label || info.value,
       });
     }
 
     // Default color
-    colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : '#888888');
+    colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : "#888888");
 
     paint = {
-      'fill-color': colorMatch,
-      'fill-opacity': convertOpacity(layerOpacity),
+      "fill-color": colorMatch,
+      "fill-opacity": convertOpacity(layerOpacity),
     };
 
     // Handle outline if present
@@ -282,67 +288,67 @@ function convertUniqueValueRenderer(renderer, layerOpacity) {
       const outlineWidth = firstSymbol.outline.width || 1;
       const outlineColor = esriColorToCSS(firstSymbol.outline.color);
 
-      paint['fill-outline-color'] = outlineColor;
+      paint["fill-outline-color"] = outlineColor;
 
       // If outline is thicker than 1px, create separate line paint
       if (outlineWidth > 1) {
         outlinePaint = {
-          'line-color': outlineColor,
-          'line-width': outlineWidth,
+          "line-color": outlineColor,
+          "line-width": outlineWidth,
         };
       }
     }
-  } else if (geomType === 'line') {
-    const colorMatch = ['match', ['get', field]];
+  } else if (geomType === "line") {
+    const colorMatch = ["match", ["get", field]];
 
     for (const info of uniqueValueInfos) {
       colorMatch.push(coerceMatchValue(info.value));
       colorMatch.push(esriColorToCSS(info.symbol?.color));
 
       legend.push({
-        type: 'line',
+        type: "line",
         color: esriColorToCSS(info.symbol?.color),
         width: info.symbol?.width || 1,
         label: info.label || info.value,
       });
     }
 
-    colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : '#888888');
+    colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : "#888888");
 
     paint = {
-      'line-color': colorMatch,
-      'line-width': firstSymbol?.width || 2,
-      'line-opacity': convertOpacity(layerOpacity),
+      "line-color": colorMatch,
+      "line-width": firstSymbol?.width || 2,
+      "line-opacity": convertOpacity(layerOpacity),
     };
-  } else if (geomType === 'circle') {
-    const colorMatch = ['match', ['get', field]];
+  } else if (geomType === "circle") {
+    const colorMatch = ["match", ["get", field]];
 
     for (const info of uniqueValueInfos) {
       colorMatch.push(coerceMatchValue(info.value));
       colorMatch.push(esriColorToCSS(info.symbol?.color));
 
       legend.push({
-        type: 'circle',
+        type: "circle",
         color: esriColorToCSS(info.symbol?.color),
         label: info.label || info.value,
       });
     }
 
-    colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : '#888888');
+    colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : "#888888");
 
     // Esri size is diameter in points, MapLibre radius is in pixels
     // Empirically tuned multiplier to match Esri rendering
     const radius = Math.round((firstSymbol?.size || 6) * 0.71 * 100) / 100;
 
     paint = {
-      'circle-color': colorMatch,
-      'circle-radius': radius,
-      'circle-opacity': convertOpacity(layerOpacity),
+      "circle-color": colorMatch,
+      "circle-radius": radius,
+      "circle-opacity": convertOpacity(layerOpacity),
     };
 
     if (hasVisibleOutline(firstSymbol?.outline)) {
-      paint['circle-stroke-color'] = esriColorToCSS(firstSymbol.outline.color);
-      paint['circle-stroke-width'] = firstSymbol.outline.width || 1;
+      paint["circle-stroke-color"] = esriColorToCSS(firstSymbol.outline.color);
+      paint["circle-stroke-width"] = firstSymbol.outline.width || 1;
     }
   }
 
@@ -357,7 +363,7 @@ function convertClassBreaksRenderer(renderer, layerOpacity) {
   const classBreakInfos = renderer.classBreakInfos || [];
 
   if (classBreakInfos.length === 0) {
-    return { paint: {}, legend: [], geomType: 'fill', outlinePaint: null };
+    return { paint: {}, legend: [], geomType: "fill", outlinePaint: null };
   }
 
   const firstSymbol = classBreakInfos[0]?.symbol;
@@ -367,10 +373,10 @@ function convertClassBreaksRenderer(renderer, layerOpacity) {
   let legend = [];
   let outlinePaint = null;
 
-  if (geomType === 'fill') {
+  if (geomType === "fill") {
     // Build step expression for fill-color
     // step format: ["step", ["get", field], color0, stop1, color1, stop2, color2, ...]
-    const colorStep = ['step', ['get', field]];
+    const colorStep = ["step", ["get", field]];
 
     // Add first color (for values below first break)
     colorStep.push(esriColorToCSS(classBreakInfos[0]?.symbol?.color));
@@ -385,27 +391,27 @@ function convertClassBreaksRenderer(renderer, layerOpacity) {
       }
 
       legend.push({
-        type: 'fill',
+        type: "fill",
         color: esriColorToCSS(info.symbol?.color),
         label: info.label || `${info.classMaxValue}`,
       });
     }
 
     paint = {
-      'fill-color': colorStep,
-      'fill-opacity': convertOpacity(layerOpacity),
+      "fill-color": colorStep,
+      "fill-opacity": convertOpacity(layerOpacity),
     };
 
     if (hasVisibleOutline(firstSymbol?.outline)) {
       const outlineWidth = firstSymbol.outline.width || 1;
       const outlineColor = esriColorToCSS(firstSymbol.outline.color);
 
-      paint['fill-outline-color'] = outlineColor;
+      paint["fill-outline-color"] = outlineColor;
 
       if (outlineWidth > 1) {
         outlinePaint = {
-          'line-color': outlineColor,
-          'line-width': outlineWidth,
+          "line-color": outlineColor,
+          "line-width": outlineWidth,
         };
       }
     }
@@ -419,21 +425,21 @@ function convertClassBreaksRenderer(renderer, layerOpacity) {
  */
 function convertRenderer(drawingInfo, layerOpacity) {
   if (!drawingInfo?.renderer) {
-    return { paint: {}, legend: [], geomType: 'fill', outlinePaint: null };
+    return { paint: {}, legend: [], geomType: "fill", outlinePaint: null };
   }
 
   const renderer = drawingInfo.renderer;
 
   switch (renderer.type) {
-    case 'simple':
+    case "simple":
       return convertSimpleRenderer(renderer, layerOpacity);
-    case 'uniqueValue':
+    case "uniqueValue":
       return convertUniqueValueRenderer(renderer, layerOpacity);
-    case 'classBreaks':
+    case "classBreaks":
       return convertClassBreaksRenderer(renderer, layerOpacity);
     default:
       console.warn(`Unknown renderer type: ${renderer.type}`);
-      return { paint: {}, legend: [], geomType: 'fill', outlinePaint: null };
+      return { paint: {}, legend: [], geomType: "fill", outlinePaint: null };
   }
 }
 
@@ -447,7 +453,7 @@ function convertRenderer(drawingInfo, layerOpacity) {
 function convertPopupInfo(popupInfo) {
   if (!popupInfo) return null;
 
-  const title = popupInfo.title || '';
+  const title = popupInfo.title || "";
   const fieldInfos = popupInfo.fieldInfos || [];
 
   // Filter to visible fields only and include format info
@@ -495,16 +501,14 @@ function convertPopupInfo(popupInfo) {
  */
 function titleToId(title) {
   // Remove the "Group_" prefix
-  const cleanTitle = title.includes('_')
-    ? title.split('_').slice(1).join('_')
-    : title;
+  const cleanTitle = title.includes("_") ? title.split("_").slice(1).join("_") : title;
 
   // Convert to camelCase
   return cleanTitle
     .toLowerCase()
     .replace(/[^a-z0-9]+(.)/g, (_, char) => char.toUpperCase())
-    .replace(/[^a-z0-9]/gi, '')
-    .replace(/^[0-9]/, '_$&'); // Prefix with _ if starts with number
+    .replace(/[^a-z0-9]/gi, "")
+    .replace(/^[0-9]/, "_$&"); // Prefix with _ if starts with number
 }
 
 /**
@@ -512,23 +516,19 @@ function titleToId(title) {
  */
 function titleToKebab(title) {
   // Remove the "Group_" prefix
-  const cleanTitle = title.includes('_')
-    ? title.split('_').slice(1).join(' ')
-    : title;
+  const cleanTitle = title.includes("_") ? title.split("_").slice(1).join(" ") : title;
 
   return cleanTitle
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 /**
  * Get display title (without group prefix)
  */
 function getDisplayTitle(title) {
-  return title.includes('_')
-    ? title.split('_').slice(1).join(' ')
-    : title;
+  return title.includes("_") ? title.split("_").slice(1).join(" ") : title;
 }
 
 // ============================================================================
@@ -539,10 +539,7 @@ function getDisplayTitle(title) {
  * Generate TypeScript layer config file content
  */
 function generateLayerFile(layer, index) {
-  const result = convertRenderer(
-    layer.layerDefinition?.drawingInfo,
-    layer.opacity
-  );
+  const result = convertRenderer(layer.layerDefinition?.drawingInfo, layer.opacity);
   const { paint, legend, geomType, outlinePaint } = result;
 
   const popup = convertPopupInfo(layer.popupInfo);
@@ -559,19 +556,19 @@ function generateLayerFile(layer, index) {
   const zoomRange = convertScaleRange(minScale, maxScale);
 
   // Determine MapLibre layer type
-  const maplibreType = geomType === 'symbol' ? 'circle' : geomType;
+  const maplibreType = geomType === "symbol" ? "circle" : geomType;
 
   // Build the where clause line
-  const whereClauseLine = where ? `\n  where: ${JSON.stringify(where)},` : '';
+  const whereClauseLine = where ? `\n  where: ${JSON.stringify(where)},` : "";
 
   // Build the zoom range lines
-  const minZoomLine = zoomRange.minZoom !== undefined ? `\n  minZoom: ${zoomRange.minZoom},` : '';
-  const maxZoomLine = zoomRange.maxZoom !== undefined ? `\n  maxZoom: ${zoomRange.maxZoom},` : '';
+  const minZoomLine = zoomRange.minZoom !== undefined ? `\n  minZoom: ${zoomRange.minZoom},` : "";
+  const maxZoomLine = zoomRange.maxZoom !== undefined ? `\n  maxZoom: ${zoomRange.maxZoom},` : "";
 
   // Build the outlinePaint line (for fill layers with thick outlines)
   const outlinePaintLine = outlinePaint
-    ? `\n\n  outlinePaint: ${JSON.stringify(outlinePaint, null, 4).replace(/\n/g, '\n  ')} as LineLayerSpecification["paint"],`
-    : '';
+    ? `\n\n  outlinePaint: ${JSON.stringify(outlinePaint, null, 4).replace(/\n/g, "\n  ")} as LineLayerSpecification["paint"],`
+    : "";
 
   // Need to import LineLayerSpecification if we have outlinePaint
   const imports = outlinePaint
@@ -594,11 +591,11 @@ export const ${varName} = {
   url: "${layer.url}",${whereClauseLine}${minZoomLine}${maxZoomLine}
   opacity: ${layer.opacity ?? 1},
 
-  paint: ${JSON.stringify(paint, null, 4).replace(/\n/g, '\n  ')} as ${capitalize(maplibreType)}LayerSpecification["paint"],${outlinePaintLine}
+  paint: ${JSON.stringify(paint, null, 4).replace(/\n/g, "\n  ")} as ${capitalize(maplibreType)}LayerSpecification["paint"],${outlinePaintLine}
 
-  legend: ${JSON.stringify(legend, null, 4).replace(/\n/g, '\n  ')},
+  legend: ${JSON.stringify(legend, null, 4).replace(/\n/g, "\n  ")},
 
-  popup: ${popup ? JSON.stringify(popup, null, 4).replace(/\n/g, '\n  ') : 'null'},
+  popup: ${popup ? JSON.stringify(popup, null, 4).replace(/\n/g, "\n  ") : "null"},
 };
 `;
 
@@ -618,13 +615,11 @@ function capitalize(str) {
  * Generate index.ts that exports all layers
  */
 function generateIndexFile(layers) {
-  const imports = layers.map(l =>
-    `import { ${l.varName} } from "./${l.fileName.replace('.ts', '')}";`
-  ).join('\n');
+  const imports = layers.map(l => `import { ${l.varName} } from "./${l.fileName.replace(".ts", "")}";`).join("\n");
 
-  const exports = layers.map(l => `  ${l.varName},`).join('\n');
+  const exports = layers.map(l => `  ${l.varName},`).join("\n");
 
-  const layerList = layers.map(l => `  ${l.varName},`).join('\n');
+  const layerList = layers.map(l => `  ${l.varName},`).join("\n");
 
   return `/**
  * Layer Index
@@ -745,7 +740,6 @@ async function main() {
       // Write layer file
       const filePath = path.join(OUTPUT_DIR, fileInfo.fileName);
       fs.writeFileSync(filePath, fileInfo.content);
-
     } catch (err) {
       console.error(`Error converting ${layer.title}:`, err.message);
     }
@@ -753,21 +747,21 @@ async function main() {
 
   // Write index.ts
   const indexContent = generateIndexFile(layerFiles);
-  fs.writeFileSync(path.join(OUTPUT_DIR, 'index.ts'), indexContent);
+  fs.writeFileSync(path.join(OUTPUT_DIR, "index.ts"), indexContent);
 
   // Write types.ts
   const typesContent = generateTypesFile();
-  fs.writeFileSync(path.join(OUTPUT_DIR, 'types.ts'), typesContent);
+  fs.writeFileSync(path.join(OUTPUT_DIR, "types.ts"), typesContent);
 
   console.log(`\nGenerated ${layerFiles.length} layer files`);
   console.log(`Output: ${OUTPUT_DIR}`);
-  console.log('\nFiles created:');
-  console.log('  - types.ts');
-  console.log('  - index.ts');
+  console.log("\nFiles created:");
+  console.log("  - types.ts");
+  console.log("  - index.ts");
   layerFiles.forEach(f => console.log(`  - ${f.fileName}`));
 }
 
 main().catch(err => {
-  console.error('Error:', err);
+  console.error("Error:", err);
   process.exit(1);
 });

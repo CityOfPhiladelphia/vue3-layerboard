@@ -1,2 +1,2 @@
 // Framework utilities
-export { transformWebMapToLayerConfigs } from './webmap-transformer'
+export { transformWebMapToLayerConfigs } from "./webmap-transformer";
