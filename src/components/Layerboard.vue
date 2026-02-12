@@ -1267,7 +1267,7 @@ body {
   /* Position header for dropdown menu */
   .layerboard-header {
     position: relative;
-    padding: 4px 12px;
+    padding: 8px 12px;
     gap: 10px;
   }
 
