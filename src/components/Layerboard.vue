@@ -1004,14 +1004,12 @@ body {
   padding: 0.5em;
   background-color: #0f4d90;
   color: white;
-  opacity: 0;
   text-decoration: underline;
 }
 
 .skip-to-main-content-link:focus {
   left: 0px;
   top: 0px;
-  opacity: 1;
 }
 
 .skip-to-main-content-link:hover {
