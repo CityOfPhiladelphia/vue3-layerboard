@@ -668,7 +668,7 @@ onBeforeUnmount(() => {
         aria-label="Toggle menu"
         @click="toggleMobileMenu"
       >
-        <Icon :icon-definition="faBars" size="medium" decorative />
+        <Icon :icon-definition="faBars" size="medium" inline decorative />
       </button>
 
       <slot name="header">
@@ -989,7 +989,7 @@ body {
 .layerboard-layout {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
   width: 100vw;
   overflow: hidden;
   font-family:
@@ -1181,6 +1181,7 @@ body {
   color: white;
   cursor: pointer;
   padding: 0;
+  font-size: 22px;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
@@ -1267,6 +1268,7 @@ body {
   .layerboard-header {
     position: relative;
     padding: 4px 12px;
+    gap: 10px;
   }
 
   .layerboard-main {
