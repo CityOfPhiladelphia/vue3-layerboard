@@ -46,7 +46,7 @@
   "dependencies": {
     "@phila/phila-ui-core": "2.3.1-beta.0",
     "@phila/phila-ui-link": "1.0.2-beta.0",
-    "@phila/phila-ui-map-core": "0.0.3-beta.4",
+    "@phila/phila-ui-map-core": "0.0.3-beta.5",
     "@phila/phila-ui-text-field": "1.1.1-beta.0"
   },
   "devDependencies": {

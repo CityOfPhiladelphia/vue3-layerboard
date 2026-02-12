@@ -1157,8 +1157,8 @@ export async function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): Pro
       const forceServiceRenderer = USE_SERVICE_RENDERER.includes(layer.title);
 
       // Preserve webmap outline info before potentially replacing with service renderer
-      const webmapOutline = drawingInfo?.renderer?.uniqueValueInfos?.[0]?.symbol?.outline
-        || drawingInfo?.renderer?.defaultSymbol?.outline;
+      const webmapOutline =
+        drawingInfo?.renderer?.uniqueValueInfos?.[0]?.symbol?.outline || drawingInfo?.renderer?.defaultSymbol?.outline;
 
       if ((needsServiceRenderer || forceServiceRenderer) && layer.url) {
         if (forceServiceRenderer) {
@@ -1177,8 +1177,7 @@ export async function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): Pro
           // apply the webmap outline to the service renderer's symbols
           if (webmapOutline && hasVisibleOutline(webmapOutline) && drawingInfo?.renderer) {
             const renderer = drawingInfo.renderer;
-            const serviceOutline = renderer.uniqueValueInfos?.[0]?.symbol?.outline
-              || renderer.defaultSymbol?.outline;
+            const serviceOutline = renderer.uniqueValueInfos?.[0]?.symbol?.outline || renderer.defaultSymbol?.outline;
             if (!hasVisibleOutline(serviceOutline)) {
               for (const info of renderer.uniqueValueInfos || []) {
                 if (info.symbol) {

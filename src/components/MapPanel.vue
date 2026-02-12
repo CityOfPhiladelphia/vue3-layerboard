@@ -1005,7 +1005,11 @@ const popupHtml = computed(() => {
       const value = formatFieldValue(feature.properties[field.field], field.format, feature.popupConfig.showTime);
       const labelLower = field.label.toLowerCase();
       const labelIsUrl = labelLower.includes("url") || labelLower.includes("website");
-      const isUrl = value.startsWith("http://") || value.startsWith("https://") || value.startsWith("www.") || (labelIsUrl && value.includes("."));
+      const isUrl =
+        value.startsWith("http://") ||
+        value.startsWith("https://") ||
+        value.startsWith("www.") ||
+        (labelIsUrl && value.includes("."));
       const linkHref = value.startsWith("http://") || value.startsWith("https://") ? value : `https://${value}`;
       const displayValue = isUrl
         ? `<a href="${escapeHtml(linkHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(value)}</a>`
