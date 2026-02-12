@@ -412,10 +412,30 @@ function onOpacityChange(layerId: string, event: Event) {
 
 /* Loading indicator */
 .loading-indicator {
-  font-size: 11px;
+  font-size: 13px;
   color: #0f4d90;
   font-style: italic;
   margin-left: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.loading-indicator::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #0f4d90;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Error indicator */

@@ -741,7 +741,7 @@ function formatFieldValue(value: unknown, format?: PopupFieldFormat, showTime?: 
     const useDigitSeparator = format?.digitSeparator ?? true;
 
     if (places !== undefined) {
-      if (Number.isInteger(value) && places > 0) {
+      if (Number.isInteger(value) && places >= 0) {
         return String(value);
       }
       const formatted = value.toFixed(places);
@@ -755,6 +755,7 @@ function formatFieldValue(value: unknown, format?: PopupFieldFormat, showTime?: 
       return formatted;
     }
 
+    if (Number.isInteger(value)) return String(value);
     return useDigitSeparator ? value.toLocaleString() : String(value);
   }
 
@@ -1002,9 +1003,12 @@ const popupHtml = computed(() => {
     html += `<table class="popup-table" aria-label="${escapeHtml(popupTitle.value)}">`;
     for (const field of feature.popupConfig.fields) {
       const value = formatFieldValue(feature.properties[field.field], field.format, feature.popupConfig.showTime);
-      const isUrl = value.startsWith("http://") || value.startsWith("https://");
+      const labelLower = field.label.toLowerCase();
+      const labelIsUrl = labelLower.includes("url") || labelLower.includes("website");
+      const isUrl = value.startsWith("http://") || value.startsWith("https://") || value.startsWith("www.") || (labelIsUrl && value.includes("."));
+      const linkHref = value.startsWith("http://") || value.startsWith("https://") ? value : `https://${value}`;
       const displayValue = isUrl
-        ? `<a href="${escapeHtml(value)}" target="_blank" rel="noopener noreferrer">${escapeHtml(value)}</a>`
+        ? `<a href="${escapeHtml(linkHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(value)}</a>`
         : escapeHtml(value);
       html += `<tr><th scope="row">${escapeHtml(field.label)}</th><td>${displayValue}</td></tr>`;
     }
@@ -1461,6 +1465,7 @@ function handleSearchResult(result: AisGeocodeResult) {
         :lng-lat="popupLngLat"
         :html="popupHtml"
         :close-on-click="false"
+        :offset="[0, -15]"
         :show-navigation="popupFeatures.length > 1"
         :current-feature-index="currentFeatureIndex"
         :total-features="popupFeatures.length"
