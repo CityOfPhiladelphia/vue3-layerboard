@@ -12,7 +12,6 @@ import {
 } from "@phila/phila-ui-map-core";
 import type { CyclomediaConfig, PictometryCredentials, AisGeocodeResult } from "@phila/phila-ui-map-core";
 import type { LngLatLike, CircleLayerSpecification, LineLayerSpecification } from "maplibre-gl";
-import bboxClip from "@turf/bbox-clip";
 import type { TiledLayerConfig } from "@/types/layer";
 
 // Bounds type for spatial queries
@@ -126,17 +125,12 @@ const currentBounds = ref<Bounds | null>(null);
 // Used to determine which layers are newly visible and need fetching
 const previouslyVisibleLayers = ref<Set<string>>(new Set());
 
-// Layers with complex geometries that should be clipped to viewport bounds
-// This reduces MapLibre's rendering workload by only rendering visible portions
-const CLIP_TO_VIEWPORT_LAYER_IDS: string[] = [];
-
 // Layers with complex geometries that need server-side simplification via maxAllowableOffset
 // The ArcGIS server reduces vertex count before sending, scaling with zoom level
 const SIMPLIFY_GEOMETRY_LAYER_IDS = ["zoning-overlays", "fema-100-year-floodplain", "fema-500-year-floodplain"];
 
 // Helper to fetch features within a bounding box from ArcGIS FeatureServer
 // Automatically paginates if more than 2000 features exist in the bounds
-// For configured layers, clips geometries to viewport bounds to improve rendering performance
 async function fetchFeaturesInBounds(
   url: string,
   bounds: Bounds,
@@ -201,30 +195,6 @@ async function fetchFeaturesInBounds(
     }
     return feature;
   });
-
-  // Clip geometries to viewport bounds for configured layers
-  // This reduces MapLibre's rendering workload - similar to how Leaflet only rendered visible portions
-  if (CLIP_TO_VIEWPORT_LAYER_IDS.includes(layerId)) {
-    const bboxArray: [number, number, number, number] = [bounds.west, bounds.south, bounds.east, bounds.north];
-
-    allFeatures = allFeatures.map(feature => {
-      // Only clip polygon geometries (the complex ones causing performance issues)
-      if (feature.geometry && (feature.geometry.type === "Polygon" || feature.geometry.type === "MultiPolygon")) {
-        try {
-          // Clip the feature to the viewport bounds
-          // Type assertion needed because we've already verified it's a Polygon or MultiPolygon
-          const clipped = bboxClip(feature as GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPolygon>, bboxArray);
-          return clipped;
-        } catch (err) {
-          // If clipping fails, return the original feature
-          console.warn(`Failed to clip feature in ${layerId}:`, err);
-          return feature;
-        }
-      }
-      // Return non-polygon features unchanged
-      return feature;
-    });
-  }
 
   return {
     type: "FeatureCollection",
