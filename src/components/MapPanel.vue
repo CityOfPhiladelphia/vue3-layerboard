@@ -132,7 +132,7 @@ const CLIP_TO_VIEWPORT_LAYER_IDS = ["fema-100-year-floodplain", "fema-500-year-f
 
 // Layers with complex geometries that need server-side simplification via maxAllowableOffset
 // The ArcGIS server reduces vertex count before sending, scaling with zoom level
-const SIMPLIFY_GEOMETRY_LAYER_IDS = ["zoning-overlays"];
+const SIMPLIFY_GEOMETRY_LAYER_IDS = ["zoning-overlays", "fema-100-year-floodplain", "fema-500-year-floodplain"];
 
 // Helper to fetch features within a bounding box from ArcGIS FeatureServer
 // Automatically paginates if more than 2000 features exist in the bounds
