@@ -130,6 +130,10 @@ const previouslyVisibleLayers = ref<Set<string>>(new Set());
 // This reduces MapLibre's rendering workload by only rendering visible portions
 const CLIP_TO_VIEWPORT_LAYER_IDS = ["fema-100-year-floodplain", "fema-500-year-floodplain"];
 
+// Layers with complex geometries that need server-side simplification via maxAllowableOffset
+// The ArcGIS server reduces vertex count before sending, scaling with zoom level
+const SIMPLIFY_GEOMETRY_LAYER_IDS = ["zoning-overlays"];
+
 // Helper to fetch features within a bounding box from ArcGIS FeatureServer
 // Automatically paginates if more than 2000 features exist in the bounds
 // For configured layers, clips geometries to viewport bounds to improve rendering performance
@@ -138,6 +142,7 @@ async function fetchFeaturesInBounds(
   bounds: Bounds,
   layerId: string,
   where?: string,
+  zoom?: number,
 ): Promise<GeoJSON.FeatureCollection> {
   const whereClause = encodeURIComponent(where || "1=1");
 
@@ -150,6 +155,13 @@ async function fetchFeaturesInBounds(
     spatialReference: { wkid: 4326 },
   });
 
+  // For layers with complex geometries, ask the server to simplify before sending
+  // Tolerance is ~1 pixel at the current zoom: detail increases as you zoom in
+  const simplifyParam =
+    zoom !== undefined && SIMPLIFY_GEOMETRY_LAYER_IDS.includes(layerId)
+      ? `&maxAllowableOffset=${360 / (Math.pow(2, zoom) * 512)}`
+      : "";
+
   const pageSize = 2000;
   let offset = 0;
   let allFeatures: GeoJSON.Feature[] = [];
@@ -157,7 +169,7 @@ async function fetchFeaturesInBounds(
 
   // Fetch all features within bounds, paginating if necessary
   while (hasMore) {
-    const queryUrl = `${url}/query?where=${whereClause}&geometry=${encodeURIComponent(geometry)}&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=true&resultRecordCount=${pageSize}&resultOffset=${offset}&f=geojson`;
+    const queryUrl = `${url}/query?where=${whereClause}&geometry=${encodeURIComponent(geometry)}&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=true&resultRecordCount=${pageSize}&resultOffset=${offset}${simplifyParam}&f=geojson`;
 
     const response = await fetch(queryUrl);
 
@@ -230,7 +242,8 @@ async function fetchSpecificLayers(bounds: Bounds, layerIds: string[]) {
 
     emit("layerLoading", layerId, true);
     try {
-      const data = await fetchFeaturesInBounds(config.url, bounds, layerId, config.where);
+      const zoom = mapInstance.value?.getZoom();
+      const data = await fetchFeaturesInBounds(config.url, bounds, layerId, config.where, zoom);
       layerData.value = { ...layerData.value, [layerId]: data };
       emit("layerError", layerId, null);
     } catch (err) {
