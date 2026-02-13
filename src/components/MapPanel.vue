@@ -128,7 +128,7 @@ const previouslyVisibleLayers = ref<Set<string>>(new Set());
 
 // Layers with complex geometries that should be clipped to viewport bounds
 // This reduces MapLibre's rendering workload by only rendering visible portions
-const CLIP_TO_VIEWPORT_LAYER_IDS = ["fema-100-year-floodplain", "fema-500-year-floodplain"];
+const CLIP_TO_VIEWPORT_LAYER_IDS: string[] = [];
 
 // Layers with complex geometries that need server-side simplification via maxAllowableOffset
 // The ArcGIS server reduces vertex count before sending, scaling with zoom level
