@@ -127,7 +127,7 @@ function onOpacityChange(layerId: string, event: Event) {
         />
         <span class="layer-title">
           {{ getLayerDisplayName(layer) }}
-          <span v-if="isLayerLoading(layer.id)" class="loading-indicator" role="status"> Loading... </span>
+          <span v-if="isLayerLoading(layer.id) && isLayerAvailableAtZoom(layer)" class="loading-indicator" role="status"> Loading... </span>
           <span
             v-if="getLayerError(layer.id)"
             class="error-indicator"
@@ -151,7 +151,7 @@ function onOpacityChange(layerId: string, event: Event) {
       >
         <span class="layer-title">
           {{ getLayerDisplayName(layer) }}
-          <span v-if="isLayerLoading(layer.id)" class="loading-indicator" role="status"> Loading... </span>
+          <span v-if="isLayerLoading(layer.id) && isLayerAvailableAtZoom(layer)" class="loading-indicator" role="status"> Loading... </span>
           <span
             v-if="getLayerError(layer.id)"
             class="error-indicator"
@@ -165,7 +165,7 @@ function onOpacityChange(layerId: string, event: Event) {
       </div>
 
       <!-- Opacity slider (respects per-layer shouldShowSlider) -->
-      <div v-if="shouldShowSlider(layer) && isVisible(layer.id)" class="opacity-control">
+      <div v-if="shouldShowSlider(layer) && isVisible(layer.id) && isLayerAvailableAtZoom(layer)" class="opacity-control">
         <label class="opacity-label" :for="'opacity-' + layer.id">
           Opacity: {{ Math.round(getLayerOpacity(layer.id) * 100) }}%
         </label>
@@ -184,7 +184,7 @@ function onOpacityChange(layerId: string, event: Event) {
 
       <!-- Legend (respects per-layer shouldShowLegendBox) -->
       <ul
-        v-if="shouldShowLegendBox(layer) && isVisible(layer.id) && layer.legend?.length"
+        v-if="shouldShowLegendBox(layer) && isVisible(layer.id) && isLayerAvailableAtZoom(layer) && layer.legend?.length"
         class="layer-legend"
         :aria-label="'Legend for ' + getLayerDisplayName(layer)"
       >
@@ -300,7 +300,7 @@ function onOpacityChange(layerId: string, event: Event) {
 }
 
 .zoom-indicator {
-  font-size: 11px;
+  font-size: 13px;
   color: #767676;
   font-style: italic;
   margin-left: 4px;
