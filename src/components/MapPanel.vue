@@ -264,9 +264,9 @@ function onMapLoad(map: any) {
 }
 
 // Watch for visibility changes - fetch only newly visible layers
-// We watch the Set size because the Set is mutated (not replaced), so watching the Set itself won't trigger
+// We watch the Set reference because Layerboard replaces the Set on every change
 watch(
-  () => props.visibleLayers.size,
+  () => props.visibleLayers,
   async () => {
     // Close any open popup when layer visibility changes
     // This prevents showing data from a layer that's no longer visible
