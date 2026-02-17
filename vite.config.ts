@@ -8,7 +8,7 @@ import dts from "vite-plugin-dts";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
-  plugins: [vue(), vueDevTools(), dts({ include: ["src"] })],
+  plugins: [vue(), vueDevTools(), dts({ include: ["src"], tsconfigPath: "./tsconfig.app.json" })],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
