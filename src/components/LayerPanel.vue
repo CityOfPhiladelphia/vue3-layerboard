@@ -180,7 +180,7 @@ function onOpacityChange(layerId: string, event: Event) {
             />
             <span class="layer-title">
               {{ layer.config.title }}
-              <span v-if="isLayerLoading(layer.config.id)" class="loading-indicator" role="status"> Loading... </span>
+              <span v-if="isLayerLoading(layer.config.id) && isLayerAvailableAtZoom(layer.config)" class="loading-indicator" role="status"> Loading... </span>
               <span
                 v-if="getLayerError(layer.config.id)"
                 class="error-indicator"
@@ -195,7 +195,7 @@ function onOpacityChange(layerId: string, event: Event) {
         </div>
 
         <!-- Opacity slider (shown when layer is visible and showOpacity is true) -->
-        <div v-if="showOpacity && isVisible(layer.config.id)" class="opacity-control">
+        <div v-if="showOpacity && isVisible(layer.config.id) && isLayerAvailableAtZoom(layer.config)" class="opacity-control">
           <label class="opacity-label" :for="'opacity-' + layer.config.id">
             Opacity: {{ Math.round(getLayerOpacity(layer.config.id) * 100) }}%
           </label>
@@ -214,7 +214,7 @@ function onOpacityChange(layerId: string, event: Event) {
 
         <!-- Legend (shown when layer is visible, showLegend is true, and has legend items) -->
         <ul
-          v-if="showLegend && isVisible(layer.config.id) && layer.config.legend?.length"
+          v-if="showLegend && isVisible(layer.config.id) && isLayerAvailableAtZoom(layer.config) && layer.config.legend?.length"
           class="layer-legend"
           :aria-label="'Legend for ' + layer.config.title"
         >
@@ -404,7 +404,7 @@ function onOpacityChange(layerId: string, event: Event) {
 }
 
 .zoom-indicator {
-  font-size: 11px;
+  font-size: 13px;
   color: #767676;
   font-style: italic;
   margin-left: 4px;
