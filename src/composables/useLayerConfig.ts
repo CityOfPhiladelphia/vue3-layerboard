@@ -9,8 +9,6 @@ export function useLayerConfig() {
   const visibleLayerIds = ref<Set<string>>(new Set());
   const loadingLayerIds = ref<Set<string>>(new Set());
 
-  // TODO: Extract layer state logic from App.vue
-
   function toggleLayer(layerId: string) {
     if (visibleLayerIds.value.has(layerId)) {
       visibleLayerIds.value.delete(layerId);
