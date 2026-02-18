@@ -10,6 +10,7 @@
 
 import type { LayerConfig } from "@/types/layer";
 import { shouldShowCheckbox, shouldShowSlider, shouldShowLegendBox, getLayerDisplayName } from "@/utils/layer-display";
+import { useLayerState } from "@/composables/useLayerState";
 
 const props = withDefaults(
   defineProps<{
@@ -49,31 +50,7 @@ const emit = defineEmits<{
   (e: "setOpacity", layerId: string, opacity: number): void;
 }>();
 
-// Helper functions for visibility and state
-function isVisible(layerId: string): boolean {
-  return props.visibleLayerIds.has(layerId);
-}
-
-function getLayerOpacity(layerId: string): number {
-  return props.layerOpacities[layerId] ?? 1;
-}
-
-function isLayerLoading(layerId: string): boolean {
-  return props.loadingLayerIds.has(layerId);
-}
-
-function getLayerError(layerId: string): string | null {
-  return props.layerErrors[layerId] || null;
-}
-
-function isLayerAvailableAtZoom(config: LayerConfig): boolean {
-  const zoom = props.currentZoom;
-  const minZoom = config.minZoom;
-  const maxZoom = config.maxZoom;
-  if (minZoom !== undefined && zoom < minZoom) return false;
-  if (maxZoom !== undefined && zoom > maxZoom) return false;
-  return true;
-}
+const { isVisible, getLayerOpacity, isLayerLoading, getLayerError, isLayerAvailableAtZoom } = useLayerState(() => props);
 
 function onToggleLayer(layerId: string) {
   emit("toggleLayer", layerId);
