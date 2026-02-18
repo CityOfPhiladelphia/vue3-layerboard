@@ -7,6 +7,7 @@ import { Icon } from "@phila/phila-ui-core";
 import { faCircleInfo, faFilter } from "@fortawesome/pro-solid-svg-icons";
 import LayerStatusIndicators from "./LayerStatusIndicators.vue";
 import LayerOpacitySlider from "./LayerOpacitySlider.vue";
+import LayerLegend from "./LayerLegend.vue";
 import { useLayerState } from "@/composables/useLayerState";
 
 // Props with configuration options
@@ -171,43 +172,11 @@ function onToggleLayer(layerId: string) {
           @update:opacity="emit('setOpacity', layer.config.id, $event)"
         />
 
-        <!-- Legend (shown when layer is visible, showLegend is true, and has legend items) -->
-        <ul
+        <LayerLegend
           v-if="showLegend && isVisible(layer.config.id) && isLayerAvailableAtZoom(layer.config) && layer.config.legend?.length"
-          class="layer-legend"
-          :aria-label="'Legend for ' + layer.config.title"
-        >
-          <li v-for="(item, index) in layer.config.legend" :key="index" class="legend-item">
-            <!-- Circle symbol -->
-            <span
-              v-if="item.type === 'circle'"
-              class="legend-symbol legend-circle"
-              :style="{ backgroundColor: item.color }"
-              aria-hidden="true"
-            ></span>
-
-            <!-- Line symbol -->
-            <span
-              v-else-if="item.type === 'line'"
-              class="legend-symbol legend-line"
-              :style="{
-                backgroundColor: item.color,
-                height: `${item.width || 2}px`,
-              }"
-              aria-hidden="true"
-            ></span>
-
-            <!-- Fill symbol -->
-            <span
-              v-else-if="item.type === 'fill'"
-              class="legend-symbol legend-fill"
-              :style="{ backgroundColor: item.color }"
-              aria-hidden="true"
-            ></span>
-
-            <span class="legend-label">{{ item.label }}</span>
-          </li>
-        </ul>
+          :items="layer.config.legend"
+          :label="'Legend for ' + layer.config.title"
+        />
       </div>
 
       <div v-if="filteredLayerList.length === 0" class="no-results">No layers match "{{ searchQuery }}"</div>
@@ -383,49 +352,12 @@ function onToggleLayer(layerId: string) {
   font-style: italic;
 }
 
-/* Legend styles */
-.layer-legend {
-  list-style: none;
-  margin: 0 0 8px 0;
+:deep(.layer-legend) {
   padding: 4px 8px 8px 40px;
+  margin: 0 0 8px 0;
 }
 
-/* Adjust padding when metadata icons are shown */
-.has-metadata .layer-legend {
+.has-metadata :deep(.layer-legend) {
   padding-left: 64px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 2px 0;
-}
-
-.legend-symbol {
-  flex-shrink: 0;
-}
-
-.legend-circle {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-
-.legend-line {
-  width: 20px;
-  min-height: 2px;
-  border-radius: 1px;
-}
-
-.legend-fill {
-  width: 14px;
-  height: 14px;
-  border: 1px solid #666;
-}
-
-.legend-label {
-  font-size: 12px;
-  color: #555;
 }
 </style>

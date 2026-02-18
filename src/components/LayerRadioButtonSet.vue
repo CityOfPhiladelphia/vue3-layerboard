@@ -11,6 +11,7 @@ import type { LayerConfig } from "@/types/layer";
 import { shouldShowSlider, shouldShowLegendBox, getLayerDisplayName } from "@/utils/layer-display";
 import LayerStatusIndicators from "./LayerStatusIndicators.vue";
 import LayerOpacitySlider from "./LayerOpacitySlider.vue";
+import LayerLegend from "./LayerLegend.vue";
 import { useLayerState } from "@/composables/useLayerState";
 
 const props = withDefaults(
@@ -101,43 +102,11 @@ function onSelectLayer(layerId: string) {
         @update:opacity="emit('setOpacity', layer.id, $event)"
       />
 
-      <!-- Legend (respects per-layer shouldShowLegendBox) -->
-      <ul
+      <LayerLegend
         v-if="shouldShowLegendBox(layer, showLegend) && isVisible(layer.id) && isLayerAvailableAtZoom(layer) && layer.legend?.length"
-        class="layer-legend"
-        :aria-label="'Legend for ' + getLayerDisplayName(layer)"
-      >
-        <li v-for="(item, index) in layer.legend" :key="index" class="legend-item">
-          <!-- Circle symbol -->
-          <span
-            v-if="item.type === 'circle'"
-            class="legend-symbol legend-circle"
-            :style="{ backgroundColor: item.color }"
-            aria-hidden="true"
-          ></span>
-
-          <!-- Line symbol -->
-          <span
-            v-else-if="item.type === 'line'"
-            class="legend-symbol legend-line"
-            :style="{
-              backgroundColor: item.color,
-              height: `${item.width || 2}px`,
-            }"
-            aria-hidden="true"
-          ></span>
-
-          <!-- Fill symbol -->
-          <span
-            v-else-if="item.type === 'fill'"
-            class="legend-symbol legend-fill"
-            :style="{ backgroundColor: item.color }"
-            aria-hidden="true"
-          ></span>
-
-          <span class="legend-label">{{ item.label }}</span>
-        </li>
-      </ul>
+        :items="layer.legend"
+        :label="'Legend for ' + getLayerDisplayName(layer)"
+      />
     </div>
 
     <!-- Empty state -->
@@ -209,47 +178,6 @@ function onSelectLayer(layerId: string) {
 /* Error indicator */
 .layer-error {
   color: #c00;
-}
-
-/* Legend styles */
-.layer-legend {
-  list-style: none;
-  margin: 0;
-  padding: 4px 8px 8px 36px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 2px 0;
-}
-
-.legend-symbol {
-  flex-shrink: 0;
-}
-
-.legend-circle {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-
-.legend-line {
-  width: 20px;
-  min-height: 2px;
-  border-radius: 1px;
-}
-
-.legend-fill {
-  width: 14px;
-  height: 14px;
-  border: 1px solid #666;
-}
-
-.legend-label {
-  font-size: 12px;
-  color: #555;
 }
 
 /* Empty state */
