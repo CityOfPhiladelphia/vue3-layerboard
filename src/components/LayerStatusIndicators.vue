@@ -8,14 +8,7 @@ defineProps<{
 
 <template>
   <span v-if="loading && !unavailable" class="loading-indicator" role="status"> Loading... </span>
-  <span
-    v-if="error"
-    class="error-indicator"
-    :aria-label="error"
-    role="status"
-  >
-    Error
-  </span>
+  <span v-if="error" class="error-indicator" :aria-label="error" role="status"> Error </span>
   <span v-if="unavailable" class="zoom-indicator"> (zoom in) </span>
 </template>
 

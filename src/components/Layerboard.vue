@@ -89,6 +89,11 @@ const props = withDefaults(
     initialCenter?: [number, number];
   }>(),
   {
+    subtitle: undefined,
+    cyclomediaConfig: undefined,
+    pictometryCredentials: undefined,
+    initialZoom: undefined,
+    initialCenter: undefined,
     themeColor: "#0f4d90",
     showDefaultSidebar: true,
     sidebarWidth: "30%",

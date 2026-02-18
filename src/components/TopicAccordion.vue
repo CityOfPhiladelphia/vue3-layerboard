@@ -18,6 +18,8 @@ const props = withDefaults(
     headerClass?: string;
   }>(),
   {
+    icon: undefined,
+    headerClass: undefined,
     expanded: false,
     layerIds: () => [],
   },

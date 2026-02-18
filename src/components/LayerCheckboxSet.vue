@@ -43,6 +43,7 @@ const props = withDefaults(
     currentZoom: 12,
     showOpacity: true,
     showLegend: true,
+    groupLabel: undefined,
   },
 );
 
@@ -53,13 +54,13 @@ const emit = defineEmits<{
   (e: "setOpacity", layerId: string, opacity: number): void;
 }>();
 
-const { isVisible, getLayerOpacity, isLayerLoading, getLayerError, isLayerAvailableAtZoom } = useLayerState(() => props);
+const { isVisible, getLayerOpacity, isLayerLoading, getLayerError, isLayerAvailableAtZoom } = useLayerState(
+  () => props,
+);
 
 function onToggleLayer(layerId: string) {
   emit("toggleLayer", layerId);
 }
-
-
 </script>
 
 <template>
@@ -118,7 +119,12 @@ function onToggleLayer(layerId: string) {
       />
 
       <LayerLegend
-        v-if="shouldShowLegendBox(layer, showLegend) && isVisible(layer.id) && isLayerAvailableAtZoom(layer) && layer.legend?.length"
+        v-if="
+          shouldShowLegendBox(layer, showLegend) &&
+          isVisible(layer.id) &&
+          isLayerAvailableAtZoom(layer) &&
+          layer.legend?.length
+        "
         :items="layer.legend"
         :label="'Legend for ' + getLayerDisplayName(layer)"
       />

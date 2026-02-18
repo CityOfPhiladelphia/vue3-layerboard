@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const props = defineProps<{
+defineProps<{
   layerId: string;
   layerName: string;
   opacity: number;
@@ -17,9 +17,7 @@ function onInput(event: Event) {
 
 <template>
   <div class="opacity-control">
-    <label class="opacity-label" :for="'opacity-' + layerId">
-      Opacity: {{ Math.round(opacity * 100) }}%
-    </label>
+    <label class="opacity-label" :for="'opacity-' + layerId"> Opacity: {{ Math.round(opacity * 100) }}% </label>
     <input
       :id="'opacity-' + layerId"
       type="range"
