@@ -9,6 +9,7 @@
 
 import type { LayerConfig } from "@/types/layer";
 import { shouldShowSlider, shouldShowLegendBox, getLayerDisplayName } from "@/utils/layer-display";
+import LayerStatusIndicators from "./LayerStatusIndicators.vue";
 import { useLayerState } from "@/composables/useLayerState";
 
 const props = withDefaults(
@@ -86,16 +87,11 @@ function onOpacityChange(layerId: string, event: Event) {
         />
         <span class="layer-title">
           {{ getLayerDisplayName(layer) }}
-          <span v-if="isLayerLoading(layer.id) && isLayerAvailableAtZoom(layer)" class="loading-indicator" role="status"> Loading... </span>
-          <span
-            v-if="getLayerError(layer.id)"
-            class="error-indicator"
-            :aria-label="getLayerError(layer.id) || 'Error'"
-            role="status"
-          >
-            Error
-          </span>
-          <span v-if="!isLayerAvailableAtZoom(layer)" class="zoom-indicator"> (zoom in) </span>
+          <LayerStatusIndicators
+            :loading="isLayerLoading(layer.id)"
+            :error="getLayerError(layer.id)"
+            :unavailable="!isLayerAvailableAtZoom(layer)"
+          />
         </span>
       </label>
 
@@ -222,51 +218,9 @@ function onOpacityChange(layerId: string, event: Event) {
   background-color: transparent;
 }
 
-.zoom-indicator {
-  font-size: 13px;
-  color: #767676;
-  font-style: italic;
-  margin-left: 4px;
-}
-
-/* Loading indicator */
-.loading-indicator {
-  font-size: 13px;
-  color: #0f4d90;
-  font-style: italic;
-  margin-left: 4px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.loading-indicator::before {
-  content: "";
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border: 2px solid #0f4d90;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* Error indicator */
 .layer-error {
   color: #c00;
-}
-
-.error-indicator {
-  font-size: 11px;
-  color: #c00;
-  font-weight: bold;
-  margin-left: 4px;
 }
 
 /* Opacity control */

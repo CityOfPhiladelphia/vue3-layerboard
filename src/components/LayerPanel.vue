@@ -5,6 +5,7 @@ import { normalizeUrl } from "@/utils/url";
 import { TextField } from "@phila/phila-ui-text-field";
 import { Icon } from "@phila/phila-ui-core";
 import { faCircleInfo, faFilter } from "@fortawesome/pro-solid-svg-icons";
+import LayerStatusIndicators from "./LayerStatusIndicators.vue";
 import { useLayerState } from "@/composables/useLayerState";
 
 // Props with configuration options
@@ -156,16 +157,11 @@ function onOpacityChange(layerId: string, event: Event) {
             />
             <span class="layer-title">
               {{ layer.config.title }}
-              <span v-if="isLayerLoading(layer.config.id) && isLayerAvailableAtZoom(layer.config)" class="loading-indicator" role="status"> Loading... </span>
-              <span
-                v-if="getLayerError(layer.config.id)"
-                class="error-indicator"
-                :aria-label="getLayerError(layer.config.id) || 'Error'"
-                role="status"
-              >
-                Error
-              </span>
-              <span v-if="!isLayerAvailableAtZoom(layer.config)" class="zoom-indicator"> (zoom in) </span>
+              <LayerStatusIndicators
+                :loading="isLayerLoading(layer.config.id)"
+                :error="getLayerError(layer.config.id)"
+                :unavailable="!isLayerAvailableAtZoom(layer.config)"
+              />
             </span>
           </label>
         </div>
@@ -379,51 +375,9 @@ function onOpacityChange(layerId: string, event: Event) {
   background-color: transparent;
 }
 
-.zoom-indicator {
-  font-size: 13px;
-  color: #767676;
-  font-style: italic;
-  margin-left: 4px;
-}
-
-/* Loading indicator */
-.loading-indicator {
-  font-size: 13px;
-  color: #0f4d90;
-  font-style: italic;
-  margin-left: 4px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.loading-indicator::before {
-  content: "";
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border: 2px solid #0f4d90;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* Error indicator */
 .layer-error {
   color: #c00;
-}
-
-.error-indicator {
-  font-size: 11px;
-  color: #c00;
-  font-weight: bold;
-  margin-left: 4px;
 }
 
 /* Opacity control */
