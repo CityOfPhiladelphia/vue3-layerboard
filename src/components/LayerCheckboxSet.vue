@@ -9,6 +9,7 @@
 // - layerNameChange: overrides the display label
 
 import type { LayerConfig } from "@/types/layer";
+import { shouldShowCheckbox, shouldShowSlider, shouldShowLegendBox, getLayerDisplayName } from "@/utils/layer-display";
 
 const props = withDefaults(
   defineProps<{
@@ -72,29 +73,6 @@ function isLayerAvailableAtZoom(config: LayerConfig): boolean {
   if (minZoom !== undefined && zoom < minZoom) return false;
   if (maxZoom !== undefined && zoom > maxZoom) return false;
   return true;
-}
-
-// Helper functions for display options
-function shouldShowCheckbox(config: LayerConfig): boolean {
-  // Default to true if not specified
-  return config.displayOptions?.shouldShowCheckbox !== false;
-}
-
-function shouldShowSlider(config: LayerConfig): boolean {
-  // Check both component prop and per-layer option
-  if (!props.showOpacity) return false;
-  return config.displayOptions?.shouldShowSlider !== false;
-}
-
-function shouldShowLegendBox(config: LayerConfig): boolean {
-  // Check both component prop and per-layer option
-  if (!props.showLegend) return false;
-  return config.displayOptions?.shouldShowLegendBox !== false;
-}
-
-function getLayerDisplayName(config: LayerConfig): string {
-  // Use layerNameChange if provided, otherwise use title
-  return config.displayOptions?.layerNameChange || config.title;
 }
 
 function onToggleLayer(layerId: string) {
@@ -165,7 +143,7 @@ function onOpacityChange(layerId: string, event: Event) {
       </div>
 
       <!-- Opacity slider (respects per-layer shouldShowSlider) -->
-      <div v-if="shouldShowSlider(layer) && isVisible(layer.id) && isLayerAvailableAtZoom(layer)" class="opacity-control">
+      <div v-if="shouldShowSlider(layer, showOpacity) && isVisible(layer.id) && isLayerAvailableAtZoom(layer)" class="opacity-control">
         <label class="opacity-label" :for="'opacity-' + layer.id">
           Opacity: {{ Math.round(getLayerOpacity(layer.id) * 100) }}%
         </label>
@@ -184,7 +162,7 @@ function onOpacityChange(layerId: string, event: Event) {
 
       <!-- Legend (respects per-layer shouldShowLegendBox) -->
       <ul
-        v-if="shouldShowLegendBox(layer) && isVisible(layer.id) && isLayerAvailableAtZoom(layer) && layer.legend?.length"
+        v-if="shouldShowLegendBox(layer, showLegend) && isVisible(layer.id) && isLayerAvailableAtZoom(layer) && layer.legend?.length"
         class="layer-legend"
         :aria-label="'Legend for ' + getLayerDisplayName(layer)"
       >

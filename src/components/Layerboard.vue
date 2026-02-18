@@ -26,6 +26,7 @@ import type { CyclomediaConfig, PictometryCredentials } from "@phila/phila-ui-ma
 
 import { getLayerConfigs, clearCache } from "@/services/layerConfigService";
 import type { LayerConfig, TiledLayerConfig, LayerStyleOverride, PopupOverride } from "@/types/layer";
+import { normalizeUrl } from "@/utils/url";
 import type { DataSourceConfig } from "@/types/dataSource";
 import { useApiDataSources } from "@/composables/useApiDataSources";
 
@@ -309,13 +310,6 @@ async function loadLayerConfigs() {
 // ============================================================================
 // METADATA LOADING (optional)
 // ============================================================================
-function normalizeUrl(url: string): string {
-  let normalized = url.split("?")[0] || url;
-  normalized = normalized.replace(/\/query$/, "");
-  normalized = normalized.replace(/\/$/, "");
-  return normalized.toLowerCase();
-}
-
 async function fetchMetadataLookup() {
   if (!props.fetchMetadata) return;
 
