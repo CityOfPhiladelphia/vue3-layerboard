@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { LayerConfig } from "@/types/layer";
+import { normalizeUrl } from "@/utils/url";
 import { TextField } from "@phila/phila-ui-text-field";
 import { Icon } from "@phila/phila-ui-core";
 import { faCircleInfo, faFilter } from "@fortawesome/pro-solid-svg-icons";
@@ -63,14 +64,6 @@ const filteredLayerList = computed(() => {
   const query = props.searchQuery.toLowerCase();
   return props.layerList.filter(layer => layer.config.title.toLowerCase().includes(query));
 });
-
-// Normalize URL for matching (same logic as App.vue)
-function normalizeUrl(url: string): string {
-  let normalized = url.split("?")[0] || url;
-  normalized = normalized.replace(/\/query$/, "");
-  normalized = normalized.replace(/\/$/, "");
-  return normalized.toLowerCase();
-}
 
 // Get metadata URL for a layer (if available)
 function getMetadataUrl(layerUrl: string): string | null {
