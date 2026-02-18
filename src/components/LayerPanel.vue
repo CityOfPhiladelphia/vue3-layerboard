@@ -6,6 +6,7 @@ import { TextField } from "@phila/phila-ui-text-field";
 import { Icon } from "@phila/phila-ui-core";
 import { faCircleInfo, faFilter } from "@fortawesome/pro-solid-svg-icons";
 import LayerStatusIndicators from "./LayerStatusIndicators.vue";
+import LayerOpacitySlider from "./LayerOpacitySlider.vue";
 import { useLayerState } from "@/composables/useLayerState";
 
 // Props with configuration options
@@ -96,11 +97,7 @@ function onToggleLayer(layerId: string) {
   emit("toggleLayer", layerId);
 }
 
-function onOpacityChange(layerId: string, event: Event) {
-  const input = event.target as HTMLInputElement;
-  const opacity = parseFloat(input.value);
-  emit("setOpacity", layerId, opacity);
-}
+
 </script>
 
 <template>
@@ -166,23 +163,13 @@ function onOpacityChange(layerId: string, event: Event) {
           </label>
         </div>
 
-        <!-- Opacity slider (shown when layer is visible and showOpacity is true) -->
-        <div v-if="showOpacity && isVisible(layer.config.id) && isLayerAvailableAtZoom(layer.config)" class="opacity-control">
-          <label class="opacity-label" :for="'opacity-' + layer.config.id">
-            Opacity: {{ Math.round(getLayerOpacity(layer.config.id) * 100) }}%
-          </label>
-          <input
-            :id="'opacity-' + layer.config.id"
-            type="range"
-            min="0"
-            max="1"
-            step="0.05"
-            :value="getLayerOpacity(layer.config.id)"
-            :aria-label="'Opacity for ' + layer.config.title"
-            class="opacity-slider"
-            @input="onOpacityChange(layer.config.id, $event)"
-          />
-        </div>
+        <LayerOpacitySlider
+          v-if="showOpacity && isVisible(layer.config.id) && isLayerAvailableAtZoom(layer.config)"
+          :layer-id="layer.config.id"
+          :layer-name="layer.config.title"
+          :opacity="getLayerOpacity(layer.config.id)"
+          @update:opacity="emit('setOpacity', layer.config.id, $event)"
+        />
 
         <!-- Legend (shown when layer is visible, showLegend is true, and has legend items) -->
         <ul
@@ -380,32 +367,12 @@ function onOpacityChange(layerId: string, event: Event) {
   color: #c00;
 }
 
-/* Opacity control */
-.opacity-control {
+:deep(.opacity-control) {
   padding: 4px 8px 12px 40px;
 }
 
-/* Adjust padding when metadata icons are shown */
-.has-metadata .opacity-control {
+.has-metadata :deep(.opacity-control) {
   padding-left: 64px;
-}
-
-.opacity-label {
-  font-size: 12px;
-  color: #666;
-  display: block;
-  margin-bottom: 4px;
-}
-
-.opacity-slider {
-  width: 100%;
-  height: 4px;
-  cursor: pointer;
-}
-
-.opacity-slider:focus-visible {
-  outline: 2px solid #0f4d90;
-  outline-offset: 2px;
 }
 
 /* No results message */

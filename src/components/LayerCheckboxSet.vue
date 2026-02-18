@@ -11,6 +11,7 @@
 import type { LayerConfig } from "@/types/layer";
 import { shouldShowCheckbox, shouldShowSlider, shouldShowLegendBox, getLayerDisplayName } from "@/utils/layer-display";
 import LayerStatusIndicators from "./LayerStatusIndicators.vue";
+import LayerOpacitySlider from "./LayerOpacitySlider.vue";
 import { useLayerState } from "@/composables/useLayerState";
 
 const props = withDefaults(
@@ -57,10 +58,7 @@ function onToggleLayer(layerId: string) {
   emit("toggleLayer", layerId);
 }
 
-function onOpacityChange(layerId: string, event: Event) {
-  const input = event.target as HTMLInputElement;
-  emit("setOpacity", layerId, parseFloat(input.value));
-}
+
 </script>
 
 <template>
@@ -110,23 +108,13 @@ function onOpacityChange(layerId: string, event: Event) {
         </span>
       </div>
 
-      <!-- Opacity slider (respects per-layer shouldShowSlider) -->
-      <div v-if="shouldShowSlider(layer, showOpacity) && isVisible(layer.id) && isLayerAvailableAtZoom(layer)" class="opacity-control">
-        <label class="opacity-label" :for="'opacity-' + layer.id">
-          Opacity: {{ Math.round(getLayerOpacity(layer.id) * 100) }}%
-        </label>
-        <input
-          :id="'opacity-' + layer.id"
-          type="range"
-          min="0"
-          max="1"
-          step="0.05"
-          :value="getLayerOpacity(layer.id)"
-          :aria-label="'Opacity for ' + getLayerDisplayName(layer)"
-          class="opacity-slider"
-          @input="onOpacityChange(layer.id, $event)"
-        />
-      </div>
+      <LayerOpacitySlider
+        v-if="shouldShowSlider(layer, showOpacity) && isVisible(layer.id) && isLayerAvailableAtZoom(layer)"
+        :layer-id="layer.id"
+        :layer-name="getLayerDisplayName(layer)"
+        :opacity="getLayerOpacity(layer.id)"
+        @update:opacity="emit('setOpacity', layer.id, $event)"
+      />
 
       <!-- Legend (respects per-layer shouldShowLegendBox) -->
       <ul
@@ -248,29 +236,6 @@ function onOpacityChange(layerId: string, event: Event) {
 /* Error indicator */
 .layer-error {
   color: #c00;
-}
-
-/* Opacity control */
-.opacity-control {
-  padding: 4px 8px 8px 36px;
-}
-
-.opacity-label {
-  font-size: 11px;
-  color: #666;
-  display: block;
-  margin-bottom: 4px;
-}
-
-.opacity-slider {
-  width: 100%;
-  height: 4px;
-  cursor: pointer;
-}
-
-.opacity-slider:focus-visible {
-  outline: 2px solid #0f4d90;
-  outline-offset: 2px;
 }
 
 /* Legend styles */
