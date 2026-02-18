@@ -5,6 +5,7 @@ import { normalizeUrl } from "@/utils/url";
 import { TextField } from "@phila/phila-ui-text-field";
 import { Icon } from "@phila/phila-ui-core";
 import { faCircleInfo, faFilter } from "@fortawesome/pro-solid-svg-icons";
+import { useLayerState } from "@/composables/useLayerState";
 
 // Props with configuration options
 const props = withDefaults(
@@ -76,31 +77,13 @@ const anyLayerHasMetadata = computed(() => {
   return props.layerList.some(layer => getMetadataUrl(layer.config.url));
 });
 
-// Helper functions
-function isVisible(layerId: string) {
-  return props.visibleLayers.has(layerId);
-}
-
-function getLayerOpacity(layerId: string): number {
-  return props.layerOpacities[layerId] ?? 1;
-}
-
-function isLayerLoading(layerId: string): boolean {
-  return props.loadingLayers.has(layerId);
-}
-
-function getLayerError(layerId: string): string | null {
-  return props.layerErrors[layerId] || null;
-}
-
-function isLayerAvailableAtZoom(config: LayerConfig): boolean {
-  const zoom = props.currentZoom;
-  const minZoom = config.minZoom;
-  const maxZoom = config.maxZoom;
-  if (minZoom !== undefined && zoom < minZoom) return false;
-  if (maxZoom !== undefined && zoom > maxZoom) return false;
-  return true;
-}
+const { isVisible, getLayerOpacity, isLayerLoading, getLayerError, isLayerAvailableAtZoom } = useLayerState(() => ({
+  visibleLayerIds: props.visibleLayers,
+  layerOpacities: props.layerOpacities,
+  loadingLayerIds: props.loadingLayers,
+  layerErrors: props.layerErrors,
+  currentZoom: props.currentZoom,
+}));
 
 // Computed for v-model binding with TextField
 const searchValue = computed({
