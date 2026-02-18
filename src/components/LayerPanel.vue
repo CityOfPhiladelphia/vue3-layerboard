@@ -340,6 +340,10 @@ function onToggleLayer(layerId: string) {
   padding: 4px 8px 12px 40px;
 }
 
+:deep(.opacity-label) {
+  font-size: 12px;
+}
+
 .has-metadata :deep(.opacity-control) {
   padding-left: 64px;
 }
