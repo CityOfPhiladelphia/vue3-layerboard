@@ -45,6 +45,7 @@ const props = withDefaults(
     showOpacity: true,
     showLegend: true,
     groupName: "layer-radio-group",
+    groupLabel: undefined,
   },
 );
 
@@ -55,15 +56,15 @@ const emit = defineEmits<{
   (e: "setOpacity", layerId: string, opacity: number): void;
 }>();
 
-const { isVisible, getLayerOpacity, isLayerLoading, getLayerError, isLayerAvailableAtZoom } = useLayerState(() => props);
+const { isVisible, getLayerOpacity, isLayerLoading, getLayerError, isLayerAvailableAtZoom } = useLayerState(
+  () => props,
+);
 
 function onSelectLayer(layerId: string) {
   // Find all currently visible layers in this set to turn off
   const previousLayerIds = props.layers.filter(l => props.visibleLayerIds.has(l.id) && l.id !== layerId).map(l => l.id);
   emit("selectLayer", layerId, previousLayerIds);
 }
-
-
 </script>
 
 <template>
@@ -103,7 +104,12 @@ function onSelectLayer(layerId: string) {
       />
 
       <LayerLegend
-        v-if="shouldShowLegendBox(layer, showLegend) && isVisible(layer.id) && isLayerAvailableAtZoom(layer) && layer.legend?.length"
+        v-if="
+          shouldShowLegendBox(layer, showLegend) &&
+          isVisible(layer.id) &&
+          isLayerAvailableAtZoom(layer) &&
+          layer.legend?.length
+        "
         :items="layer.legend"
         :label="'Legend for ' + getLayerDisplayName(layer)"
       />

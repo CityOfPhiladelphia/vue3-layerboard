@@ -23,10 +23,7 @@ pnpm add vue pinia maplibre-gl @fortawesome/fontawesome-svg-core @fortawesome/fr
 
 ```vue
 <template>
-  <Layerboard
-    title="My Map App"
-    web-map-id="1596df70df0349e293ceec46a06ccc50"
-  />
+  <Layerboard title="My Map App" web-map-id="1596df70df0349e293ceec46a06ccc50" />
 </template>
 
 <script setup>
@@ -48,11 +45,7 @@ All layers in a searchable list. Set `show-default-sidebar` to `true` (default) 
 Group layers into collapsible accordions using the sidebar slot:
 
 ```vue
-<Layerboard
-  title="StreetSmartPHL"
-  :web-map-id="webMapId"
-  :show-default-sidebar="false"
->
+<Layerboard title="StreetSmartPHL" :web-map-id="webMapId" :show-default-sidebar="false">
   <template #sidebar="{ layers, visibleLayers, toggleLayer, setOpacity }">
     <TopicAccordion title="Paving" :expanded="true">
       <LayerCheckboxSet
@@ -68,56 +61,56 @@ Group layers into collapsible accordions using the sidebar slot:
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `title` | `string` | *required* | App title in header |
-| `webMapId` | `string` | *required* | ArcGIS Online WebMap ID |
-| `subtitle` | `string` | — | Subtitle in header |
-| `themeColor` | `string` | `"#0f4d90"` | Header/footer background color |
-| `showDefaultSidebar` | `boolean` | `true` | Show built-in LayerPanel (false for custom sidebar) |
-| `sidebarWidth` | `string` | `"30%"` | Sidebar width (CSS units) |
-| `sidebarLabel` | `string` | `"Layers"` | Mobile toggle label for sidebar view |
-| `mapLabel` | `string` | `"Map"` | Mobile toggle label for map view |
-| `fetchMetadata` | `boolean` | `false` | Fetch layer metadata from Carto |
-| `tiledLayers` | `TiledLayerConfig[]` | `[]` | ESRI MapServer tiled layers |
-| `dataSources` | `DataSourceConfig[]` | `[]` | External API data sources |
-| `layerStyleOverrides` | `Record<string, LayerStyleOverride>` | `{}` | Override paint/legend per layer |
-| `popupOverrides` | `Record<string, PopupOverride>` | `{}` | Override popup behavior per layer |
-| `initialZoom` | `number` | — | Initial map zoom level |
-| `initialCenter` | `[number, number]` | — | Initial map center `[lng, lat]` |
-| `cyclomediaConfig` | `CyclomediaConfig` | — | Cyclomedia street-level imagery config |
-| `pictometryCredentials` | `PictometryCredentials` | — | Pictometry oblique imagery credentials |
+| Prop                    | Type                                 | Default     | Description                                         |
+| ----------------------- | ------------------------------------ | ----------- | --------------------------------------------------- |
+| `title`                 | `string`                             | _required_  | App title in header                                 |
+| `webMapId`              | `string`                             | _required_  | ArcGIS Online WebMap ID                             |
+| `subtitle`              | `string`                             | —           | Subtitle in header                                  |
+| `themeColor`            | `string`                             | `"#0f4d90"` | Header/footer background color                      |
+| `showDefaultSidebar`    | `boolean`                            | `true`      | Show built-in LayerPanel (false for custom sidebar) |
+| `sidebarWidth`          | `string`                             | `"30%"`     | Sidebar width (CSS units)                           |
+| `sidebarLabel`          | `string`                             | `"Layers"`  | Mobile toggle label for sidebar view                |
+| `mapLabel`              | `string`                             | `"Map"`     | Mobile toggle label for map view                    |
+| `fetchMetadata`         | `boolean`                            | `false`     | Fetch layer metadata from Carto                     |
+| `tiledLayers`           | `TiledLayerConfig[]`                 | `[]`        | ESRI MapServer tiled layers                         |
+| `dataSources`           | `DataSourceConfig[]`                 | `[]`        | External API data sources                           |
+| `layerStyleOverrides`   | `Record<string, LayerStyleOverride>` | `{}`        | Override paint/legend per layer                     |
+| `popupOverrides`        | `Record<string, PopupOverride>`      | `{}`        | Override popup behavior per layer                   |
+| `initialZoom`           | `number`                             | —           | Initial map zoom level                              |
+| `initialCenter`         | `[number, number]`                   | —           | Initial map center `[lng, lat]`                     |
+| `cyclomediaConfig`      | `CyclomediaConfig`                   | —           | Cyclomedia street-level imagery config              |
+| `pictometryCredentials` | `PictometryCredentials`              | —           | Pictometry oblique imagery credentials              |
 
 ### Control Positions
 
 All default to sensible positions. Each accepts `"top-left" | "top-right" | "bottom-left" | "bottom-right"`.
 
-| Prop | Default |
-|------|---------|
-| `basemapControlPosition` | `"top-right"` |
-| `navigationControlPosition` | `"bottom-right"` |
-| `geolocationControlPosition` | `"bottom-right"` |
-| `searchControlPosition` | `"top-left"` |
-| `drawControlPosition` | `"bottom-left"` (or `null` to remove) |
-| `cyclomediaButtonPosition` | `"top-right"` |
-| `pictometryButtonPosition` | `"top-right"` |
+| Prop                         | Default                               |
+| ---------------------------- | ------------------------------------- |
+| `basemapControlPosition`     | `"top-right"`                         |
+| `navigationControlPosition`  | `"bottom-right"`                      |
+| `geolocationControlPosition` | `"bottom-right"`                      |
+| `searchControlPosition`      | `"top-left"`                          |
+| `drawControlPosition`        | `"bottom-left"` (or `null` to remove) |
+| `cyclomediaButtonPosition`   | `"top-right"`                         |
+| `pictometryButtonPosition`   | `"top-right"`                         |
 
 ## Events
 
-| Event | Payload | Description |
-|-------|---------|-------------|
+| Event            | Payload         | Description                      |
+| ---------------- | --------------- | -------------------------------- |
 | `configs-loaded` | `LayerConfig[]` | Layer configs loaded from WebMap |
-| `load-error` | `string` | Error message on load failure |
-| `zoom` | `number` | Zoom level changed |
+| `load-error`     | `string`        | Error message on load failure    |
+| `zoom`           | `number`        | Zoom level changed               |
 
 ## Slots
 
-| Slot | Scope | Description |
-|------|-------|-------------|
-| `header` | — | Replace default header |
-| `sidebar` | layer state + methods (see below) | Replace default LayerPanel |
-| `footer` | `{ openModal, closeModal, isModalOpen }` | Custom footer content |
-| `modal` | `{ closeModal }` | Modal content |
+| Slot      | Scope                                    | Description                |
+| --------- | ---------------------------------------- | -------------------------- |
+| `header`  | —                                        | Replace default header     |
+| `sidebar` | layer state + methods (see below)        | Replace default LayerPanel |
+| `footer`  | `{ openModal, closeModal, isModalOpen }` | Custom footer content      |
+| `modal`   | `{ closeModal }`                         | Modal content              |
 
 ### Sidebar Slot Scope
 
@@ -156,11 +149,11 @@ All components are exported for building custom layouts:
 
 ```typescript
 import {
-  Layerboard,          // Main framework component
-  LayerPanel,          // Flat layer list with search/legends/opacity
-  MapPanel,            // MapLibre map with layer rendering
-  TopicAccordion,      // Collapsible accordion for topic grouping
-  LayerCheckboxSet,    // Checkbox controls for layer toggling
+  Layerboard, // Main framework component
+  LayerPanel, // Flat layer list with search/legends/opacity
+  MapPanel, // MapLibre map with layer rendering
+  TopicAccordion, // Collapsible accordion for topic grouping
+  LayerCheckboxSet, // Checkbox controls for layer toggling
   LayerRadioButtonSet, // Radio buttons for mutually exclusive layers
 } from "@phila/layerboard";
 ```
@@ -184,8 +177,8 @@ import type {
   LayerboardConfig,
   TopicConfig,
   FeatureFlags,
-  CyclomediaConfig,      // re-exported from @phila/phila-ui-map-core
-  PictometryCredentials,  // re-exported from @phila/phila-ui-map-core
+  CyclomediaConfig, // re-exported from @phila/phila-ui-map-core
+  PictometryCredentials, // re-exported from @phila/phila-ui-map-core
 } from "@phila/layerboard";
 ```
 

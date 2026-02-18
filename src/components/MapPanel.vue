@@ -51,6 +51,13 @@ const props = withDefaults(
     initialCenter?: [number, number];
   }>(),
   {
+    tiledLayers: undefined,
+    visibleTiledLayers: undefined,
+    tiledLayerOpacities: undefined,
+    cyclomediaConfig: undefined,
+    pictometryCredentials: undefined,
+    initialZoom: undefined,
+    initialCenter: undefined,
     basemapControlPosition: "top-right",
     navigationControlPosition: "bottom-right",
     geolocationControlPosition: "bottom-right",
@@ -147,10 +154,7 @@ async function fetchFeaturesInBounds(
 
   // Ask the server to simplify geometries before sending
   // Tolerance is ~1 pixel at the current zoom: detail increases as you zoom in
-  const simplifyParam =
-    zoom !== undefined
-      ? `&maxAllowableOffset=${360 / (Math.pow(2, zoom) * 512)}`
-      : "";
+  const simplifyParam = zoom !== undefined ? `&maxAllowableOffset=${360 / (Math.pow(2, zoom) * 512)}` : "";
 
   const pageSize = 2000;
   let offset = 0;

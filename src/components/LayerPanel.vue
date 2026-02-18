@@ -97,8 +97,6 @@ const searchValue = computed({
 function onToggleLayer(layerId: string) {
   emit("toggleLayer", layerId);
 }
-
-
 </script>
 
 <template>
@@ -173,7 +171,12 @@ function onToggleLayer(layerId: string) {
         />
 
         <LayerLegend
-          v-if="showLegend && isVisible(layer.config.id) && isLayerAvailableAtZoom(layer.config) && layer.config.legend?.length"
+          v-if="
+            showLegend &&
+            isVisible(layer.config.id) &&
+            isLayerAvailableAtZoom(layer.config) &&
+            layer.config.legend?.length
+          "
           :items="layer.config.legend"
           :label="'Legend for ' + layer.config.title"
         />
