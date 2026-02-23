@@ -173,6 +173,15 @@ export function convertOpacity(opacity: number | undefined): number {
   return opacity !== undefined ? opacity : 1;
 }
 
+/**
+ * Convert Esri line width (points) to MapLibre line width (pixels).
+ * ArcGIS SLS widths are in typographic points (1pt = 1/72 inch).
+ * At standard screen resolution (96 DPI), 1pt = 96/72 ≈ 1.333px.
+ */
+function ptToPx(points: number): number {
+  return Math.round(points * (96 / 72) * 10) / 10;
+}
+
 // ============================================================================
 // SCALE TO ZOOM CONVERSION
 // ============================================================================
@@ -327,7 +336,7 @@ function convertSimpleRenderer(renderer: EsriRenderer, layerOpacity?: number, la
     };
 
     if (hasVisibleOutline(symbol.outline)) {
-      const outlineWidth = symbol.outline!.width || 1;
+      const outlineWidth = ptToPx(symbol.outline!.width || 1);
       const outlineColor = esriColorToCSS(symbol.outline!.color);
 
       outlinePaint = {
@@ -346,7 +355,7 @@ function convertSimpleRenderer(renderer: EsriRenderer, layerOpacity?: number, la
   } else if (geomType === "line" && symbol) {
     paint = {
       "line-color": esriColorToCSS(symbol.color),
-      "line-width": symbol.width || 1,
+      "line-width": ptToPx(symbol.width || 1),
       "line-opacity": convertOpacity(layerOpacity),
     };
     const dashArray = esriLineDashArray(symbol.style);
@@ -358,7 +367,7 @@ function convertSimpleRenderer(renderer: EsriRenderer, layerOpacity?: number, la
       {
         type: "line",
         color: esriColorToCSS(symbol.color),
-        width: symbol.width || 1,
+        width: ptToPx(symbol.width || 1),
         label: renderer.label || "Feature",
       },
     ];
@@ -375,7 +384,7 @@ function convertSimpleRenderer(renderer: EsriRenderer, layerOpacity?: number, la
 
     if (hasVisibleOutline(symbol.outline)) {
       paint["circle-stroke-color"] = esriColorToCSS(symbol.outline!.color);
-      paint["circle-stroke-width"] = symbol.outline!.width || 1;
+      paint["circle-stroke-width"] = ptToPx(symbol.outline!.width || 1);
     }
 
     legend = [
@@ -477,7 +486,7 @@ function convertUniqueValueRenderer(
 
     // Handle outline if present
     if (hasVisibleOutline(firstSymbol?.outline)) {
-      const outlineWidth = Math.max(firstSymbol!.outline!.width || 1, 1);
+      const outlineWidth = ptToPx(Math.max(firstSymbol!.outline!.width || 1, 1));
       const outlineColor = esriColorToCSS(firstSymbol!.outline!.color);
 
       outlinePaint = {
@@ -502,7 +511,7 @@ function convertUniqueValueRenderer(
       legend.push({
         type: "line" as const,
         color: esriColorToCSS(info.symbol?.color),
-        width: info.symbol?.width || 1,
+        width: ptToPx(info.symbol?.width || 1),
         label: label,
       });
     }
@@ -511,7 +520,7 @@ function convertUniqueValueRenderer(
 
     paint = {
       "line-color": colorMatch,
-      "line-width": firstSymbol?.width || 2,
+      "line-width": ptToPx(firstSymbol?.width || 2),
       "line-opacity": convertOpacity(layerOpacity),
     };
 
@@ -559,7 +568,7 @@ function convertUniqueValueRenderer(
 
     if (hasVisibleOutline(firstSymbol?.outline)) {
       paint["circle-stroke-color"] = esriColorToCSS(firstSymbol!.outline!.color);
-      paint["circle-stroke-width"] = firstSymbol!.outline!.width || 1;
+      paint["circle-stroke-width"] = ptToPx(firstSymbol!.outline!.width || 1);
     }
   }
 
@@ -630,7 +639,7 @@ function convertClassBreaksRenderer(renderer: EsriRenderer, layerOpacity?: numbe
     };
 
     if (hasVisibleOutline(firstSymbol?.outline)) {
-      const outlineWidth = firstSymbol!.outline!.width || 1;
+      const outlineWidth = ptToPx(firstSymbol!.outline!.width || 1);
       const outlineColor = esriColorToCSS(firstSymbol!.outline!.color);
 
       outlinePaint = {
@@ -705,18 +714,18 @@ function convertClassBreaksRenderer(renderer: EsriRenderer, layerOpacity?: numbe
         if (breaks.length === 1) {
           // Single break: simple values
           groupPaint["line-color"] = esriColorToCSS(breaks[0]!.symbol?.color);
-          groupPaint["line-width"] = breaks[0]!.symbol?.width || 2;
+          groupPaint["line-width"] = ptToPx(breaks[0]!.symbol?.width || 2);
         } else {
           // Multiple breaks: step expressions
           const colorStep: unknown[] = ["step", ["get", field]];
           const widthStep: unknown[] = ["step", ["get", field]];
           colorStep.push(esriColorToCSS(breaks[0]!.symbol?.color));
-          widthStep.push(breaks[0]!.symbol?.width || 2);
+          widthStep.push(ptToPx(breaks[0]!.symbol?.width || 2));
           for (let i = 1; i < breaks.length; i++) {
             colorStep.push(breaks[i - 1]!.classMaxValue);
             colorStep.push(esriColorToCSS(breaks[i]!.symbol?.color));
             widthStep.push(breaks[i - 1]!.classMaxValue);
-            widthStep.push(breaks[i]!.symbol?.width || 2);
+            widthStep.push(ptToPx(breaks[i]!.symbol?.width || 2));
           }
           groupPaint["line-color"] = colorStep;
           groupPaint["line-width"] = widthStep;
@@ -728,7 +737,7 @@ function convertClassBreaksRenderer(renderer: EsriRenderer, layerOpacity?: numbe
           groupLegend.push({
             type: "line" as const,
             color: esriColorToCSS(info.symbol?.color),
-            width: info.symbol?.width || 2,
+            width: ptToPx(info.symbol?.width || 2),
             label: info.label || `${prevMaxValue} - ${info.classMaxValue}`,
           });
           prevMaxValue = info.classMaxValue + 1;
@@ -760,14 +769,14 @@ function convertClassBreaksRenderer(renderer: EsriRenderer, layerOpacity?: numbe
       legend.push({
         type: "line" as const,
         color: esriColorToCSS(info.symbol?.color),
-        width: info.symbol?.width || firstSymbol?.width || 2,
+        width: ptToPx(info.symbol?.width || firstSymbol?.width || 2),
         label: info.label || `${prevMaxValue} - ${info.classMaxValue}`,
       });
 
       prevMaxValue = info.classMaxValue + 1;
     }
 
-    const lineWidth = firstSymbol?.width || 2;
+    const lineWidth = ptToPx(firstSymbol?.width || 2);
 
     paint = {
       "line-color": colorStep,
@@ -850,7 +859,7 @@ function convertColorInfoRenderer(
     };
 
     if (hasVisibleOutline(firstSymbol?.outline)) {
-      const outlineWidth = firstSymbol!.outline!.width || 1;
+      const outlineWidth = ptToPx(firstSymbol!.outline!.width || 1);
       const outlineColor = esriColorToCSS(firstSymbol!.outline!.color);
 
       outlinePaint = {
