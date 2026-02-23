@@ -587,7 +587,7 @@ function getDynamicExportLayerSource(layer: TiledLayerConfig) {
 function getSource(layer: any) {
   const data = layerData.value[layer.id];
   // Data should always exist here because we filter with hasSourceReady()
-  return { type: "geojson" as const, data: data! };
+  return { type: "geojson" as const, data: data!, tolerance: 0 };
 }
 
 function getLayerOpacity(layerId: string): number {
