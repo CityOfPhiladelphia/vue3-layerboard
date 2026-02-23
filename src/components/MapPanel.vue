@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onUnmounted } from "vue";
+import { computed, ref, watch, nextTick, onMounted, onUnmounted } from "vue";
 import {
   Map as PhilaMap,
   CircleLayer,
@@ -152,9 +152,11 @@ async function fetchFeaturesInBounds(
     spatialReference: { wkid: 4326 },
   });
 
-  // Ask the server to simplify geometries before sending
-  // Tolerance is ~1 pixel at the current zoom: detail increases as you zoom in
-  const simplifyParam = zoom !== undefined ? `&maxAllowableOffset=${360 / (Math.pow(2, zoom) * 512)}` : "";
+  // Ask the server to simplify geometries before sending (zoomed-out views only)
+  // At zoom >= 14, skip simplification — the data volume is small and line
+  // geometry needs full detail to avoid visible corner-cutting on streets
+  const simplifyParam =
+    zoom !== undefined && zoom < 14 ? `&maxAllowableOffset=${360 / (Math.pow(2, zoom) * 512)}` : "";
 
   const pageSize = 2000;
   let offset = 0;
@@ -332,6 +334,28 @@ const visibleLineLayers = computed(() =>
     .filter(l => l.config.type === "line" && isVisible(l.config.id) && hasSourceReady(l.config))
     .map(l => l.config),
 );
+
+// Fix MapLibre layer ordering after async data loads.
+// When split layers (e.g. solid + dash from same source) load at different times,
+// addLayer(layer, "highlight-lines") inserts each one directly before the anchor,
+// causing later-loading layers to stack above earlier ones regardless of intended order.
+// This watcher reorders line layers to match the visibleLineLayers computed order.
+watch(visibleLineLayers, async layers => {
+  if (layers.length < 2) return;
+  await nextTick();
+  const map = mapInstance.value;
+  if (!map) return;
+  for (let i = layers.length - 1; i >= 0; i--) {
+    const beforeId = i < layers.length - 1 ? layers[i + 1]!.id : "highlight-lines";
+    try {
+      if (map.getLayer(layers[i]!.id)) {
+        map.moveLayer(layers[i]!.id, beforeId);
+      }
+    } catch {
+      // Layer not yet added to map
+    }
+  }
+});
 
 // ============================================================================
 // TILED LAYER HELPERS
