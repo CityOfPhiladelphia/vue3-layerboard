@@ -680,11 +680,17 @@ function convertClassBreaksRenderer(renderer: EsriRenderer, layerOpacity?: numbe
         const lowerBound = g === 0 ? null : groups[g - 1]!.breaks[groups[g - 1]!.breaks.length - 1]!.classMaxValue;
         const upperBound = breaks[breaks.length - 1]!.classMaxValue;
         let whereClause: string;
+        const hasDefaultSymbol = !!renderer.defaultSymbol;
         if (lowerBound === null) {
-          whereClause = `${field} <= ${upperBound}`;
-        } else if (g === groups.length - 1) {
+          // First group: exclude features below minValue when no defaultSymbol
+          const minBound =
+            !hasDefaultSymbol && renderer.minValue != null ? `${field} >= ${renderer.minValue} AND ` : "";
+          whereClause = `${minBound}${field} <= ${upperBound}`;
+        } else if (g === groups.length - 1 && hasDefaultSymbol) {
+          // Last group with defaultSymbol: open-ended above
           whereClause = `${field} > ${lowerBound}`;
         } else {
+          // Middle groups, or last group without defaultSymbol: bounded range
           whereClause = `${field} > ${lowerBound} AND ${field} <= ${upperBound}`;
         }
 
