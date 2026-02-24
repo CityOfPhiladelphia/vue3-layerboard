@@ -124,12 +124,132 @@ interface SplitLayer {
   legend: LegendItem[];
 }
 
+interface SplitLayerGroup {
+  style: string;
+  breaks: NonNullable<EsriRenderer["classBreakInfos"]>;
+  startIndex: number;
+}
+
 interface RendererResult {
   paint: Record<string, unknown>;
   legend: LegendItem[];
   geomType: "fill" | "line" | "circle";
   outlinePaint: Record<string, unknown> | null;
   splitLayers?: SplitLayer[];
+}
+
+/**
+ * Build split layers from class breaks with mixed dash styles.
+ *
+ * Groups consecutive breaks by dash style, then builds a SplitLayer for each group
+ * with its own WHERE clause, paint properties, and legend entries.
+ */
+function buildSplitLayers(
+  classBreakInfos: NonNullable<EsriRenderer["classBreakInfos"]>,
+  styles: string[],
+  field: string,
+  renderer: EsriRenderer,
+  layerOpacity?: number,
+): SplitLayer[] {
+  // Group consecutive breaks by dash style
+  const groups: SplitLayerGroup[] = [];
+  let currentStyle = styles[0]!;
+  let currentBreaks = [classBreakInfos[0]!];
+  let startIndex = 0;
+
+  for (let i = 1; i < classBreakInfos.length; i++) {
+    if (styles[i] === currentStyle) {
+      currentBreaks.push(classBreakInfos[i]!);
+    } else {
+      groups.push({ style: currentStyle, breaks: currentBreaks, startIndex });
+      currentStyle = styles[i]!;
+      currentBreaks = [classBreakInfos[i]!];
+      startIndex = i;
+    }
+  }
+  groups.push({ style: currentStyle, breaks: currentBreaks, startIndex });
+
+  // Build a SplitLayer for each group
+  const splitLayers: SplitLayer[] = [];
+  const seenStyles = new Set<string>();
+  let prevMaxValue = renderer.minValue ?? 0;
+
+  for (let g = 0; g < groups.length; g++) {
+    const group = groups[g]!;
+    const breaks = group.breaks;
+    const dashArray = esriLineDashArray(group.style);
+
+    // WHERE clause: field range for this group
+    const lowerBound = g === 0 ? null : groups[g - 1]!.breaks[groups[g - 1]!.breaks.length - 1]!.classMaxValue;
+    const upperBound = breaks[breaks.length - 1]!.classMaxValue;
+    let whereClause: string;
+    const hasDefaultSymbol = !!renderer.defaultSymbol;
+    if (lowerBound === null) {
+      const minBound =
+        !hasDefaultSymbol && renderer.minValue != null ? `${field} >= ${renderer.minValue} AND ` : "";
+      whereClause = `${minBound}${field} <= ${upperBound}`;
+    } else if (g === groups.length - 1 && hasDefaultSymbol) {
+      whereClause = `${field} > ${lowerBound}`;
+    } else {
+      whereClause = `${field} > ${lowerBound} AND ${field} <= ${upperBound}`;
+    }
+
+    // Paint properties
+    const groupPaint: Record<string, unknown> = {
+      "line-opacity": convertOpacity(layerOpacity),
+    };
+    if (dashArray) {
+      groupPaint["line-dasharray"] = dashArray;
+    }
+
+    if (breaks.length === 1) {
+      groupPaint["line-color"] = esriColorToCSS(breaks[0]!.symbol?.color);
+      groupPaint["line-width"] = ptToPx(breaks[0]!.symbol?.width || 2);
+    } else {
+      const colorStep: unknown[] = ["step", ["get", field]];
+      const widthStep: unknown[] = ["step", ["get", field]];
+      colorStep.push(esriColorToCSS(breaks[0]!.symbol?.color));
+      widthStep.push(ptToPx(breaks[0]!.symbol?.width || 2));
+      for (let i = 1; i < breaks.length; i++) {
+        colorStep.push(breaks[i - 1]!.classMaxValue);
+        colorStep.push(esriColorToCSS(breaks[i]!.symbol?.color));
+        widthStep.push(breaks[i - 1]!.classMaxValue);
+        widthStep.push(ptToPx(breaks[i]!.symbol?.width || 2));
+      }
+      groupPaint["line-color"] = colorStep;
+      groupPaint["line-width"] = widthStep;
+    }
+
+    // Legend entries
+    const groupLegend: LegendItem[] = [];
+    for (const info of breaks) {
+      groupLegend.push({
+        type: "line" as const,
+        color: esriColorToCSS(info.symbol?.color),
+        width: ptToPx(info.symbol?.width || 2),
+        label: info.label || `${prevMaxValue} - ${info.classMaxValue}`,
+      });
+      prevMaxValue = info.classMaxValue + 1;
+    }
+
+    // Suffix: first group keeps original ID, subsequent get dash-style suffix.
+    // Append group index when a style repeats to avoid ID collisions
+    // (e.g., [solid, dash, solid, dash] would produce "-dash" twice without this).
+    const styleName = group.style.replace("esriSLS", "").toLowerCase();
+    let suffix: string;
+    if (g === 0) {
+      suffix = "";
+    } else if (seenStyles.has(styleName)) {
+      suffix = `-${styleName}-${g}`;
+    } else {
+      suffix = `-${styleName}`;
+    }
+    seenStyles.add(styleName);
+
+    splitLayers.push({ suffix, where: whereClause, paint: groupPaint, legend: groupLegend });
+  }
+
+  return splitLayers;
 }
 
 // ============================================================================
@@ -654,101 +774,7 @@ function convertClassBreaksRenderer(renderer: EsriRenderer, layerOpacity?: numbe
     const hasMixedDash = uniqueStyles.length > 1;
 
     if (hasMixedDash) {
-      // Group consecutive breaks by dash style into split layers
-      // MapLibre line-dasharray doesn't support data-driven expressions,
-      // so each dash style needs its own layer
-      const groups: Array<{ style: string; breaks: typeof classBreakInfos; startIndex: number }> = [];
-      let currentStyle = styles[0]!;
-      let currentBreaks = [classBreakInfos[0]!];
-      let startIndex = 0;
-
-      for (let i = 1; i < classBreakInfos.length; i++) {
-        if (styles[i] === currentStyle) {
-          currentBreaks.push(classBreakInfos[i]!);
-        } else {
-          groups.push({ style: currentStyle, breaks: currentBreaks, startIndex });
-          currentStyle = styles[i]!;
-          currentBreaks = [classBreakInfos[i]!];
-          startIndex = i;
-        }
-      }
-      groups.push({ style: currentStyle, breaks: currentBreaks, startIndex });
-
-      // Build split layers
-      const splitLayers: SplitLayer[] = [];
-      let prevMaxValue = renderer.minValue ?? 0;
-
-      for (let g = 0; g < groups.length; g++) {
-        const group = groups[g]!;
-        const breaks = group.breaks;
-        const dashArray = esriLineDashArray(group.style);
-
-        // Where clause: field range for this group
-        // ArcGIS classBreaks use inclusive upper bounds (classMaxValue),
-        // so boundary values belong to the LOWER class, not the upper
-        const lowerBound = g === 0 ? null : groups[g - 1]!.breaks[groups[g - 1]!.breaks.length - 1]!.classMaxValue;
-        const upperBound = breaks[breaks.length - 1]!.classMaxValue;
-        let whereClause: string;
-        const hasDefaultSymbol = !!renderer.defaultSymbol;
-        if (lowerBound === null) {
-          // First group: exclude features below minValue when no defaultSymbol
-          const minBound =
-            !hasDefaultSymbol && renderer.minValue != null ? `${field} >= ${renderer.minValue} AND ` : "";
-          whereClause = `${minBound}${field} <= ${upperBound}`;
-        } else if (g === groups.length - 1 && hasDefaultSymbol) {
-          // Last group with defaultSymbol: open-ended above
-          whereClause = `${field} > ${lowerBound}`;
-        } else {
-          // Middle groups, or last group without defaultSymbol: bounded range
-          whereClause = `${field} > ${lowerBound} AND ${field} <= ${upperBound}`;
-        }
-
-        // Build paint for this group
-        const groupPaint: Record<string, unknown> = {
-          "line-opacity": convertOpacity(layerOpacity),
-        };
-        if (dashArray) {
-          groupPaint["line-dasharray"] = dashArray;
-        }
-
-        if (breaks.length === 1) {
-          // Single break: simple values
-          groupPaint["line-color"] = esriColorToCSS(breaks[0]!.symbol?.color);
-          groupPaint["line-width"] = ptToPx(breaks[0]!.symbol?.width || 2);
-        } else {
-          // Multiple breaks: step expressions
-          const colorStep: unknown[] = ["step", ["get", field]];
-          const widthStep: unknown[] = ["step", ["get", field]];
-          colorStep.push(esriColorToCSS(breaks[0]!.symbol?.color));
-          widthStep.push(ptToPx(breaks[0]!.symbol?.width || 2));
-          for (let i = 1; i < breaks.length; i++) {
-            colorStep.push(breaks[i - 1]!.classMaxValue);
-            colorStep.push(esriColorToCSS(breaks[i]!.symbol?.color));
-            widthStep.push(breaks[i - 1]!.classMaxValue);
-            widthStep.push(ptToPx(breaks[i]!.symbol?.width || 2));
-          }
-          groupPaint["line-color"] = colorStep;
-          groupPaint["line-width"] = widthStep;
-        }
-
-        // Build legend for this group
-        const groupLegend: LegendItem[] = [];
-        for (const info of breaks) {
-          groupLegend.push({
-            type: "line" as const,
-            color: esriColorToCSS(info.symbol?.color),
-            width: ptToPx(info.symbol?.width || 2),
-            label: info.label || `${prevMaxValue} - ${info.classMaxValue}`,
-          });
-          prevMaxValue = info.classMaxValue + 1;
-        }
-
-        // Suffix: first group keeps original ID, subsequent get dash-style suffix
-        const suffix = g === 0 ? "" : `-${group.style.replace("esriSLS", "").toLowerCase()}`;
-
-        splitLayers.push({ suffix, where: whereClause, paint: groupPaint, legend: groupLegend });
-      }
-
+      const splitLayers = buildSplitLayers(classBreakInfos, styles, field, renderer, layerOpacity);
       return { paint: {}, legend: [], geomType, outlinePaint, splitLayers };
     }
 
@@ -1209,6 +1235,42 @@ async function fetchServiceDrawingInfo(
 }
 
 // ============================================================================
+// LAYER CONFIG CONSTRUCTION
+// ============================================================================
+
+/** Build a LayerConfig with common fields, applying optional overrides. */
+function buildLayerConfig(base: {
+  id: string;
+  title: string;
+  type: "fill" | "line" | "circle";
+  url: string;
+  opacity: number;
+  paint: Record<string, unknown>;
+  legend: LegendItem[];
+  popup: PopupConfig | null;
+  where?: string;
+  minZoom?: number;
+  maxZoom?: number;
+  outlinePaint?: Record<string, unknown> | null;
+}): LayerConfig {
+  const config: LayerConfig = {
+    id: base.id,
+    title: base.title,
+    type: base.type,
+    url: base.url,
+    opacity: base.opacity,
+    paint: base.paint,
+    legend: base.legend,
+    popup: base.popup,
+  };
+  if (base.where) config.where = base.where;
+  if (base.minZoom !== undefined) config.minZoom = base.minZoom;
+  if (base.maxZoom !== undefined) config.maxZoom = base.maxZoom;
+  if (base.outlinePaint) config.outlinePaint = base.outlinePaint;
+  return config;
+}
+
+// ============================================================================
 // MAIN TRANSFORMATION
 // ============================================================================
 
@@ -1402,10 +1464,8 @@ export async function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): Pro
 
       if (splitLayers && splitLayers.length > 0) {
         // Renderer produced split layers (mixed dash styles in class breaks)
-        // Create a separate LayerConfig for each split
         for (const split of splitLayers) {
-          const splitWhere = where ? `(${where}) AND (${split.where})` : split.where;
-          const config: LayerConfig = {
+          configs.push(buildLayerConfig({
             id: `${layerId}${split.suffix}`,
             title: displayTitle,
             type: geomType,
@@ -1414,21 +1474,13 @@ export async function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): Pro
             paint: split.paint,
             legend: split.legend,
             popup,
-          };
-          if (splitWhere) {
-            config.where = splitWhere;
-          }
-          if (zoomRange.minZoom !== undefined) {
-            config.minZoom = zoomRange.minZoom;
-          }
-          if (zoomRange.maxZoom !== undefined) {
-            config.maxZoom = zoomRange.maxZoom;
-          }
-          configs.push(config);
+            where: where ? `(${where}) AND (${split.where})` : split.where,
+            minZoom: zoomRange.minZoom,
+            maxZoom: zoomRange.maxZoom,
+          }));
         }
       } else {
-        // Single layer config (normal case)
-        const config: LayerConfig = {
+        configs.push(buildLayerConfig({
           id: layerId,
           title: displayTitle,
           type: geomType,
@@ -1437,22 +1489,11 @@ export async function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): Pro
           paint,
           legend,
           popup,
-        };
-
-        if (where) {
-          config.where = where;
-        }
-        if (zoomRange.minZoom !== undefined) {
-          config.minZoom = zoomRange.minZoom;
-        }
-        if (zoomRange.maxZoom !== undefined) {
-          config.maxZoom = zoomRange.maxZoom;
-        }
-        if (outlinePaint) {
-          config.outlinePaint = outlinePaint;
-        }
-
-        configs.push(config);
+          where,
+          minZoom: zoomRange.minZoom,
+          maxZoom: zoomRange.maxZoom,
+          outlinePaint,
+        }));
       }
     } catch (err) {
       console.error(`Error transforming layer ${layer.title}:`, err);
