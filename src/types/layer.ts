@@ -26,6 +26,10 @@ export interface PopupConfig {
   title: string;
   fields: PopupField[];
   showTime?: boolean;
+  /** Sort popup features by this field when multiple features are at the click point */
+  popupSortField?: string;
+  /** Sort order: "desc" for newest-first, "asc" for oldest-first (default: "desc") */
+  popupSortOrder?: "asc" | "desc";
 }
 
 /**
@@ -65,6 +69,8 @@ export interface LayerConfig {
  */
 export interface PopupOverride {
   showTime?: boolean;
+  popupSortField?: string;
+  popupSortOrder?: "asc" | "desc";
 }
 
 /**
