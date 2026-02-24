@@ -893,15 +893,14 @@ function handleLayerClick(e: { lngLat: { lng: number; lat: number } }) {
 
   if (newFeatures.length === 0) return;
 
-  // Sort features within the same layer by popupSortField if configured
-  // (e.g., PlowPHL treatments sorted newest-first by time_visited_utc)
+  // Sort features by popupSortField across layers that share the same sort field
+  // (e.g., PlowPHL split layers both sorting by time_visited_utc)
   newFeatures.sort((a, b) => {
-    // Only sort features from the same layer
-    if (a.layerId !== b.layerId) return 0;
-    const sortField = a.popupConfig?.popupSortField;
-    if (!sortField) return 0;
-    const valA = a.properties[sortField];
-    const valB = b.properties[sortField];
+    const sortFieldA = a.popupConfig?.popupSortField;
+    const sortFieldB = b.popupConfig?.popupSortField;
+    if (!sortFieldA || sortFieldA !== sortFieldB) return 0;
+    const valA = a.properties[sortFieldA];
+    const valB = b.properties[sortFieldA];
     if (valA == null || valB == null) return 0;
     const desc = a.popupConfig?.popupSortOrder !== "asc";
     if (valA < valB) return desc ? 1 : -1;
