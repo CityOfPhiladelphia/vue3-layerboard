@@ -903,8 +903,10 @@ function handleLayerClick(e: { lngLat: { lng: number; lat: number } }) {
     const valA = a.properties[sortField];
     const valB = b.properties[sortField];
     if (valA == null || valB == null) return 0;
-    const order = a.popupConfig?.popupSortOrder === "asc" ? 1 : -1;
-    return valA < valB ? order : valA > valB ? -order : 0;
+    const desc = a.popupConfig?.popupSortOrder !== "asc";
+    if (valA < valB) return desc ? 1 : -1;
+    if (valA > valB) return desc ? -1 : 1;
+    return 0;
   });
 
   popupFeatures.value = newFeatures;
