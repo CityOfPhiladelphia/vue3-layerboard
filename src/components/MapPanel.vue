@@ -692,6 +692,8 @@ interface PopupFeature {
     title: string;
     fields: PopupField[];
     showTime?: boolean;
+    popupSortField?: string;
+    popupSortOrder?: "asc" | "desc";
   } | null;
 }
 
@@ -890,6 +892,20 @@ function handleLayerClick(e: { lngLat: { lng: number; lat: number } }) {
     .filter((f): f is PopupFeature => f !== null);
 
   if (newFeatures.length === 0) return;
+
+  // Sort features within the same layer by popupSortField if configured
+  // (e.g., PlowPHL treatments sorted newest-first by time_visited_utc)
+  newFeatures.sort((a, b) => {
+    // Only sort features from the same layer
+    if (a.layerId !== b.layerId) return 0;
+    const sortField = a.popupConfig?.popupSortField;
+    if (!sortField) return 0;
+    const valA = a.properties[sortField];
+    const valB = b.properties[sortField];
+    if (valA == null || valB == null) return 0;
+    const order = a.popupConfig?.popupSortOrder === "asc" ? 1 : -1;
+    return valA < valB ? order : valA > valB ? -order : 0;
+  });
 
   popupFeatures.value = newFeatures;
   currentFeatureIndex.value = 0;
