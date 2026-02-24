@@ -206,15 +206,17 @@ async function fetchFeaturesInBounds(
 
 // Fetch specific layers in parallel
 // This is used to fetch only newly visible layers without re-fetching already loaded layers
-async function fetchSpecificLayers(bounds: Bounds, layerIds: string[]) {
+async function fetchSpecificLayers(bounds: Bounds, layerIds: string[], zoom?: number) {
   // Build array of fetch promises for parallel loading
   const fetchPromises = layerIds.map(async layerId => {
     const config = props.layerList.find(l => l.config.id === layerId)?.config;
     if (!config) return;
 
+    // Skip fetching layers outside their zoom range
+    if (zoom !== undefined && config.minZoom !== undefined && zoom < config.minZoom) return;
+
     emit("layerLoading", layerId, true);
     try {
-      const zoom = mapInstance.value?.getZoom();
       const data = await fetchFeaturesInBounds(config.url, bounds, layerId, config.where, zoom);
       layerData.value = { ...layerData.value, [layerId]: data };
       emit("layerError", layerId, null);
@@ -233,15 +235,15 @@ async function fetchSpecificLayers(bounds: Bounds, layerIds: string[]) {
 
 // Fetch all visible layers for the current bounds
 // This delegates to fetchSpecificLayers for parallel loading
-async function fetchLayers(bounds: Bounds) {
+async function fetchLayers(bounds: Bounds, zoom?: number) {
   const visibleIds = [...props.visibleLayers];
-  await fetchSpecificLayers(bounds, visibleIds);
+  await fetchSpecificLayers(bounds, visibleIds, zoom);
 }
 
 // Handle map moveend event
 function onMoveEnd(data: { center: { lng: number; lat: number }; zoom: number; bounds: Bounds }) {
   currentBounds.value = data.bounds;
-  fetchLayers(data.bounds);
+  fetchLayers(data.bounds, data.zoom);
 }
 
 // Handle map load event - get initial bounds, zoom, and scale
@@ -266,7 +268,7 @@ function onMapLoad(map: any) {
   currentScale.value = calculateMapScale(map);
 
   // Fetch any layers that are already visible
-  fetchLayers(currentBounds.value);
+  fetchLayers(currentBounds.value, zoom);
 }
 
 // Watch for visibility changes - fetch only newly visible layers
@@ -290,7 +292,8 @@ watch(
 
       // Only fetch data for newly visible layers (not already-visible ones)
       if (newlyVisibleIds.length > 0) {
-        await fetchSpecificLayers(currentBounds.value, newlyVisibleIds);
+        const zoom = mapInstance.value?.getZoom();
+        await fetchSpecificLayers(currentBounds.value, newlyVisibleIds, zoom);
       }
     }
   },
