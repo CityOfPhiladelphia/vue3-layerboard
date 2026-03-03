@@ -212,9 +212,6 @@ async function fetchSpecificLayers(bounds: Bounds, layerIds: string[], zoom?: nu
     const config = props.layerList.find(l => l.config.id === layerId)?.config;
     if (!config) return;
 
-    // Skip fetching layers outside their zoom range
-    if (zoom !== undefined && config.minZoom !== undefined && zoom < config.minZoom) return;
-
     emit("layerLoading", layerId, true);
     try {
       const data = await fetchFeaturesInBounds(config.url, bounds, layerId, config.where, zoom);
