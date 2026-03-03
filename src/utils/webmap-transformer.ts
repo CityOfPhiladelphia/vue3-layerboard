@@ -734,9 +734,17 @@ function convertUniqueValueRenderer(
       "line-opacity": convertOpacity(layerOpacity),
     };
 
-    // Apply dash pattern if all symbols use the same non-solid style
-    const styles = uniqueValueInfos.map(i => i.symbol?.style).filter(Boolean);
+    // Check dash styles across unique values
+    const styles = uniqueValueInfos.map(i => i.symbol?.style || "esriSLSSolid");
     const uniqueStyles = [...new Set(styles)];
+
+    if (uniqueStyles.length > 1) {
+      // Mixed dash styles — must split into separate MapLibre layers
+      const splitLayers = buildUniqueValueSplitLayers(uniqueValueInfos, field, defaultSymbol, layerOpacity, customLabelMap);
+      return { paint: {}, legend: [], geomType, outlinePaint, splitLayers };
+    }
+
+    // All values share the same dash style — apply to single layer
     if (uniqueStyles.length === 1) {
       const dashArray = esriLineDashArray(uniqueStyles[0]);
       if (dashArray) {
