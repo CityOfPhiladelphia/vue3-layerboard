@@ -62,6 +62,8 @@ export interface LayerConfig {
   popup: PopupConfig | null;
   /** Display options for sidebar controls */
   displayOptions?: LayerDisplayOptions;
+  /** For split layers: the base layer ID that controls visibility */
+  parentId?: string;
 }
 
 /**
