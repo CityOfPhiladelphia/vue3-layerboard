@@ -233,10 +233,21 @@ async function fetchSpecificLayers(bounds: Bounds, layerIds: string[], zoom?: nu
   await Promise.all(fetchPromises);
 }
 
+// Expand a set of layer IDs to include any child split layers
+function expandWithChildLayers(layerIds: string[]): string[] {
+  const expanded = new Set(layerIds);
+  for (const item of props.layerList) {
+    if (item.config.parentId && expanded.has(item.config.parentId)) {
+      expanded.add(item.config.id);
+    }
+  }
+  return [...expanded];
+}
+
 // Fetch all visible layers for the current bounds
 // This delegates to fetchSpecificLayers for parallel loading
 async function fetchLayers(bounds: Bounds, zoom?: number) {
-  const visibleIds = [...props.visibleLayers];
+  const visibleIds = expandWithChildLayers([...props.visibleLayers]);
   await fetchSpecificLayers(bounds, visibleIds, zoom);
 }
 
@@ -291,9 +302,11 @@ watch(
       previouslyVisibleLayers.value = new Set(currentVisibleIds);
 
       // Only fetch data for newly visible layers (not already-visible ones)
-      if (newlyVisibleIds.length > 0) {
+      // Expand to include child split layers
+      const expandedNewIds = expandWithChildLayers(newlyVisibleIds);
+      if (expandedNewIds.length > 0) {
         const zoom = mapInstance.value?.getZoom();
-        await fetchSpecificLayers(currentBounds.value, newlyVisibleIds, zoom);
+        await fetchSpecificLayers(currentBounds.value, expandedNewIds, zoom);
       }
     }
   },
@@ -303,7 +316,10 @@ watch(
 // LAYER FILTERING BY TYPE
 // ============================================================================
 function isVisible(layerId: string) {
-  return props.visibleLayers.has(layerId);
+  if (props.visibleLayers.has(layerId)) return true;
+  // Split layers inherit visibility from their parent
+  const config = props.layerList.find(l => l.config.id === layerId)?.config;
+  return !!config?.parentId && props.visibleLayers.has(config.parentId);
 }
 
 // Check if layer has data ready to render
@@ -845,10 +861,11 @@ function handleLayerClick(e: { lngLat: { lng: number; lat: number } }) {
   if (!map) return;
 
   // Build array of all visible layer IDs from the layer configuration
+  // Include split layers whose parent is visible
   const visibleLayerIds: string[] = [];
   props.layerList.forEach(layerItem => {
     const layerConfig = layerItem.config;
-    if (props.visibleLayers.has(layerConfig.id)) {
+    if (isVisible(layerConfig.id)) {
       visibleLayerIds.push(layerConfig.id);
       // Include outline layers for fill layers
       if (layerConfig.outlinePaint) {

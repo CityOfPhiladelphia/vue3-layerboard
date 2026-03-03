@@ -1350,6 +1350,7 @@ function buildLayerConfig(base: {
   minZoom?: number;
   maxZoom?: number;
   outlinePaint?: Record<string, unknown> | null;
+  parentId?: string;
 }): LayerConfig {
   const config: LayerConfig = {
     id: base.id,
@@ -1365,6 +1366,7 @@ function buildLayerConfig(base: {
   if (base.minZoom !== undefined) config.minZoom = base.minZoom;
   if (base.maxZoom !== undefined) config.maxZoom = base.maxZoom;
   if (base.outlinePaint) config.outlinePaint = base.outlinePaint;
+  if (base.parentId) config.parentId = base.parentId;
   return config;
 }
 
@@ -1561,10 +1563,12 @@ export async function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): Pro
       const effectiveOpacity = layer.opacity ?? 1;
 
       if (splitLayers && splitLayers.length > 0) {
-        // Renderer produced split layers (mixed dash styles in class breaks)
+        // Renderer produced split layers (mixed dash styles)
+        // Non-first splits get parentId so they inherit the base layer's visibility
         for (const split of splitLayers) {
+          const splitId = `${layerId}${split.suffix}`;
           configs.push(buildLayerConfig({
-            id: `${layerId}${split.suffix}`,
+            id: splitId,
             title: displayTitle,
             type: geomType,
             url: layer.url,
@@ -1575,6 +1579,7 @@ export async function transformWebMapToLayerConfigs(webMapJson: EsriWebMap): Pro
             where: where ? `(${where}) AND (${split.where})` : split.where,
             minZoom: zoomRange.minZoom,
             maxZoom: zoomRange.maxZoom,
+            parentId: split.suffix ? layerId : undefined,
           }));
         }
       } else {
