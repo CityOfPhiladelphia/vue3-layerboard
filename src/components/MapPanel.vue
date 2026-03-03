@@ -874,10 +874,15 @@ function handleLayerClick(e: { lngLat: { lng: number; lat: number } }) {
     }
   });
 
-  // Query all features at the click point from all visible layers
+  // Filter to layers that actually exist on the map (have data loaded)
+  // Split layers at different zoom ranges may be visible but not yet rendered
+  const existingLayerIds = visibleLayerIds.filter(id => map.getLayer(id));
+  if (existingLayerIds.length === 0) return;
+
+  // Query all features at the click point from all rendered layers
   const point = map.project([e.lngLat.lng, e.lngLat.lat]);
   const allFeatures = map.queryRenderedFeatures(point, {
-    layers: visibleLayerIds,
+    layers: existingLayerIds,
   }) as MapLibreFeature[];
 
   if (allFeatures.length === 0) return;
