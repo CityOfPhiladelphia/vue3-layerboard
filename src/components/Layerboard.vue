@@ -425,7 +425,7 @@ const modalCloseRef = ref<HTMLElement | null>(null);
 // ============================================================================
 // MOBILE PANEL TOGGLE
 // ============================================================================
-const activePanel = ref<"sidebar" | "map">("map");
+const activePanel = ref<"sidebar" | "map">("sidebar");
 
 function togglePanel() {
   activePanel.value = activePanel.value === "sidebar" ? "map" : "sidebar";
