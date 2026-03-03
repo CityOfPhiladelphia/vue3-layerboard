@@ -88,10 +88,10 @@ export interface EsriSymbol {
 // Dash arrays are specified in units of line width
 const ESRI_LINE_DASH_MAP: Record<string, number[] | null> = {
   esriSLSSolid: null,
-  esriSLSDash: [4, 3],
-  esriSLSDot: [1, 3],
-  esriSLSDashDot: [4, 3, 1, 3],
-  esriSLSDashDotDot: [4, 3, 1, 3, 1, 3],
+  esriSLSDash: [6, 1.5],
+  esriSLSDot: [1, 1.5],
+  esriSLSDashDot: [6, 1.5, 1, 1.5],
+  esriSLSDashDotDot: [6, 1.5, 1, 1.5, 1, 1.5],
   esriSLSNull: null,
 };
 
