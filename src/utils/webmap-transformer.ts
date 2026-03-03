@@ -88,10 +88,10 @@ export interface EsriSymbol {
 // Dash arrays are specified in units of line width
 const ESRI_LINE_DASH_MAP: Record<string, number[] | null> = {
   esriSLSSolid: null,
-  esriSLSDash: [4, 3],
-  esriSLSDot: [1, 3],
-  esriSLSDashDot: [4, 3, 1, 3],
-  esriSLSDashDotDot: [4, 3, 1, 3, 1, 3],
+  esriSLSDash: [6, 1.5],
+  esriSLSDot: [1, 1.5],
+  esriSLSDashDot: [6, 1.5, 1, 1.5],
+  esriSLSDashDotDot: [6, 1.5, 1, 1.5, 1, 1.5],
   esriSLSNull: null,
 };
 
@@ -245,6 +245,96 @@ function buildSplitLayers(
       suffix = `-${styleName}`;
     }
     seenStyles.add(styleName);
+
+    splitLayers.push({ suffix, where: whereClause, paint: groupPaint, legend: groupLegend });
+  }
+
+  return splitLayers;
+}
+
+/**
+ * Build split layers from unique values with mixed dash styles.
+ *
+ * Groups unique values by dash style, then builds a SplitLayer for each group
+ * with its own WHERE clause, paint properties, and legend entries.
+ */
+function buildUniqueValueSplitLayers(
+  uniqueValueInfos: NonNullable<EsriRenderer["uniqueValueInfos"]>,
+  field: string,
+  defaultSymbol: EsriSymbol | undefined,
+  layerOpacity?: number,
+  customLabelMap?: Map<string, string>,
+): SplitLayer[] {
+  // Group unique values by dash style
+  const styleGroups = new Map<string, typeof uniqueValueInfos>();
+  for (const info of uniqueValueInfos) {
+    const style = info.symbol?.style || "esriSLSSolid";
+    if (!styleGroups.has(style)) {
+      styleGroups.set(style, []);
+    }
+    styleGroups.get(style)!.push(info);
+  }
+
+  const splitLayers: SplitLayer[] = [];
+  const seenStyles = new Set<string>();
+  let isFirst = true;
+
+  for (const [style, infos] of styleGroups) {
+    const dashArray = esriLineDashArray(style);
+
+    // WHERE clause: field = 'VALUE1' OR field = 'VALUE2'
+    const conditions = infos.map(info => `${field} = '${String(info.value).replace(/'/g, "''")}'`);
+    const whereClause = conditions.join(" OR ");
+
+    // Paint properties
+    const groupPaint: Record<string, unknown> = {
+      "line-opacity": convertOpacity(layerOpacity),
+    };
+    if (dashArray) {
+      groupPaint["line-dasharray"] = dashArray;
+    }
+
+    if (infos.length === 1) {
+      groupPaint["line-color"] = esriColorToCSS(infos[0]!.symbol?.color);
+      groupPaint["line-width"] = ptToPx(infos[0]!.symbol?.width || 2);
+    } else {
+      // Multiple values share the same dash style — use match expression
+      const colorMatch: unknown[] = ["match", ["to-string", ["get", field]]];
+      for (const info of infos) {
+        colorMatch.push(coerceMatchValue(info.value));
+        colorMatch.push(esriColorToCSS(info.symbol?.color));
+      }
+      colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : "rgba(0, 0, 0, 0)");
+      groupPaint["line-color"] = colorMatch;
+      groupPaint["line-width"] = ptToPx(infos[0]!.symbol?.width || 2);
+    }
+
+    // Legend entries
+    const groupLegend: LegendItem[] = [];
+    for (const info of infos) {
+      const valueStr = String(info.value);
+      const customLabel = customLabelMap?.get(valueStr);
+      const label = customLabel || info.label || valueStr;
+      groupLegend.push({
+        type: "line" as const,
+        color: esriColorToCSS(info.symbol?.color),
+        width: ptToPx(info.symbol?.width || 1),
+        label,
+      });
+    }
+
+    // Suffix: first group keeps original ID, subsequent get style-based suffix
+    const styleName = style.replace("esriSLS", "").toLowerCase();
+    let suffix: string;
+    if (isFirst) {
+      suffix = "";
+    } else if (seenStyles.has(styleName)) {
+      suffix = `-${styleName}-${splitLayers.length}`;
+    } else {
+      suffix = `-${styleName}`;
+    }
+    seenStyles.add(styleName);
+    isFirst = false;
 
     splitLayers.push({ suffix, where: whereClause, paint: groupPaint, legend: groupLegend });
   }
@@ -644,9 +734,17 @@ function convertUniqueValueRenderer(
       "line-opacity": convertOpacity(layerOpacity),
     };
 
-    // Apply dash pattern if all symbols use the same non-solid style
-    const styles = uniqueValueInfos.map(i => i.symbol?.style).filter(Boolean);
+    // Check dash styles across unique values
+    const styles = uniqueValueInfos.map(i => i.symbol?.style || "esriSLSSolid");
     const uniqueStyles = [...new Set(styles)];
+
+    if (uniqueStyles.length > 1) {
+      // Mixed dash styles — must split into separate MapLibre layers
+      const splitLayers = buildUniqueValueSplitLayers(uniqueValueInfos, field, defaultSymbol, layerOpacity, customLabelMap);
+      return { paint: {}, legend: [], geomType, outlinePaint, splitLayers };
+    }
+
+    // All values share the same dash style — apply to single layer
     if (uniqueStyles.length === 1) {
       const dashArray = esriLineDashArray(uniqueStyles[0]);
       if (dashArray) {
