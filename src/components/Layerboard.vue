@@ -273,7 +273,8 @@ async function loadLayerConfigs() {
           type: styleOverride.type ?? result.type,
         };
       }
-      const popupOverride = props.popupOverrides[config.id];
+      const popupOverride = props.popupOverrides[config.id]
+        || (config.parentId ? props.popupOverrides[config.parentId] : undefined);
       if (popupOverride && result.popup) {
         result = {
           ...result,
