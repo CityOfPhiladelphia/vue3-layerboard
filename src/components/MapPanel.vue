@@ -11,7 +11,7 @@ import {
   MapMarker,
 } from "@phila/phila-ui-map-core";
 import type { CyclomediaConfig, PictometryCredentials, AisGeocodeResult } from "@phila/phila-ui-map-core";
-import type { LngLatLike, CircleLayerSpecification, LineLayerSpecification } from "maplibre-gl";
+import type { LngLatLike, CircleLayerSpecification, LineLayerSpecification, PointLike } from "maplibre-gl";
 import type { TiledLayerConfig } from "@/types/layer";
 
 // Bounds type for spatial queries
@@ -876,9 +876,14 @@ function handleLayerClick(e: { lngLat: { lng: number; lat: number } }) {
   const existingLayerIds = visibleLayerIds.filter(id => map.getLayer(id));
   if (existingLayerIds.length === 0) return;
 
-  // Query all features at the click point from all rendered layers
+  // Query features near the click point with a tolerance for easier line clicking
   const point = map.project([e.lngLat.lng, e.lngLat.lat]);
-  const allFeatures = map.queryRenderedFeatures(point, {
+  const tolerance = 10;
+  const bbox: [PointLike, PointLike] = [
+    [point.x - tolerance, point.y - tolerance],
+    [point.x + tolerance, point.y + tolerance],
+  ];
+  const allFeatures = map.queryRenderedFeatures(bbox, {
     layers: existingLayerIds,
   }) as MapLibreFeature[];
 
