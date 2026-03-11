@@ -1424,6 +1424,7 @@ function handleSearchResult(result: AisGeocodeResult) {
         :paint="{ 'raster-opacity': getTiledLayerOpacity(tiledLayer.id) }"
         :minzoom="tiledLayer.minZoom"
         :maxzoom="tiledLayer.maxZoom"
+        before-id="highlight-circles"
       />
 
       <!-- Dynamic Export Layers (ESRI MapServer /export endpoint) - for zoomed in views -->
@@ -1436,6 +1437,7 @@ function handleSearchResult(result: AisGeocodeResult) {
         :paint="{ 'raster-opacity': getTiledLayerOpacity(dynamicLayer.id) }"
         :minzoom="dynamicLayer.minZoom"
         :maxzoom="dynamicLayer.maxZoom"
+        before-id="highlight-circles"
       />
 
       <!-- Circle Layers - positioned before highlight layers -->
