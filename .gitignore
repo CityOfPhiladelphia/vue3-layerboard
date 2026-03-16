@@ -47,3 +47,6 @@ __screenshots__/
 tmpclaude-*
 
 .npmrc
+
+# Claude Code
+.claude/

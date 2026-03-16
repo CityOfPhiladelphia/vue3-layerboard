@@ -43,6 +43,7 @@ export interface EsriRenderer {
   field?: string;
   field1?: string;
   defaultSymbol?: EsriSymbol;
+  defaultLabel?: string;
   /** Minimum value for classBreaks renderer (used for label generation) */
   minValue?: number;
   uniqueValueInfos?: Array<{
@@ -689,6 +690,14 @@ function convertUniqueValueRenderer(
     // Default color
     colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : "rgba(0, 0, 0, 0)");
 
+    if (defaultSymbol) {
+      legend.push({
+        type: "fill" as const,
+        color: esriColorToCSS(defaultSymbol.color),
+        label: renderer.defaultLabel || "Other",
+      });
+    }
+
     paint = {
       "fill-color": colorMatch,
       "fill-opacity": convertOpacity(layerOpacity),
@@ -727,6 +736,15 @@ function convertUniqueValueRenderer(
     }
 
     colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : "rgba(0, 0, 0, 0)");
+
+    if (defaultSymbol) {
+      legend.push({
+        type: "line" as const,
+        color: esriColorToCSS(defaultSymbol.color),
+        width: ptToPx(defaultSymbol.width || 1),
+        label: renderer.defaultLabel || "Other",
+      });
+    }
 
     paint = {
       "line-color": colorMatch,
@@ -773,6 +791,14 @@ function convertUniqueValueRenderer(
     }
 
     colorMatch.push(defaultSymbol ? esriColorToCSS(defaultSymbol.color) : "rgba(0, 0, 0, 0)");
+
+    if (defaultSymbol) {
+      legend.push({
+        type: "circle" as const,
+        color: esriColorToCSS(defaultSymbol.color),
+        label: renderer.defaultLabel || "Other",
+      });
+    }
 
     // Esri size is diameter in points, MapLibre radius is in pixels
     // Empirically tuned multiplier to match Esri rendering
