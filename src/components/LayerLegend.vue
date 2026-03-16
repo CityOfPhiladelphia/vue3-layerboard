@@ -34,7 +34,7 @@ defineProps<{
         aria-hidden="true"
       ></span>
 
-      <span class="legend-label">{{ item.label }}</span>
+      <span v-if="items.length > 1" class="legend-label">{{ item.label }}</span>
     </li>
   </ul>
 </template>
@@ -58,25 +58,25 @@ defineProps<{
 }
 
 .legend-circle {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
 }
 
 .legend-line {
-  width: 20px;
-  min-height: 2px;
+  width: 22px;
+  min-height: 4px;
   border-radius: 1px;
 }
 
 .legend-fill {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border: 1px solid #666;
 }
 
 .legend-label {
-  font-size: 12px;
+  font-size: 14px;
   color: #555;
 }
 </style>
