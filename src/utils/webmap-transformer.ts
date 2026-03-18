@@ -556,13 +556,26 @@ function convertSimpleRenderer(renderer: EsriRenderer, layerOpacity?: number, la
       };
     }
 
-    legend = [
-      {
-        type: "fill",
-        color: esriColorToCSS(symbol.color),
-        label: renderer.label || "Feature",
-      },
-    ];
+    if (fillAlpha === 0 && hasVisibleOutline(symbol.outline)) {
+      // Outline-only polygon: show as empty box with colored border
+      legend = [
+        {
+          type: "fill",
+          color: "transparent",
+          outlineColor: esriColorToCSS(symbol.outline!.color),
+          outlineWidth: ptToPx(symbol.outline!.width || 1),
+          label: renderer.label || "Feature",
+        },
+      ];
+    } else {
+      legend = [
+        {
+          type: "fill",
+          color: esriColorToCSS(symbol.color),
+          label: renderer.label || "Feature",
+        },
+      ];
+    }
   } else if (geomType === "line" && symbol) {
     paint = {
       "line-color": esriColorToCSS(symbol.color),

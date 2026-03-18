@@ -941,10 +941,18 @@ body {
 
 .popup-table th,
 .popup-table td {
-  padding: 4px 8px 4px 0;
+  padding: 4px 8px 4px 8px;
   text-align: left;
   vertical-align: top;
   border-bottom: 1px solid #eee;
+}
+
+.popup-table tr:nth-child(odd) {
+  background-color: #f0f0f0;
+}
+
+.popup-table tr:nth-child(even) {
+  background-color: #f8f8f8;
 }
 
 .popup-table tr:last-child th,

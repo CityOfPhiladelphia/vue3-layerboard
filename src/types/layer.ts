@@ -8,6 +8,9 @@ export interface LegendItem {
   label: string;
   width?: number;
   radius?: number;
+  /** For outline-only fill symbols (transparent fill with visible border) */
+  outlineColor?: string;
+  outlineWidth?: number;
 }
 
 export interface PopupFieldFormat {

@@ -30,7 +30,11 @@ defineProps<{
       <span
         v-else-if="item.type === 'fill'"
         class="legend-symbol legend-fill"
-        :style="{ backgroundColor: item.color }"
+        :style="{
+          backgroundColor: item.color,
+          borderColor: item.outlineColor || '#666',
+          borderWidth: item.outlineColor ? `${Math.max(item.outlineWidth || 2, 2)}px` : undefined,
+        }"
         aria-hidden="true"
       ></span>
 
