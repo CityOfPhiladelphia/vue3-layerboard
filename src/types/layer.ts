@@ -67,6 +67,8 @@ export interface LayerConfig {
   displayOptions?: LayerDisplayOptions;
   /** For split layers: the base layer ID that controls visibility */
   parentId?: string;
+  /** Controls stacking order on the map within same geometry type (higher = on top) */
+  zOrder?: number;
 }
 
 /**
@@ -91,6 +93,8 @@ export interface LayerStyleOverride {
   legend?: LegendItem[];
   /** Override the layer type (fill, line, circle) */
   type?: "fill" | "line" | "circle";
+  /** Controls stacking order on the map within same geometry type (higher = on top) */
+  zOrder?: number;
 }
 
 // MapLibre-specific paint property interfaces

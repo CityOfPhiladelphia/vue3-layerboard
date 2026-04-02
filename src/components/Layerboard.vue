@@ -271,6 +271,7 @@ async function loadLayerConfigs() {
           outlinePaint: styleOverride.outlinePaint ?? result.outlinePaint,
           legend: styleOverride.legend ?? result.legend,
           type: styleOverride.type ?? result.type,
+          zOrder: styleOverride.zOrder ?? result.zOrder,
         };
       }
       const popupOverride = props.popupOverrides[config.id]
