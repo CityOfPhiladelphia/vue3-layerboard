@@ -361,11 +361,13 @@ watch(visibleLineLayers, async layers => {
   await nextTick();
   const map = mapInstance.value;
   if (!map) return;
-  for (let i = layers.length - 1; i >= 0; i--) {
-    const beforeId = i < layers.length - 1 ? layers[i + 1]!.id : "highlight-lines";
+  // Sort by zOrder so higher values stack on top
+  const sorted = [...layers].sort((a, b) => (a.zOrder ?? 0) - (b.zOrder ?? 0));
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    const beforeId = i < sorted.length - 1 ? sorted[i + 1]!.id : "highlight-lines";
     try {
-      if (map.getLayer(layers[i]!.id)) {
-        map.moveLayer(layers[i]!.id, beforeId);
+      if (map.getLayer(sorted[i]!.id)) {
+        map.moveLayer(sorted[i]!.id, beforeId);
       }
     } catch {
       // Layer not yet added to map
