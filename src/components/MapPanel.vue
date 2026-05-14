@@ -1399,7 +1399,7 @@ function handleSearchResult(result: AisGeocodeResult) {
       :navigation-controls="{ position: props.navigationControlPosition }"
       :geolocation-control="{ position: props.geolocationControlPosition }"
       :basemap-change-controls="{ toggle: true, dropdown: true, position: props.basemapControlPosition }"
-      :map-search-control="{ position: props.searchControlPosition }"
+      :map-search-control="{ position: props.searchControlPosition, autocomplete: true }"
       :enable-cyclomedia="true"
       :cyclomedia-config="props.cyclomediaConfig"
       :cyclomedia-button-position="props.cyclomediaButtonPosition"
