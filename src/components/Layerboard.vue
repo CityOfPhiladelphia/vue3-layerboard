@@ -21,7 +21,7 @@ import "@phila/phila-ui-map-core/dist/assets/phila-ui-map-core.css";
 import MapPanel from "./MapPanel.vue";
 import LayerPanel from "./LayerPanel.vue";
 import { Icon } from "@phila/phila-ui-core";
-import { faCaretLeft, faCaretRight, faXmark, faBars } from "@fortawesome/pro-solid-svg-icons";
+import { faCaretLeft, faCaretRight, faXmark, faBars } from "@fortawesome/free-solid-svg-icons";
 import type { CyclomediaConfig, PictometryCredentials } from "@phila/phila-ui-map-core";
 
 import { getLayerConfigs, clearCache } from "@/services/layerConfigService";
