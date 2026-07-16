@@ -1,14 +1,27 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, h, type FunctionalComponent, type SVGAttributes } from "vue";
 import type { LayerConfig } from "@/types/layer";
 import { normalizeUrl } from "@/utils/url";
 import { TextField } from "@phila/phila-ui-text-field";
 import { Icon } from "@phila/phila-ui-core";
-import { faCircleInfo, faFilter } from "@fortawesome/free-solid-svg-icons";
+import { IconCircleInfo } from "@phila/phila-ui-core/icons";
+
 import LayerStatusIndicators from "./LayerStatusIndicators.vue";
 import LayerOpacitySlider from "./LayerOpacitySlider.vue";
 import LayerLegend from "./LayerLegend.vue";
 import { useLayerState } from "@/composables/useLayerState";
+
+// The core icon set has no funnel glyph. Defined here as a functional component
+// matching the shape of core's own icons so that Icon's `icon` prop applies the
+// `phila-icon-core__svg` class — and its 1em sizing — directly to the <svg>.
+// Font Awesome Free 7 `filter`, the same source core's icons are cut from.
+const IconFilter: FunctionalComponent<SVGAttributes> = () =>
+  h("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 512 512" }, [
+    h("path", {
+      fill: "currentColor",
+      d: "M32 64C19.1 64 7.4 71.8 2.4 83.8S.2 109.5 9.4 118.6L192 301.3 192 416c0 8.5 3.4 16.6 9.4 22.6l64 64c9.2 9.2 22.9 11.9 34.9 6.9S320 492.9 320 480l0-178.7 182.6-182.6c9.2-9.2 11.9-22.9 6.9-34.9S492.9 64 480 64L32 64z",
+    }),
+  ]);
 
 // Props with configuration options
 const props = withDefaults(
@@ -105,7 +118,7 @@ function onToggleLayer(layerId: string) {
     <div v-if="showSearch" class="search-box">
       <TextField v-model="searchValue" :placeholder="searchPlaceholder" class-name="layer-search-field">
         <template #trailing-action>
-          <Icon :icon-definition="faFilter" size="small" inline decorative />
+          <Icon :icon="IconFilter" size="small" inline decorative />
         </template>
       </TextField>
     </div>
@@ -134,7 +147,7 @@ function onToggleLayer(layerId: string) {
             :aria-label="'View metadata for ' + layer.config.title"
             @click.stop
           >
-            <Icon :icon-definition="faCircleInfo" size="small" inline decorative />
+            <Icon :icon="IconCircleInfo" size="small" inline decorative />
           </a>
           <span v-else-if="anyLayerHasMetadata" class="metadata-placeholder"></span>
 
