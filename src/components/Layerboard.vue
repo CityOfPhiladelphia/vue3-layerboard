@@ -21,7 +21,7 @@ import "@phila/phila-ui-map-core/dist/assets/phila-ui-map-core.css";
 import MapPanel from "./MapPanel.vue";
 import LayerPanel from "./LayerPanel.vue";
 import { Icon } from "@phila/phila-ui-core";
-import { faCaretLeft, faCaretRight, faXmark, faBars } from "@fortawesome/free-solid-svg-icons";
+import { IconBars, IconCaretLeft, IconCaretRight, IconClose } from "@phila/phila-ui-core/icons";
 import type { CyclomediaConfig, PictometryCredentials } from "@phila/phila-ui-map-core";
 
 import { getLayerConfigs, clearCache } from "@/services/layerConfigService";
@@ -669,7 +669,7 @@ onBeforeUnmount(() => {
         aria-label="Toggle menu"
         @click="toggleMobileMenu"
       >
-        <Icon :icon-definition="faBars" size="medium" inline decorative />
+        <Icon :icon="IconBars" size="medium" inline decorative />
       </button>
 
       <slot name="header">
@@ -699,7 +699,7 @@ onBeforeUnmount(() => {
           aria-label="Close menu"
           @click="closeMobileMenu"
         >
-          <Icon :icon-definition="faXmark" size="medium" decorative />
+          <Icon :icon="IconClose" size="medium" decorative />
         </button>
       </div>
 
@@ -812,7 +812,7 @@ onBeforeUnmount(() => {
           :aria-label="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
           @click="toggleSidebarCollapse"
         >
-          <Icon :icon-definition="sidebarCollapsed ? faCaretRight : faCaretLeft" size="medium" decorative />
+          <Icon :icon="sidebarCollapsed ? IconCaretRight : IconCaretLeft" size="medium" decorative />
         </button>
       </template>
     </div>
@@ -839,7 +839,7 @@ onBeforeUnmount(() => {
     >
       <div ref="modalRef" class="layerboard-modal" role="dialog" aria-modal="true" aria-label="Application information">
         <button ref="modalCloseRef" class="layerboard-modal-close" aria-label="Close modal" @click="closeModal">
-          <Icon :icon-definition="faXmark" size="medium" decorative />
+          <Icon :icon="IconClose" size="medium" decorative />
         </button>
         <slot name="modal" :close-modal="closeModal">
           <!-- Default empty modal content -->
