@@ -4,7 +4,7 @@ import type { LayerConfig } from "@/types/layer";
 import { normalizeUrl } from "@/utils/url";
 import { TextField } from "@phila/phila-ui-text-field";
 import { Icon } from "@phila/phila-ui-core";
-import { faCircleInfo, faFilter } from "@fortawesome/pro-solid-svg-icons";
+import { faCircleInfo, faFilter } from "@fortawesome/free-solid-svg-icons";
 import LayerStatusIndicators from "./LayerStatusIndicators.vue";
 import LayerOpacitySlider from "./LayerOpacitySlider.vue";
 import LayerLegend from "./LayerLegend.vue";
