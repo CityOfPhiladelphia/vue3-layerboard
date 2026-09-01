@@ -1,30 +1,75 @@
+# Publishes @phila/layerboard to npm via OIDC trusted publishing.
+#
+# npmjs.com (package Settings > Trusted Publisher) trusts THIS repository and
+# THIS workflow filename; the job exchanges a GitHub OIDC token for a
+# short-lived npm credential at publish time. No npm token is stored anywhere,
+# and the publish runs on GitHub's runners, off the City network.
+#
+# Two ways to release:
+#   - push a version tag: v3.3.0-beta.0 publishes to the "beta" dist-tag,
+#     v3.3.0 publishes to "latest" (any tag containing "-" is a prerelease)
+#   - Actions > "Publish to npm" > Run workflow, choosing the dist-tag
 name: Publish to npm
 
 on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "npm dist-tag to publish under"
+        required: true
+        default: beta
+        type: choice
+        options:
+          - beta
+          - latest
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The release guard needs main's history, not a shallow clone.
+          fetch-depth: 0
+
+      - name: Guard the release
+        run: |
+          set -e
+          tag="${{ github.ref_name }}"
+          pkg="v$(node -p "require('./package.json').version")"
+
+          # The tag must match package.json. `npm version` guarantees this;
+          # a hand-made tag can't be trusted to.
+          if [[ "$tag" == v* && "$tag" != "$pkg" ]]; then
+            echo "::error::tag $tag does not match package.json version $pkg"
+            exit 1
+          fi
+
+          # Prereleases may ship from any branch (useful for testing a
+          # consumer). Anything that would become 'latest' must be on main.
+          if [[ "$tag" == v* && "$tag" != *-* ]]; then
+            git fetch origin main
+            if ! git merge-base --is-ancestor HEAD origin/main; then
+              echo "::error::$tag is not on main - only prereleases may publish from other branches"
+              exit 1
+            fi
+          fi
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: "pnpm"
-
-      - name: Configure FontAwesome registry
-        run: |
-          echo "@fortawesome:registry=https://npm.fontawesome.com/" >> .npmrc
-          echo "//npm.fontawesome.com/:_authToken=${{ secrets.FA_AUTH_TOKEN }}" >> .npmrc
+          node-version: 24
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -32,8 +77,24 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Configure npm for publish
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+      - name: Resolve dist-tag
+        id: dist
+        run: |
+          if [ -n "${{ inputs.tag }}" ]; then
+            tag="${{ inputs.tag }}"
+          elif [[ "${{ github.ref_name }}" == *-* ]]; then
+            tag="beta"
+          else
+            tag="latest"
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Publishing ${{ github.ref_name }} to dist-tag '$tag'"
 
+      # Trusted publishing needs npm 11.5.1+ (Node 22.14+); Node 24 ships a
+      # newer npm, but pin the floor so a runner image change can't regress it.
+      - name: Ensure npm supports trusted publishing
+        run: npm install -g npm@latest && npm --version
+
+      # Provenance is attached automatically under trusted publishing.
       - name: Publish
-        run: pnpm publish --access public --no-git-checks
+        run: npm publish --tag "${{ steps.dist.outputs.tag }}"
