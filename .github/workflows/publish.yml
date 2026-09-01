@@ -35,6 +35,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The release guard needs main's history, not a shallow clone.
+          fetch-depth: 0
+
+      - name: Guard the release
+        run: |
+          set -e
+          tag="${{ github.ref_name }}"
+          pkg="v$(node -p "require('./package.json').version")"
+
+          # The tag must match package.json. `npm version` guarantees this;
+          # a hand-made tag can't be trusted to.
+          if [[ "$tag" == v* && "$tag" != "$pkg" ]]; then
+            echo "::error::tag $tag does not match package.json version $pkg"
+            exit 1
+          fi
+
+          # Prereleases may ship from any branch (useful for testing a
+          # consumer). Anything that would become 'latest' must be on main.
+          if [[ "$tag" == v* && "$tag" != *-* ]]; then
+            git fetch origin main
+            if ! git merge-base --is-ancestor HEAD origin/main; then
+              echo "::error::$tag is not on main - only prereleases may publish from other branches"
+              exit 1
+            fi
+          fi
 
       - uses: pnpm/action-setup@v4
         with:
