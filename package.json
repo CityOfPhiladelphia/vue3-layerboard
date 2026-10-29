@@ -62,7 +62,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-vue": "^10.7.0",
     "globals": "^17.3.0",
-    "maplibre-gl": "^5.14.0",
+    "maplibre-gl": "^6.4.1",
     "npm-run-all2": "^8.0.4",
     "pinia": "^3.0.4",
     "prettier": "^3.8.1",
