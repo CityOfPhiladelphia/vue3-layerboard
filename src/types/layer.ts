@@ -33,6 +33,8 @@ export interface PopupConfig {
   popupSortField?: string;
   /** Sort order: "desc" for newest-first, "asc" for oldest-first (default: "desc") */
   popupSortOrder?: "asc" | "desc";
+  /** Text shown for URL field values in place of the URL itself */
+  linkText?: string;
 }
 
 /**
@@ -78,6 +80,7 @@ export interface PopupOverride {
   showTime?: boolean;
   popupSortField?: string;
   popupSortOrder?: "asc" | "desc";
+  linkText?: string;
 }
 
 /**
