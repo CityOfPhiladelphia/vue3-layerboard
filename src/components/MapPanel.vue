@@ -709,6 +709,7 @@ interface PopupFeature {
     showTime?: boolean;
     popupSortField?: string;
     popupSortOrder?: "asc" | "desc";
+    linkText?: string;
   } | null;
 }
 
@@ -1065,7 +1066,7 @@ const popupHtml = computed(() => {
         (labelIsUrl && value.includes("."));
       const linkHref = value.startsWith("http://") || value.startsWith("https://") ? value : `https://${value}`;
       const displayValue = isUrl
-        ? `<a href="${escapeHtml(linkHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(value)}</a>`
+        ? `<a href="${escapeHtml(linkHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(feature.popupConfig.linkText ?? value)}</a>`
         : escapeHtml(value);
       html += `<tr><th scope="row">${escapeHtml(field.label)}</th><td>${displayValue}</td></tr>`;
     }
